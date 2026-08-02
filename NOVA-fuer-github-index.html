@@ -458,6 +458,47 @@ select option{ background:#141a26; }
 .wk-v{ display:flex; align-items:center; gap:8px; }
 .wk-v b{ font-family:var(--f-disp); font-size:var(--t-md); font-variant-numeric:tabular-nums; }
 
+/* ── Journal ──────────────────────────────────────────── */
+.mood-row{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:7px; }
+.mood{
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:13px 6px; border-radius:var(--r); border:1px solid var(--line);
+  background:rgba(255,255,255,.03); color:var(--text-faint);
+  transition:border-color var(--d2) var(--ez), color var(--d2) var(--ez),
+             background-color var(--d2) var(--ez), transform var(--d1) var(--ez);
+}
+.mood svg{ width:24px; height:24px; }
+.mood span{ font-size:var(--t-xs); }
+.mood:hover{ color:var(--text-dim); border-color:var(--line-2); }
+.mood:active{ transform:scale(.96); }
+.mood.on{
+  color:var(--mc); border-color:color-mix(in srgb, var(--mc) 48%, transparent);
+  background:color-mix(in srgb, var(--mc) 13%, transparent);
+}
+.mood.on span{ font-weight:600; }
+.j-hint{
+  display:flex; gap:9px; align-items:flex-start; margin-top:12px; padding:11px 13px;
+  border-radius:var(--r); background:rgba(79,227,210,.08);
+  border:1px solid rgba(79,227,210,.2); font-size:var(--t-sm); color:var(--text-dim); line-height:1.55;
+}
+.j-hint svg{ width:15px; height:15px; color:var(--c1); flex:0 0 auto; margin-top:1px; }
+.j-list{ display:flex; flex-direction:column; gap:7px; max-height:620px; overflow-y:auto; }
+.j-item{
+  width:100%; text-align:left; padding:11px 13px; border-radius:var(--r);
+  background:rgba(255,255,255,.03); border:1px solid transparent;
+  transition:border-color var(--d2) var(--ez), background-color var(--d2) var(--ez);
+}
+.j-item:hover{ border-color:var(--line-2); background:rgba(255,255,255,.05); }
+.j-item-top{ display:flex; align-items:center; justify-content:space-between; gap:9px; margin-bottom:5px; }
+.j-date{ font-size:var(--t-sm); font-weight:600; display:flex; align-items:baseline; gap:6px; }
+.j-wd{ font-weight:400; color:var(--text-faint); font-size:var(--t-xs); }
+.j-mood{ display:flex; align-items:center; gap:5px; font-size:var(--t-xs); font-weight:600; }
+.j-text{ font-size:var(--t-sm); color:var(--text-dim); line-height:1.55;
+  display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.j-empty{ font-style:italic; color:var(--text-faint); }
+.j-suche{ width:auto; max-width:170px; padding:6px 10px; font-size:var(--t-sm); }
+@media(max-width:860px){ .j-suche{ max-width:none; width:100%; margin-top:8px; } }
+
 /* ── Monatszellen ─────────────────────────────────────── */
 .mcell{
   aspect-ratio:1; border-radius:var(--r-xs); padding:6px 5px;
@@ -482,10 +523,62 @@ select option{ background:#141a26; }
 /* ── Mobil ────────────────────────────────────────────── */
 @media(max-width:860px){
   .hd-top,.hd-main{ grid-template-columns:minmax(0,1fr); }
-  .hd-goals{ grid-template-columns:minmax(0,1fr); }
-  .goal{ padding:14px 15px; }
-  .goal-num b{ font-size:2.1rem; }
-  .wk-row{ grid-template-columns:84px minmax(0,1fr) auto; gap:10px; }
+  .wk-row{ grid-template-columns:78px minmax(0,1fr) auto; gap:9px; }
+
+  /* Ziele nebeneinander statt drei volle Bildschirme untereinander */
+  .hd-goals{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+  .goal{ padding:11px 9px; }
+  .goal-top{ margin-bottom:7px; gap:6px; }
+  .goal-name{ font-size:var(--t-xs); font-weight:600; }
+  .goal-ico svg{ width:14px; height:14px; }
+  .goal-badge{ display:none; }
+  .goal-num{ flex-direction:column; align-items:flex-start; gap:0; }
+  .goal-num b{ font-size:1.7rem; }
+  .goal-num span{ font-size:10px; }
+  .goal-bar{ margin:8px 0 6px; height:4px; }
+  .goal-foot{ flex-direction:column; gap:2px; font-size:10px; }
+  .goal-act{ width:100%; margin-top:8px; padding:7px 6px; font-size:var(--t-xs); }
+
+  /* Leerzustände sollen keine halbe Bildschirmhöhe verbrauchen */
+  .empty{ padding:16px 12px; font-size:var(--t-sm); }
+  .empty svg{ width:20px; height:20px; margin-bottom:5px; }
+  .hd-plan .empty{ padding:12px; }
+
+  /* Kopfzeile: nur das Nötigste */
+  .topbar{ gap:7px; }
+  .topbar .kbtn{ padding:8px 9px; }
+  .orb{ width:34px; height:34px; }
+
+  /* Journal */
+  .mood-row{ gap:5px; }
+  .mood{ padding:10px 3px; gap:4px; }
+  .mood svg{ width:20px; height:20px; }
+  .mood span{ font-size:10px; }
+  .j-list{ max-height:none; }
+  
+}
+
+/* Sehr schmal: jedes Ziel eine Zeile, Name bleibt sichtbar */
+@media(max-width:430px){
+  .hd-goals{ grid-template-columns:minmax(0,1fr); gap:7px; }
+  .goal{ display:grid; grid-template-columns:auto minmax(0,1fr) auto;
+         align-items:center; gap:2px 10px; padding:12px 13px; }
+  .goal-top{ margin:0; grid-column:1; grid-row:1/3; }
+  .goal-ico svg{ width:18px; height:18px; }
+  .goal-name{ display:block; grid-column:2; grid-row:1; font-size:var(--t-sm); }
+  .goal-num{ grid-column:2; grid-row:2; flex-direction:row; align-items:baseline; gap:7px; }
+  .goal-num b{ font-size:1.45rem; }
+  .goal-num span{ font-size:var(--t-xs); }
+  .goal-act{ grid-column:3; grid-row:1/3; width:auto; margin:0; white-space:nowrap; }
+  .goal-bar{ grid-column:1/-1; margin:9px 0 0; }
+  .goal-foot{ grid-column:1/-1; flex-direction:row; justify-content:space-between; margin-top:5px; }
+}
+
+/* Leere Karten sollen nicht ganze Bildschirme belegen */
+@media(max-width:860px){
+  .hd-plan{ padding-bottom:8px; }
+  .hd-plan .empty{ padding:10px 12px 14px; }
+  .hd-plan .empty svg{ display:none; }
 }
 @media(max-width:860px){
   .shell{ grid-template-columns:1fr; }
@@ -563,7 +656,7 @@ select option{ background:#141a26; }
    ============================================================ */
 const KEY="nova_v1", OLD_KEY="routine_v1";
 const CLOUD_ON="nova_cloud_on", CLOUD_TOK="nova_gh_token";
-const GH_USER="mattiknp", GH_REPO="routine-tracker", GH_FILE="nova.json";  /* privates Repo */
+const GH_USER="mattiknp", GH_REPO="routine-tracker", GH_FILE="nova.json";
 const GH_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
 
 const blank=()=>({habits:[],habitLog:{},metrics:{},sport:{},todos:[],planer:{},
@@ -616,7 +709,7 @@ function load(){
     if(raw){ S=Object.assign(blank(),JSON.parse(raw)); return; }
     const old=localStorage.getItem(OLD_KEY);
     if(old){ S=Object.assign(blank(),JSON.parse(old)); imported="alt"; persist(); return; }
-    if(SEED&&SEED.habits){
+    if(typeof SEED!=="undefined"&&SEED&&SEED.habits){
       S=Object.assign(blank(),JSON.parse(JSON.stringify(SEED))); imported="seed"; persist(); return; }
   }catch(e){ console.warn("Laden fehlgeschlagen",e); }
   S=blank();
@@ -914,6 +1007,10 @@ const I=(()=>{
     drop:   w('<path d="M12 3.5S5.5 11 5.5 15a6.5 6.5 0 0 0 13 0c0-4-6.5-11.5-6.5-11.5z"/>'),
     smile:  w('<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/>'),
     note:   w('<path d="M5 3.5h14v17H5z"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4"/>'),
+    face1:  w('<circle cx="12" cy="12" r="9"/><path d="M8 15.5s1.5-2 4-2 4 2 4 2"/><path d="M9 9.5h.01M15 9.5h.01"/>'),
+    face2:  w('<circle cx="12" cy="12" r="9"/><path d="M8.5 15h7"/><path d="M9 9.5h.01M15 9.5h.01"/>'),
+    face3:  w('<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/>'),
+    bulb:   w('<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/>'),
   };
 })();
 const ico=(n,cls="")=>I[n]?I[n].replace("<svg",`<svg class="${cls}"`):"";
@@ -977,6 +1074,7 @@ const NAV=[
   {id:"planer",  t:"Planer",       i:"cal",    g:0},
   {id:"nexus",   t:"Nexus",        i:"orbit",  g:1},
   {id:"rhythmus",t:"Rhythmus",     i:"pulse",  g:1},
+  {id:"journal", t:"Journal",      i:"note",   g:1},
   {id:"woche",   t:"Woche",        i:"grid",   g:2},
   {id:"monat",   t:"Monat",        i:"cal",    g:2},
   {id:"jahr",    t:"Jahr",         i:"grid",   g:2},
@@ -1145,6 +1243,7 @@ function cmdkSource(){
   a.push({g:"Eintragen",t:"Sleep Score eintragen",i:"heart",run:()=>quickPrompt("sleepScore","Sleep Score 0–100","z. B. 78")});
   a.push({g:"Eintragen",t:"Training hinzufügen",i:"run",run:()=>{go("sport");}});
   a.push({g:"Eintragen",t:"Gewohnheit anlegen",i:"plus",run:()=>habitModal(null)});
+  a.push({g:"Eintragen",t:"Stimmung und Lernen eintragen",i:"note",run:()=>{jDate=today();go("journal");}});
   activeHabits().forEach(h=>a.push({g:"Heute abhaken",t:h.name,i:"check",
     run:()=>{ toggleHabit(today(),h.id); toast(h.name+" umgeschaltet"); go(VIEW); }}));
   a.push({g:"Daten",t:"Backup herunterladen",i:"down",run:exportData});
@@ -1480,7 +1579,10 @@ R.heute=function(){
           <div class="hd-nx-t">Tageswert${nm}</div>
           <div class="hd-sub">${total?`${done} von ${total} Gewohnheiten`:"Noch keine Gewohnheiten"}${sp.length?` · ${Math.round(sportMin(k))} min Training`:""}</div>
         </div>
-        <button class="b b-sm" onclick="go('nexus')">Groß</button>
+        <div style="display:flex;gap:6px">
+          <button class="b b-sm" onclick="go('journal')" title="Journal">${ico("note")}</button>
+          <button class="b b-sm" onclick="go('nexus')">Groß</button>
+        </div>
       </div>
       <div class="hd-nx-stage"><canvas id="nxMini" style="display:block;width:100%"></canvas></div>
     </div>
@@ -1872,7 +1974,7 @@ function nexusData(){
 }
 
 function makeNexus(cv,opt={}){
-  const X={cv,ctx:cv.getContext("2d"),w:0,h:0,dpr:1,
+  const X={cv,ctx:cv.getContext("2d"),w:0,h:0,dpr:1,eng:false,
     yaw:.6,pitch:-.36,vy:0,vp:0,drag:false,lx:0,ly:0,
     stars:[],dust:[],hover:-1,mx:-1,my:-1,run:false,t0:performance.now(),
     mini:!!opt.mini, ratio:opt.ratio||.62, maxH:opt.maxH||660,
@@ -1888,6 +1990,9 @@ function makeNexus(cv,opt={}){
     const h=Math.max(X.mini?230:340,Math.min(X.maxH,w*X.ratio));
     if(w===X.w&&h===X.h&&dpr===X.dpr) return;
     X.w=w; X.h=h; X.dpr=dpr;
+    /* Auf schmalen Schirmen ist kein Platz für Trabantennamen und
+       Kerntext — sie überlagern sonst die Zahl. */
+    X.eng = w<430;
     cv.width=w*dpr; cv.height=h*dpr;
     cv.style.width=w+"px"; cv.style.height=h+"px";
     const sn=X.mini?90:110;
@@ -1960,7 +2065,7 @@ function makeNexus(cv,opt={}){
 
     /* In der kleinen Fassung kreisen die Knoten weiter außen, sonst
        schiebt sich einer vor die Zahl im Kern. */
-    const NR=R*(X.mini?1.42:1);
+    const NR=R*(X.eng?1.62:X.mini?1.42:1);
     const P=X.nodes.map(n=>proj(n.lat,n.lon,cx,cy,NR)); X.P=P;
     const PS=X.sats.map(s=>proj(s.lat,s.lon,cx,cy,R*1.02));
 
@@ -1989,7 +2094,7 @@ function makeNexus(cv,opt={}){
         ctx.fillStyle=s.on?s.color:"rgba(140,160,180,.5)";
         ctx.beginPath(); ctx.arc(p.x,p.y,(s.on?(X.mini?2.4:3.1):(X.mini?1.7:2.1))*p.s,0,6.2832); ctx.fill();
         ctx.shadowBlur=0;
-        if(p.z>(X.mini?.55:.25)&&s.label){
+        if(!X.eng&&p.z>(X.mini?.55:.25)&&s.label){
           ctx.globalAlpha=al*.75; ctx.fillStyle="#8ea3b5";
           ctx.font=`${X.mini?7.5:9}px ui-monospace, monospace`; ctx.textAlign="center";
           ctx.fillText(s.label,p.x,p.y+11*p.s);
@@ -2029,10 +2134,16 @@ function makeNexus(cv,opt={}){
         const below=p.y>cy;
         const ly=below?p.y+r+(X.mini?11:14):p.y-r-(X.mini?13:18);
         ctx.textAlign="center";
-        ctx.fillStyle="#93a7b8"; ctx.font=`${X.mini?8.5:10}px system-ui, sans-serif`;
-        ctx.fillText(n.key,p.x,ly);
-        ctx.fillStyle="#eaf2f6"; ctx.font=`700 ${X.mini?10:12}px system-ui, sans-serif`;
-        ctx.fillText(n.sub,p.x,ly+(X.mini?11:14));
+        if(X.eng){
+          /* nur der Wert, direkt am Knoten */
+          ctx.fillStyle="#eaf2f6"; ctx.font='700 10px system-ui, sans-serif';
+          ctx.fillText(n.sub,p.x,ly+3);
+        } else {
+          ctx.fillStyle="#93a7b8"; ctx.font=`${X.mini?8.5:10}px system-ui, sans-serif`;
+          ctx.fillText(n.key,p.x,ly);
+          ctx.fillStyle="#eaf2f6"; ctx.font=`700 ${X.mini?10:12}px system-ui, sans-serif`;
+          ctx.fillText(n.sub,p.x,ly+(X.mini?11:14));
+        }
         if(!X.mini&&n.stale>=3){
           ctx.fillStyle="#c48a3a"; ctx.font='9px system-ui, sans-serif';
           ctx.fillText(n.stale>=30?"lange nichts":`${n.stale} Tage her`,p.x,ly+27);
@@ -2057,8 +2168,10 @@ function makeNexus(cv,opt={}){
     ctx.textAlign="center";
     ctx.fillStyle=col; ctx.font=`700 ${X.mini?26:30}px system-ui, sans-serif`;
     ctx.fillText(String(X.score),cx,cy+(X.mini?9:6));
-    ctx.fillStyle="#7d92a4"; ctx.font=`${X.mini?7.5:9}px system-ui, sans-serif`;
-    ctx.fillText("3-TAGE-SCHNITT",cx,cy+(X.mini?21:22));
+    if(!X.eng){
+      ctx.fillStyle="#7d92a4"; ctx.font=`${X.mini?7.5:9}px system-ui, sans-serif`;
+      ctx.fillText("3-TAGE-SCHNITT",cx,cy+(X.mini?21:22));
+    }
 
     let hv=-1;
     if(X.mx>=0){ let best=1e9;
@@ -2414,6 +2527,130 @@ function hexRgb(h){
 }
 </script>
 <script>
+/* ============================================================
+   11b — JOURNAL
+   Stimmung und Tageslernen. Bewusst schmal gehalten: eine Zahl,
+   ein Textfeld, und danach die Rückschau.
+   ============================================================ */
+const MOODS=[
+  {v:1,l:"mies",   c:"#e0697c", i:"face1"},
+  {v:2,l:"zäh",    c:"#d9a441", i:"face2"},
+  {v:3,l:"okay",   c:"#8b96a8", i:"face2"},
+  {v:4,l:"gut",    c:"#3fc9a4", i:"face3"},
+  {v:5,l:"stark",  c:"#4fe3d2", i:"face3"},
+];
+const moodOf=k=>(S.mood||{})[k]||null;
+function setMood(k,v){ if(!S.mood)S.mood={}; const e=S.mood[k]||(S.mood[k]={});
+  e.v=(e.v===v?null:v); if(e.v===null) delete e.v;
+  if(!e.v&&!e.note) delete S.mood[k]; save(); }
+function setNote(k,t){ if(!S.mood)S.mood={}; const e=S.mood[k]||(S.mood[k]={});
+  t=t.trim(); if(t) e.note=t; else delete e.note;
+  if(!e.v&&!e.note) delete S.mood[k]; save(); }
+
+let jDate=today(), jFilter="";
+
+R.journal=function(){
+  const k=jDate, m=moodOf(k)||{};
+  const alle=Object.entries(S.mood||{}).filter(([,e])=>e.note||e.v)
+    .sort((a,b)=>b[0].localeCompare(a[0]));
+  const suche=jFilter.trim().toLowerCase();
+  const liste=suche?alle.filter(([d,e])=>(e.note||"").toLowerCase().includes(suche)):alle;
+
+  /* Stimmungsverlauf der letzten acht Wochen */
+  const tage=[...Array(56)].map((_,i)=>addD(new Date(),-55+i));
+  const werte=tage.map(d=>{const e=moodOf(dk(d));return e&&e.v?e.v:null;});
+  const mitWert=werte.filter(v=>v!==null);
+  const schnitt=mitWert.length?avg(mitWert):null;
+
+  /* Wie hängt Stimmung mit Schlaf zusammen? Nur zeigen, wenn genug da ist. */
+  let paare=[];
+  Object.entries(S.mood||{}).forEach(([d,e])=>{
+    const mm=S.metrics[d]||{};
+    if(e.v&&nv(mm.sleepHours)) paare.push([mm.sleepHours,e.v]);
+  });
+  let hinweis="";
+  if(paare.length>=8){
+    const gut=paare.filter(p=>p[1]>=4), schlecht=paare.filter(p=>p[1]<=2);
+    if(gut.length>=3&&schlecht.length>=3){
+      const sg=avg(gut.map(p=>p[0])), ss=avg(schlecht.map(p=>p[0]));
+      if(Math.abs(sg-ss)>=.4)
+        hinweis=`An guten Tagen hast du im Schnitt ${f(sg)} h geschlafen, an schlechten ${f(ss)} h.`;
+    }
+  }
+
+  document.getElementById("v-journal").innerHTML=`
+  <div class="p-head" style="margin-bottom:14px">
+    <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Journal</div>
+    <div class="p-note">${alle.length} Einträge${schnitt!==null?` · Stimmung ${f(schnitt)} von 5`:""}</div></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="b b-i" id="jPrev">${ico("left")}</button>
+      <input type="date" id="jDate" value="${k}" style="width:auto;padding:7px 10px;font-size:var(--t-sm)">
+      <button class="b b-i" id="jNext">${ico("right")}</button></div>
+  </div>
+
+  <div class="grid" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start">
+    <div class="grid">
+      <div class="p">
+        <div class="p-title" style="margin-bottom:14px">${ico("smile")}Wie war ${k===today()?"heute":fmtShort(parsedk(k))}?</div>
+        <div class="mood-row">
+          ${MOODS.map(x=>`<button class="mood${m.v===x.v?" on":""}" data-mv="${x.v}" style="--mc:${x.c}">
+            ${ico(x.i)}<span>${x.l}</span></button>`).join("")}
+        </div>
+        <label style="display:flex;align-items:center;gap:7px;font-size:var(--t-sm);color:var(--text-dim);margin:18px 0 7px">
+          ${ico("bulb").replace("<svg",'<svg width="14" height="14"')}Was hast du heute gelernt?</label>
+        <textarea id="jNote" rows="5" placeholder="Eine Sache reicht. Auch Kleinigkeiten zählen."
+          style="resize:vertical;line-height:1.6">${esc(m.note||"")}</textarea>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+          <button class="b b-1" id="jSave">Speichern</button>
+          <span class="p-note" id="jHint"></span>
+        </div>
+      </div>
+
+      <div class="p">
+        <div class="p-head"><div class="p-title">${ico("spark")}Stimmung, acht Wochen</div>
+          <span class="p-note">${mitWert.length} Tage bewertet</span></div>
+        ${mitWert.length>1
+          ? lineChart(tage.map(d=>d.getDate()===1||d.getDay()===1?fmtShort(d):""),
+              [{data:werte,color:"var(--c1)"}],{min:1,max:5,h:150})
+          : `<div class="empty">${ico("smile")}<div>Bewerte ein paar Tage, dann entsteht hier eine Kurve.</div></div>`}
+        ${hinweis?`<div class="j-hint">${ico("bulb")}<span>${esc(hinweis)}</span></div>`:""}
+      </div>
+    </div>
+
+    <div class="p">
+      <div class="p-head">
+        <div class="p-title">${ico("note")}Rückschau</div>
+        <input id="jSuche" placeholder="Suchen…" value="${esc(jFilter)}" class="j-suche">
+      </div>
+      ${liste.length?`<div class="j-list">${liste.slice(0,60).map(([d,e])=>{
+        const mo=MOODS.find(x=>x.v===e.v);
+        return `<button class="j-item" data-jd="${d}">
+          <div class="j-item-top">
+            <span class="j-date">${fmtShort(parsedk(d))}<span class="j-wd">${WD[(parsedk(d).getDay()+6)%7]}</span></span>
+            ${mo?`<span class="j-mood" style="color:${mo.c}">${ico(mo.i).replace("<svg",'<svg width="14" height="14"')}${mo.l}</span>`:""}
+          </div>
+          ${e.note?`<p class="j-text">${esc(e.note)}</p>`:`<p class="j-text j-empty">nur bewertet</p>`}
+        </button>`;}).join("")}</div>`
+      :`<div class="empty">${ico("note")}<div>${suche?"Nichts gefunden.":"Noch keine Einträge.<br>Schreib links deine erste Notiz."}</div></div>`}
+    </div>
+  </div>`;
+
+  const V=document.getElementById("v-journal");
+  V.querySelector("#jPrev").onclick=()=>{ jDate=dk(addD(parsedk(jDate),-1)); R.journal(); };
+  V.querySelector("#jNext").onclick=()=>{ jDate=dk(addD(parsedk(jDate),1)); R.journal(); };
+  V.querySelector("#jDate").onchange=e=>{ jDate=e.target.value||today(); R.journal(); };
+  V.querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{ setMood(k,+b.dataset.mv); R.journal(); });
+  V.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{ jDate=b.dataset.jd; R.journal(); });
+  const ta=V.querySelector("#jNote"), hint=V.querySelector("#jHint");
+  const sichern=()=>{ setNote(k,ta.value); hint.textContent="gespeichert"; setTimeout(()=>hint.textContent="",1800); };
+  V.querySelector("#jSave").onclick=sichern;
+  ta.onblur=()=>{ if((moodOf(k)||{}).note!==ta.value.trim()) sichern(); };
+  ta.onkeydown=e=>{ if((e.metaKey||e.ctrlKey)&&e.key==="Enter") sichern(); };
+  const su=V.querySelector("#jSuche");
+  su.oninput=()=>{ jFilter=su.value; const p=su.selectionStart; R.journal();
+    const n=document.getElementById("jSuche"); n.focus(); n.setSelectionRange(p,p); };
+};
+
 /* ============================================================
    12 — WOCHE, MONAT, JAHR
    ============================================================ */
@@ -2921,20 +3158,7 @@ load();
 garminNeu=mergeGarmin();
 if(garminNeu) persist();
 shell();
-if(cloudOn()){ setSync("busy"); pullCloud().then(ok=>{ if(ok){ mergeGarmin(); persist(); go(VIEW); paintOrb(); } }); }
-else{
-  setSync("off");
-  /* Leerer Erststart: ohne Verbindung gibt es hier nichts zu sehen. */
-  if(!(S.habits||[]).length && !Object.keys(S.metrics||{}).length){
-    setTimeout(()=>modal(`<h3>Willkommen bei NOVA</h3>
-      <p style="color:var(--text-dim);font-size:var(--t-base);line-height:1.65">
-        Diese Fassung startet leer. Verbinde sie mit deinem privaten GitHub-Repo,
-        dann holt sie deine Daten und hält alle Geräte gleich.</p>
-      <div class="mo-act">
-        <button class="b" onclick="closeModal()">Später</button>
-        <button class="b b-1" onclick="closeModal();cloudModal()">Jetzt verbinden</button></div>`),700);
-  }
-}
+if(cloudOn()){ setSync("busy"); pullCloud().then(ok=>{ if(ok) go(VIEW); }); } else setSync("off");
 if(garminNeu) setTimeout(()=>toast(`${garminNeu} Werte von Garmin ergänzt`,"heart"),1400);
 if(imported) setTimeout(()=>toast(imported==="seed"
   ? "Dein Stand vom 1. August geladen" : "Daten aus deinem Tracker übernommen","cloud"),600);

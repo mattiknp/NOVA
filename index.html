@@ -2051,6 +2051,139 @@ function nexusData(){
   return {nodes:N,sats,score:score3()??0};
 }
 
+/* Raumfähre von oben, Nase nach rechts. Alle Maße relativ zur Länge L,
+   damit sie in jeder Größe stimmig bleibt. Gezeichnet wird von hinten
+   nach vorn: erst Flügel, dann Rumpf, dann Aufbauten. */
+function zeichneShuttle(ctx,L){
+  const B=L*0.30;          /* halbe Spannweite am Heck */
+
+  /* Deltaflügel */
+  ctx.beginPath();
+  ctx.moveTo( L*0.18,        0);
+  ctx.lineTo(-L*0.30,  B*1.00);
+  ctx.lineTo(-L*0.46,  B*1.02);
+  ctx.lineTo(-L*0.46, -B*1.02);
+  ctx.lineTo(-L*0.30, -B*1.00);
+  ctx.closePath();
+  ctx.fillStyle="#dfe8ee"; ctx.fill();
+  /* Schwarze Flügelvorderkanten, der Hitzeschutz */
+  ctx.beginPath();
+  ctx.moveTo( L*0.18, 0);
+  ctx.lineTo(-L*0.30,  B*1.00);
+  ctx.lineTo(-L*0.30,  B*0.86);
+  ctx.lineTo( L*0.13, 0);
+  ctx.lineTo(-L*0.30, -B*0.86);
+  ctx.lineTo(-L*0.30, -B*1.00);
+  ctx.closePath();
+  ctx.fillStyle="#1d2632"; ctx.fill();
+
+  /* Dunkle Flügelhinterkante */
+  ctx.fillStyle="#39434f";
+  ctx.fillRect(-L*0.46, -B*1.02, L*0.035, B*2.04);
+
+  /* Rumpf */
+  ctx.beginPath();
+  ctx.moveTo( L*0.50,        0);
+  ctx.quadraticCurveTo(L*0.42, -B*0.30, L*0.24, -B*0.34);
+  ctx.lineTo(-L*0.44, -B*0.36);
+  ctx.lineTo(-L*0.48, -B*0.26);
+  ctx.lineTo(-L*0.48,  B*0.26);
+  ctx.lineTo(-L*0.44,  B*0.36);
+  ctx.lineTo( L*0.24,  B*0.34);
+  ctx.quadraticCurveTo(L*0.42,  B*0.30, L*0.50, 0);
+  ctx.closePath();
+  ctx.fillStyle="#f2f6f8"; ctx.fill();
+
+  /* Bugpartie geschwärzt */
+  ctx.beginPath();
+  ctx.moveTo( L*0.50, 0);
+  ctx.quadraticCurveTo(L*0.42, -B*0.30, L*0.30, -B*0.33);
+  ctx.lineTo( L*0.30,  B*0.33);
+  ctx.quadraticCurveTo(L*0.42,  B*0.30, L*0.50, 0);
+  ctx.closePath();
+  ctx.fillStyle="#232d3a"; ctx.fill();
+
+  /* Windschutz: durchgehendes Band, in der Aufsicht ein Trapez */
+  ctx.beginPath();
+  ctx.moveTo(L*0.28, -B*0.22);
+  ctx.lineTo(L*0.33, -B*0.13);
+  ctx.lineTo(L*0.33,  B*0.13);
+  ctx.lineTo(L*0.28,  B*0.22);
+  ctx.closePath();
+  ctx.fillStyle="#8fdcee"; ctx.fill();
+  /* Streben zwischen den Scheiben */
+  ctx.strokeStyle="#232d3a"; ctx.lineWidth=Math.max(.4,L*0.008);
+  [-1,1].forEach(i=>{
+    ctx.beginPath();
+    ctx.moveTo(L*0.283, i*B*0.075); ctx.lineTo(L*0.33, i*B*0.070);
+    ctx.stroke();
+  });
+
+  /* Frachtraum, geöffnet */
+  ctx.fillStyle="#0f1620";
+  ctx.beginPath();
+  ctx.moveTo(-L*0.40, -B*0.22); ctx.lineTo( L*0.16, -B*0.20);
+  ctx.lineTo( L*0.16,  B*0.20); ctx.lineTo(-L*0.40,  B*0.22);
+  ctx.closePath(); ctx.fill();
+  /* Innenrippen */
+  ctx.strokeStyle="rgba(150,190,210,.45)"; ctx.lineWidth=Math.max(.4,L*0.008);
+  for(let i=0;i<5;i++){
+    const x=-L*0.36 + i*(L*0.50/5);
+    ctx.beginPath(); ctx.moveTo(x,-B*0.20); ctx.lineTo(x,B*0.20); ctx.stroke();
+  }
+  /* Torflügel als helle Kanten */
+  ctx.strokeStyle="#ffffff"; ctx.lineWidth=Math.max(.5,L*0.012);
+  ctx.beginPath(); ctx.moveTo(-L*0.40,-B*0.22); ctx.lineTo(L*0.16,-B*0.20); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-L*0.40, B*0.22); ctx.lineTo(L*0.16, B*0.20); ctx.stroke();
+
+  /* Seitenleitwerk. In der Aufsicht steht es hochkant, deshalb schmal —
+     mit dunkler Kante, sonst geht es im hellen Rumpf unter. */
+  ctx.beginPath();
+  ctx.moveTo(-L*0.38, 0);
+  ctx.lineTo(-L*0.46, -B*0.11);
+  ctx.lineTo(-L*0.56, -B*0.09);
+  ctx.lineTo(-L*0.56,  B*0.09);
+  ctx.lineTo(-L*0.46,  B*0.11);
+  ctx.closePath();
+  ctx.fillStyle="#aebdc9"; ctx.fill();
+  ctx.strokeStyle="#39434f"; ctx.lineWidth=Math.max(.5,L*0.010); ctx.stroke();
+  /* Ruder an der Hinterkante */
+  ctx.fillStyle="#39434f";
+  ctx.fillRect(-L*0.56,-B*0.09,L*0.035,B*0.18);
+
+  /* Steuerklappen am Heck */
+  ctx.fillStyle="#1d2632";
+  ctx.fillRect(-L*0.50, -B*0.98, L*0.05, B*0.34);
+  ctx.fillRect(-L*0.50,  B*0.64, L*0.05, B*0.34);
+
+  /* Haupttriebwerke: drei Düsen */
+  const duese=(y,r)=>{
+    ctx.beginPath(); ctx.ellipse(-L*0.50,y,r*0.9,r,0,0,6.2832);
+    ctx.fillStyle="#39434f"; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-L*0.50,y,r*0.5,r*0.58,0,0,6.2832);
+    ctx.fillStyle="#11161d"; ctx.fill();
+  };
+  duese(-B*0.17, B*0.13); duese(B*0.17, B*0.13); duese(0, B*0.15);
+
+  /* Manövriertriebwerke seitlich */
+  ctx.fillStyle="#e6edf1";
+  ctx.beginPath(); ctx.ellipse(-L*0.42,-B*0.30,L*0.06,B*0.10,-0.2,0,6.2832); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(-L*0.42, B*0.30,L*0.06,B*0.10, 0.2,0,6.2832); ctx.fill();
+
+  /* Abgasfahne */
+  const g=ctx.createLinearGradient(-L*0.50,0,-L*0.95,0);
+  g.addColorStop(0,"rgba(160,225,255,.75)");
+  g.addColorStop(1,"rgba(120,200,255,0)");
+  ctx.fillStyle=g;
+  ctx.beginPath();
+  ctx.moveTo(-L*0.50,-B*0.26); ctx.lineTo(-L*0.95,0); ctx.lineTo(-L*0.50,B*0.26);
+  ctx.closePath(); ctx.fill();
+
+  /* Rumpfnaht */
+  ctx.strokeStyle="rgba(60,80,100,.35)"; ctx.lineWidth=Math.max(.35,L*0.006);
+  ctx.beginPath(); ctx.moveTo(L*0.17,0); ctx.lineTo(L*0.27,0); ctx.stroke();
+}
+
 function makeNexus(cv,opt={}){
   const X={cv,ctx:cv.getContext("2d"),w:0,h:0,dpr:1,eng:false,
     yaw:.6,pitch:-.36,vy:0,vp:0,drag:false,lx:0,ly:0,
@@ -2228,6 +2361,58 @@ function makeNexus(cv,opt={}){
       }
       ctx.globalAlpha=1;
     });
+
+    /* Raumfähre auf geneigter Bahn. Der Schweif wird nicht aus vergangenen
+       Bildern gesammelt, sondern rückwärts aus der Bahn gerechnet — so ist er
+       unabhängig von der Bildrate immer gleich lang und glatt. */
+    {
+      const bahn=tm*.26, N=30, SPANNE=.62;
+      const bp=b2=>proj(Math.sin(b2*.65)*.55, b2, cx,cy, R*1.34);
+      const p0=bp(bahn), p1=bp(bahn+.04);
+
+      ctx.save(); ctx.globalCompositeOperation="lighter"; ctx.lineCap="round";
+      let vor=null;
+      for(let j=N;j>=0;j--){
+        const f=1-j/N;                       /* 0 am Ende, 1 an der Fähre */
+        const p=bp(bahn - j/N*SPANNE);
+        if(vor && p.z>-.55 && vor.z>-.55){
+          const breit=(X.mini?2.6:4.0)*f*f*p.s;
+          ctx.globalAlpha=.13*f*f;
+          ctx.strokeStyle="#6cc0ff"; ctx.lineWidth=breit*3.2;
+          ctx.beginPath(); ctx.moveTo(vor.x,vor.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+          ctx.globalAlpha=.40*f*f;
+          ctx.strokeStyle="#c8ecff"; ctx.lineWidth=breit;
+          ctx.beginPath(); ctx.moveTo(vor.x,vor.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+          if(f>.6){
+            ctx.globalAlpha=.6*(f-.6)/.4;
+            ctx.strokeStyle="#ffffff"; ctx.lineWidth=Math.max(.6,breit*.3);
+            ctx.beginPath(); ctx.moveTo(vor.x,vor.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+          }
+          /* Funken, die sich vom Schweif lösen */
+          if(j%5===0){
+            const s2=Math.sin(tm*2.4+j*1.7);
+            ctx.globalAlpha=.26*f;
+            ctx.fillStyle="#9fd8ea";
+            ctx.beginPath();
+            ctx.arc(p.x+s2*4*(1-f), p.y+Math.cos(tm*2.1+j)*4*(1-f), 1.2*f, 0, 6.2832);
+            ctx.fill();
+          }
+        }
+        vor=p;
+      }
+      ctx.restore(); ctx.globalAlpha=1;
+
+      if(p0.z>-.5){
+        const sicht=clamp((p0.z+.5)/1.5,.3,1);
+        ctx.save();
+        ctx.translate(p0.x,p0.y);
+        ctx.rotate(Math.atan2(p1.y-p0.y, p1.x-p0.x));
+        ctx.globalAlpha=sicht;
+        ctx.shadowColor="rgba(190,235,250,.85)"; ctx.shadowBlur=11*sicht;
+        zeichneShuttle(ctx,(X.mini?15:24)*p0.s);
+        ctx.restore(); ctx.globalAlpha=1; ctx.shadowBlur=0;
+      }
+    }
 
     const coreR=Math.min(X.mini?24:46,R*(X.mini?.36:.42)), ratio=clamp(X.score/100,0,1);
     const cg=ctx.createRadialGradient(cx,cy,0,cx,cy,coreR*1.8);

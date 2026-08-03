@@ -724,7 +724,7 @@ const GH_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_F
 
 const blank=()=>({habits:[],habitLog:{},metrics:{},sport:{},todos:[],planer:{},
   dayCheck:{},planerTypes:[],planerHidden:[],sportTypes:[],sportHidden:[],
-  goals:{sleep:8,study:3,phone:0,sport:300},notes:{},mood:{},water:{}});
+  goals:{sleep:8,study:3,phone:0,sport:300},notes:{},mood:{},water:{},spiel:{best:0,runden:0}});
 
 /* Mitgelieferter Stand: dein Backup vom 1. August, direkt eingebacken.
    Greift nur beim allerersten Start oder auf ausdrückliche Anforderung. */
@@ -1790,7 +1790,7 @@ R.heute=function(){
   /* Kleiner Nexus auf der Startseite */
   const mini=V.querySelector("#nxMini");
   if(mini){
-    NEXUS_MINI=makeNexus(mini,{mini:true,ratio:.86,maxH:460});
+    NEXUS_MINI=makeNexus(mini,{mini:true,ratio:.78,maxH:380});
     NEXUS_MINI.start();
     const wl=V.querySelector("#nxWerte");
     if(wl) wl.innerHTML=NEXUS_MINI.nodes.map(n=>
@@ -2041,44 +2041,45 @@ function nexusData(){
      lat:.46,lon:5.5, stale:0},
   ];
   const log=S.habitLog[k]||{};
-  const hs=activeHabits();
+  const hs=activeHabits().slice(0,14);
   const sats=hs.map((h,i)=>{
     const a=i/Math.max(1,hs.length)*6.2832;
     return {label:h.name.replace(/[^\p{L}\p{N} ]/gu,"").trim().slice(0,13),
-      color:h.color,on:!!log[h.id],parent:0,art:"habit",
-      lat:N[0].lat+Math.sin(a)*.44, lon:N[0].lon+Math.cos(a)*.66};
+      color:h.color,on:!!log[h.id],parent:0,
+      lat:N[0].lat+Math.sin(a)*.42, lon:N[0].lon+Math.cos(a)*.62};
   });
-  /* Heutige Trainingseinheiten umkreisen den Trainingsknoten */
-  sportOn(k).forEach((e,i,arr)=>{
-    const t=typeInfo(e.type), a=i/Math.max(1,arr.length)*6.2832+.7;
-    sats.push({label:t.label,color:t.color,on:true,parent:4,art:"sport",
-      lat:N[4].lat+Math.sin(a)*.34, lon:N[4].lon+Math.cos(a)*.5});
-  });
-  /* Offene Aufgaben als kleine Begleiter am Aufgabenknoten */
-  (S.todos||[]).filter(t=>!t.done).slice(0,10).forEach((t,i,arr)=>{
-    const a=i/Math.max(1,arr.length)*6.2832+1.4;
-    const c=t.priority==="high"?"#e0697c":t.priority==="low"?"#7d8899":"#d9a441";
-    sats.push({label:t.text.slice(0,11),color:c,on:false,parent:6,art:"todo",
-      lat:N[6].lat+Math.sin(a)*.30, lon:N[6].lon+Math.cos(a)*.44});
-  });
-  /* Freie Partikel als Tiefenstaffelung, Menge nach Tagesfüllung */
-  const dichte=Math.round(10+ (score3()??0)/100*16);
-  const motes=[...Array(dichte)].map((_,i)=>{
-    const a=i/dichte*6.2832*3.1;
-    return {lat:Math.sin(i*1.7)*1.2, lon:a, color:i%3===0?"#4fe3d2":i%3===1?"#8b7cf0":"#d488b8",
-            r:.55+((i*37)%40)/60};
-  });
-  return {nodes:N,sats,motes,score:score3()??0};
+  return {nodes:N,sats,score:score3()??0};
 }
 
+/* Grobe Umrisse der Kontinente in Grad als [Länge, Breite].
+   Bewusst wenige Punkte — auf einer Kugel dieser Größe wird jedes
+   Detail zu Rauschen. */
+const NX_LAND=[
+  /* Nordamerika */
+  [[-165,66],[-135,69],[-125,50],[-117,32],[-100,20],[-85,12],[-80,26],
+   [-70,44],[-55,52],[-70,68],[-100,72],[-140,70],[-165,66]],
+  /* Südamerika */
+  [[-79,9],[-60,10],[-45,-3],[-36,-10],[-48,-25],[-58,-38],[-70,-54],
+   [-74,-42],[-77,-18],[-81,-4],[-79,9]],
+  /* Europa und Afrika als ein Zug */
+  [[-9,36],[4,43],[20,41],[30,50],[24,66],[8,62],[-4,50],[-9,36]],
+  [[-17,15],[-6,34],[11,37],[32,31],[43,12],[51,12],[41,-5],[33,-25],
+   [18,-34],[11,-16],[6,4],[-9,5],[-17,15]],
+  /* Asien */
+  [[32,52],[50,40],[62,25],[76,8],[90,20],[103,10],[112,22],[122,32],
+   [133,46],[152,60],[178,66],[150,73],[110,76],[75,74],[45,64],[32,52]],
+  /* Australien */
+  [[114,-22],[130,-12],[145,-14],[152,-28],[147,-38],[132,-32],[114,-34],[114,-22]],
+];
+
 function makeNexus(cv,opt={}){
-  const X={cv,ctx:cv.getContext("2d"),w:0,h:0,dpr:1,eng:false,
+  const X={cv,ctx:cv.getContext("2d"),w:0,h:0,dpr:1,eng:false,pull:0,issTrail:[],game:null,
     yaw:.6,pitch:-.36,vy:0,vp:0,drag:false,lx:0,ly:0,
     stars:[],dust:[],hover:-1,mx:-1,my:-1,run:false,t0:performance.now(),
     mini:!!opt.mini, ratio:opt.ratio||.62, maxH:opt.maxH||660,
     onHover:opt.onHover||null, P:[] };
   const D=nexusData();
-  X.nodes=D.nodes; X.sats=D.sats; X.motes=D.motes||[]; X.score=D.score;
+  X.nodes=D.nodes; X.sats=D.sats; X.score=D.score;
 
   function size(){
     const wrap=cv.parentElement; if(!wrap) return;
@@ -2093,9 +2094,9 @@ function makeNexus(cv,opt={}){
     X.eng = w<430;
     cv.width=w*dpr; cv.height=h*dpr;
     cv.style.width=w+"px"; cv.style.height=h+"px";
-    const sn=X.mini?110:150;
+    const sn=X.mini?90:110;
     X.stars=[...Array(sn)].map(()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.1+.25,a:Math.random()*.5+.15,p:Math.random()*6.28}));
-    X.dust=[...Array(X.mini?46:64)].map(()=>({a:Math.random()*6.28,rad:.6+Math.random()*.75,sp:.0002+Math.random()*.0005,lat:(Math.random()-.5)*1.6}));
+    X.dust=[...Array(X.mini?34:44)].map(()=>({a:Math.random()*6.28,rad:.6+Math.random()*.75,sp:.0002+Math.random()*.0005,lat:(Math.random()-.5)*1.6}));
   }
 
   function proj(lat,lon,cx,cy,R){
@@ -2145,6 +2146,38 @@ function makeNexus(cv,opt={}){
       ctx.restore();
     }
 
+    /* Weltkarte in gestrichelten Linien. Punkte hinter dem Horizont
+       werden ausgelassen, sonst zieht die Projektion sie quer über
+       die Kugel. Auf die Kugelscheibe begrenzt. */
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(cx,cy,R*1.02,R*.94,0,0,6.2832); ctx.clip();
+    ctx.setLineDash([3,5]);
+    ctx.lineDashOffset=-tm*4;
+    ctx.lineJoin="round"; ctx.lineCap="round";
+    NX_LAND.forEach(kontur=>{
+      let stueck=[];
+      const male=()=>{
+        if(stueck.length<2){ stueck=[]; return; }
+        const zt=stueck.reduce((a,p)=>a+p.z,0)/stueck.length;
+        ctx.globalAlpha=(.07+.15*clamp(zt,0,1));
+        ctx.strokeStyle="#8fd8cc"; ctx.lineWidth=X.mini?1:1.2;
+        ctx.beginPath();
+        stueck.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+        ctx.stroke();
+        stueck=[];
+      };
+      kontur.forEach(([lonG,latG])=>{
+        /* Längengrad negiert: sonst läuft der Globus spiegelverkehrt,
+           Osten säße links. */
+        const p=proj(latG*Math.PI/180, -lonG*Math.PI/180, cx,cy,R);
+        if(p.z<.02){ male(); return; }
+        stueck.push(p);
+      });
+      male();
+    });
+    ctx.setLineDash([]);
+    ctx.restore(); ctx.globalAlpha=1;
+
     const lats=X.mini?[-.95,-.62,-.31,0,.31,.62,.95]:[-.95,-.62,-.31,0,.31,.62,.95];
     const lons=[0,.524,1.047,1.571,2.094,2.618];
     const grid=[];
@@ -2152,8 +2185,8 @@ function makeNexus(cv,opt={}){
     lons.forEach(lo=>{ const rg=[]; for(let i=0;i<=40;i++) rg.push(proj(-1.5708+i*.0785,lo,cx,cy,R)); grid.push(rg); });
     grid.forEach(rg=>{ for(let i=0;i<rg.length-1;i++){
       const a=rg[i],b=rg[i+1],z=(a.z+b.z)/2;
-      ctx.strokeStyle=`rgba(110,190,200,${(.03+.115*(z+1)/2).toFixed(3)})`;
-      ctx.lineWidth=.85; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }});
+      ctx.strokeStyle=`rgba(120,200,210,${(.06+.20*(z+1)/2).toFixed(3)})`;
+      ctx.lineWidth=X.mini?1.1:1.4; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }});
 
     X.dust.forEach(d=>{ d.a+=d.sp*16;
       const p=proj(d.lat,d.a,cx,cy,R*d.rad*1.25);
@@ -2163,29 +2196,9 @@ function makeNexus(cv,opt={}){
 
     /* In der kleinen Fassung kreisen die Knoten weiter außen, sonst
        schiebt sich einer vor die Zahl im Kern. */
-    const NR=R*(X.eng?1.62:X.mini?1.48:1);
+    const NR=R*(X.eng?1.62:X.mini?1.42:1);
     const P=X.nodes.map(n=>proj(n.lat,n.lon,cx,cy,NR)); X.P=P;
-    const PS=X.sats.map(s=>proj(s.lat,s.lon,cx,cy,NR*(s.art==="todo"?.86:s.art==="sport"?.94:1.0)));
-
-    /* Freie Partikel auf einer eigenen, weiteren Bahn */
-    (X.motes||[]).forEach((m,i)=>{
-      const p=proj(m.lat, m.lon + tm*.045*(1+(i%3)*.35), cx,cy, R*1.16);
-      const al=(.10+.34*(p.z+1)/2);
-      ctx.globalAlpha=al; ctx.fillStyle=m.color;
-      ctx.beginPath(); ctx.arc(p.x,p.y,m.r*p.s,0,6.2832); ctx.fill();
-    });
-    ctx.globalAlpha=1;
-
-    /* Ring, der die Bereiche der Reihe nach verbindet */
-    if(!X.eng){
-      ctx.lineWidth=.8;
-      for(let i=0;i<P.length;i++){
-        const a=P[i], c2=P[(i+1)%P.length];
-        const z=(a.z+c2.z)/2;
-        ctx.strokeStyle=`rgba(140,190,205,${(.04+.13*(z+1)/2).toFixed(3)})`;
-        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(c2.x,c2.y); ctx.stroke();
-      }
-    }
+    const PS=X.sats.map(s=>proj(s.lat,s.lon,cx,cy,R*1.02));
 
     X.nodes.forEach((n,i)=>{
       const p=P[i], al=.14+.4*(p.z+1)/2;
@@ -2205,24 +2218,12 @@ function makeNexus(cv,opt={}){
     {
       PS.map((p,i)=>({p,i})).sort((a,b)=>a.p.z-b.p.z).forEach(({p,i})=>{
         const s=X.sats[i], pp=P[s.parent], al=.2+.65*(p.z+1)/2;
-        ctx.strokeStyle=s.color; ctx.globalAlpha=al*(s.art==="todo"?.16:.26); ctx.lineWidth=s.art==="todo"?.5:.7;
+        ctx.strokeStyle=s.color; ctx.globalAlpha=al*.28; ctx.lineWidth=.7;
         ctx.beginPath(); ctx.moveTo(pp.x,pp.y); ctx.lineTo(p.x,p.y); ctx.stroke();
         ctx.globalAlpha=al;
         if(s.on){ ctx.shadowColor=s.color; ctx.shadowBlur=9; }
-        const gr=s.art==="todo" ? (X.mini?1.5:1.9)
-               : s.art==="sport"? (X.mini?2.8:3.6)
-               : (s.on?(X.mini?2.4:3.1):(X.mini?1.7:2.1));
         ctx.fillStyle=s.on?s.color:"rgba(140,160,180,.5)";
-        if(s.art==="sport"){
-          /* Trainingseinheiten als kleine Rauten, damit sie sich
-             von den Gewohnheiten unterscheiden */
-          ctx.beginPath();
-          ctx.moveTo(p.x,p.y-gr*p.s); ctx.lineTo(p.x+gr*p.s,p.y);
-          ctx.lineTo(p.x,p.y+gr*p.s); ctx.lineTo(p.x-gr*p.s,p.y);
-          ctx.closePath(); ctx.fill();
-        } else {
-          ctx.beginPath(); ctx.arc(p.x,p.y,gr*p.s,0,6.2832); ctx.fill();
-        }
+        ctx.beginPath(); ctx.arc(p.x,p.y,(s.on?(X.mini?2.4:3.1):(X.mini?1.7:2.1))*p.s,0,6.2832); ctx.fill();
         ctx.shadowBlur=0;
         if(!X.eng&&p.z>(X.mini?.55:.25)&&s.label){
           ctx.globalAlpha=al*.75; ctx.fillStyle="#8ea3b5";
@@ -2281,6 +2282,162 @@ function makeNexus(cv,opt={}){
       ctx.globalAlpha=1;
     });
 
+    /* Raumstation auf geneigter Bahn, mit nachziehender Spur */
+    {
+      const bahn=tm*.34;
+      const ip=proj(Math.sin(bahn*.7)*.62, bahn, cx,cy, R*1.30);
+      X.issTrail.push({x:ip.x,y:ip.y,z:ip.z});
+      if(X.issTrail.length>26) X.issTrail.shift();
+      X.issTrail.forEach((t,i)=>{
+        const f=i/X.issTrail.length;
+        ctx.globalAlpha=f*.34*(t.z>-.4?1:.25);
+        ctx.fillStyle="#bfe8ea";
+        ctx.beginPath(); ctx.arc(t.x,t.y,1.5*f,0,6.2832); ctx.fill();
+      });
+      ctx.globalAlpha=1;
+      if(ip.z>-.55){
+        const gr=(X.mini?3.4:4.2)*ip.s, sicht=clamp((ip.z+.55)/1.55,.25,1);
+        ctx.save(); ctx.translate(ip.x,ip.y); ctx.rotate(bahn*.8);
+        ctx.globalAlpha=sicht;
+        ctx.shadowColor="#dff6f7"; ctx.shadowBlur=8;
+        /* Rumpf */
+        ctx.fillStyle="#e6f4f5";
+        ctx.beginPath(); ctx.ellipse(0,0,gr*.9,gr*.36,0,0,6.2832); ctx.fill();
+        ctx.shadowBlur=0;
+        /* Solarflächen */
+        ctx.fillStyle="#5a9ded";
+        ctx.fillRect(-gr*1.5,-gr*.16,gr*.75,gr*.32);
+        ctx.fillRect( gr*.75,-gr*.16,gr*.75,gr*.32);
+        ctx.restore(); ctx.globalAlpha=1;
+      }
+    }
+
+    /* Beim Überfahren saugt der Zeiger Energie aus Kern und Knoten.
+       Additive Überlagerung, damit sich die Bahnen zu einem hellen
+       Strom addieren statt sich gegenseitig zu übermalen. */
+    X.pull += ((X.mx>=0 && !X.drag ? 1 : 0) - X.pull) * .16;
+    if(X.pull>.015 && X.mx>=0){
+      const Q=X.pull;
+      ctx.save();
+      ctx.globalCompositeOperation="lighter";
+
+      /* Ströme von jedem Knoten zum Zeiger */
+      P.forEach((p,i)=>{
+        const n=X.nodes[i];
+        if(p.z<-.5) return;
+        const anz=5;
+        for(let k=0;k<anz;k++){
+          const t2=((tm*1.15 + i*.23 + k/anz) % 1);
+          const q=t2*t2*(3-2*t2);
+          /* leicht gebogen, damit es strömt statt zu schießen */
+          const mx=(p.x+X.mx)/2 + (X.my-p.y)*.18;
+          const my=(p.y+X.my)/2 - (X.mx-p.x)*.18;
+          const u=1-q;
+          const bx=u*u*p.x+2*u*q*mx+q*q*X.mx;
+          const by=u*u*p.y+2*u*q*my+q*q*X.my;
+          ctx.globalAlpha=Q*(1-t2)*.9;
+          ctx.fillStyle=n.color;
+          ctx.beginPath(); ctx.arc(bx,by,(1.2+3.4*(1-t2))*(X.mini?.8:1),0,6.2832); ctx.fill();
+        }
+        /* Leitfaden */
+        ctx.globalAlpha=Q*.13;
+        ctx.strokeStyle=n.color; ctx.lineWidth=.9;
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(X.mx,X.my); ctx.stroke();
+      });
+
+      /* Kräftiger Hauptstrom aus dem Kern */
+      for(let k=0;k<14;k++){
+        const t2=((tm*1.5 + k/14) % 1);
+        const q=t2*t2*(3-2*t2);
+        const seit=Math.sin(t2*9+k)*14*(1-t2);
+        const bx=cx+(X.mx-cx)*q + seit;
+        const by=cy+(X.my-cy)*q + Math.cos(t2*9+k)*14*(1-t2);
+        ctx.globalAlpha=Q*(1-t2);
+        ctx.fillStyle=k%3===0?"#ffffff":k%3===1?"#4fe3d2":"#8b7cf0";
+        ctx.beginPath(); ctx.arc(bx,by,(1.6+4.2*(1-t2))*(X.mini?.8:1),0,6.2832); ctx.fill();
+      }
+
+      /* Kranz um den Zeiger */
+      const ring=18+Math.sin(tm*6)*4;
+      ctx.globalAlpha=Q*.75; ctx.strokeStyle="#7fefe2"; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.arc(X.mx,X.my,ring,0,6.2832); ctx.stroke();
+      ctx.globalAlpha=Q*.35; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(X.mx,X.my,ring*1.7,tm*2,tm*2+2.1); ctx.stroke();
+      ctx.beginPath(); ctx.arc(X.mx,X.my,ring*1.7,tm*2+3.14,tm*2+5.24); ctx.stroke();
+
+      /* Glut */
+      const gg=ctx.createRadialGradient(X.mx,X.my,0,X.mx,X.my,54);
+      gg.addColorStop(0,`rgba(180,255,248,${(Q*.55).toFixed(3)})`);
+      gg.addColorStop(.4,`rgba(79,227,210,${(Q*.26).toFixed(3)})`);
+      gg.addColorStop(1,"rgba(79,227,210,0)");
+      ctx.globalAlpha=1; ctx.fillStyle=gg;
+      ctx.beginPath(); ctx.arc(X.mx,X.my,54,0,6.2832); ctx.fill();
+
+      ctx.restore(); ctx.globalAlpha=1;
+    }
+
+    /* Minispiel: Signale erscheinen auf der Kugel und verlöschen.
+       Wer sie rechtzeitig trifft, sammelt Punkte. Reine Zugabe —
+       ohne Start passiert hier nichts. */
+    if(X.game){
+      const G=X.game;
+      G.rest=Math.max(0,G.ende-now);
+      if(G.rest<=0){ endeSpiel(X); }
+      else{
+        /* Nachschub, wird mit der Zeit schneller */
+        const takt=Math.max(430, 1150 - (45000-G.rest)/45000*620);
+        if(now-G.letzte>takt && G.sig.length<7){
+          G.letzte=now;
+          G.sig.push({lat:(Math.random()-.5)*2.2, lon:Math.random()*6.2832,
+                      auf:now, leben:2100+Math.random()*700, tot:false});
+        }
+        G.sig=G.sig.filter(sg=>{
+          const alter=now-sg.auf;
+          if(alter>sg.leben){ if(!sg.tot){ G.combo=0; } return false; }
+          const p=proj(sg.lat,sg.lon,cx,cy,R*1.03);
+          sg.px=p.x; sg.py=p.y; sg.pz=p.z; sg.pr=(9+6*(1-alter/sg.leben))*p.s;
+          if(p.z<-.1) return true;
+          const rest=1-alter/sg.leben;
+          ctx.save(); ctx.globalCompositeOperation="lighter";
+          /* Ring, der zusammenläuft */
+          ctx.globalAlpha=.5+.5*rest;
+          ctx.strokeStyle="#ffd166"; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.arc(p.x,p.y,sg.pr*(1+rest*1.4),0,6.2832); ctx.stroke();
+          ctx.globalAlpha=.85;
+          ctx.fillStyle="#ffd166"; ctx.shadowColor="#ffd166"; ctx.shadowBlur=14;
+          ctx.beginPath(); ctx.arc(p.x,p.y,sg.pr*.42,0,6.2832); ctx.fill();
+          ctx.shadowBlur=0; ctx.restore(); ctx.globalAlpha=1;
+          return true;
+        });
+        /* Treffer-Aufblitzen */
+        G.blitz=G.blitz.filter(bz=>{
+          const a=(now-bz.t)/420; if(a>1) return false;
+          ctx.save(); ctx.globalCompositeOperation="lighter";
+          ctx.globalAlpha=(1-a)*.9; ctx.strokeStyle="#7fefe2"; ctx.lineWidth=2.4;
+          ctx.beginPath(); ctx.arc(bz.x,bz.y,10+a*44,0,6.2832); ctx.stroke();
+          ctx.restore(); ctx.globalAlpha=1;
+          return true;
+        });
+        /* Anzeige */
+        ctx.textAlign="left";
+        ctx.fillStyle="#eaf2f6"; ctx.font=`700 ${X.mini?13:16}px system-ui, sans-serif`;
+        ctx.fillText(String(G.punkte), 14, 24);
+        ctx.fillStyle="#7d92a4"; ctx.font=`${X.mini?9:10}px system-ui, sans-serif`;
+        ctx.fillText("PUNKTE", 14, 38);
+        if(G.combo>1){
+          ctx.fillStyle="#ffd166"; ctx.font=`700 ${X.mini?11:13}px system-ui, sans-serif`;
+          ctx.fillText("x"+G.combo, 14, 56);
+        }
+        ctx.textAlign="right";
+        ctx.fillStyle="#eaf2f6"; ctx.font=`700 ${X.mini?13:16}px system-ui, sans-serif`;
+        ctx.fillText((G.rest/1000).toFixed(1)+"s", w-14, 24);
+        ctx.textAlign="center";
+        /* Zeitbalken */
+        ctx.fillStyle="rgba(255,255,255,.10)"; ctx.fillRect(0,h-3,w,3);
+        ctx.fillStyle="#4fe3d2"; ctx.fillRect(0,h-3,w*(G.rest/45000),3);
+      }
+    }
+
     const coreR=Math.min(X.mini?24:46,R*(X.mini?.36:.42)), ratio=clamp(X.score/100,0,1);
     const cg=ctx.createRadialGradient(cx,cy,0,cx,cy,coreR*1.8);
     cg.addColorStop(0,"rgba(79,227,210,.20)"); cg.addColorStop(1,"rgba(0,0,0,0)");
@@ -2314,6 +2471,23 @@ function makeNexus(cv,opt={}){
   const pos=e=>{ const r=cv.getBoundingClientRect();
     const t=e.touches?e.touches[0]:e; return {x:t.clientX-r.left,y:t.clientY-r.top}; };
   cv.addEventListener("mousedown",e=>{ X.drag=true; const p=pos(e); X.lx=p.x; X.ly=p.y; });
+  cv.addEventListener("click",e=>{
+    if(!X.game) return;
+    const p=pos(e), G=X.game;
+    let idx=-1, best=1e9;
+    G.sig.forEach((sg,i)=>{
+      if(sg.pz===undefined||sg.pz<-.1) return;
+      const d=Math.hypot(sg.px-p.x, sg.py-p.y);
+      if(d < Math.max(26,sg.pr*2.6) && d<best){ best=d; idx=i; }
+    });
+    if(idx>=0){
+      const sg=G.sig[idx]; sg.tot=true;
+      G.sig.splice(idx,1);
+      G.combo++; G.treffer++;
+      G.punkte += 10 + Math.min(G.combo,8)*5;
+      G.blitz.push({x:sg.px,y:sg.py,t:performance.now()});
+    } else { G.combo=0; }
+  });
   cv.addEventListener("mousemove",e=>{ const p=pos(e); X.mx=p.x; X.my=p.y;
     if(X.drag){ const dx=p.x-X.lx, dy=p.y-X.ly;
       X.yaw+=dx*.0065; X.pitch=clamp(X.pitch+dy*.005,-1.05,.5);
@@ -2327,9 +2501,28 @@ function makeNexus(cv,opt={}){
       X.vy=dx*.0065; X.vp=dy*.005; X.lx=p.x; X.ly=p.y; e.preventDefault(); } },{passive:false});
   cv.addEventListener("touchend",()=>{ X.drag=false; });
 
+  X.spielStart=()=>{
+    X.game={punkte:0,combo:0,treffer:0,sig:[],blitz:[],
+            ende:performance.now()+45000, letzte:0, rest:45000};
+    X.spielAn&&X.spielAn();
+  };
+  X.spielStop=()=>{ endeSpiel(X); };
   X.start=()=>{ if(X.run) return; X.run=true; X.w=0; X.h=0; X.t0=performance.now(); requestAnimationFrame(draw); };
-  X.refresh=()=>{ const D2=nexusData(); X.nodes=D2.nodes; X.sats=D2.sats; X.motes=D2.motes||[]; X.score=D2.score; };
+  X.refresh=()=>{ const D2=nexusData(); X.nodes=D2.nodes; X.sats=D2.sats; X.score=D2.score; };
   return X;
+}
+
+function endeSpiel(X){
+  const G=X.game; if(!G) return;
+  X.game=null;
+  if(!S.spiel) S.spiel={best:0,runden:0};
+  S.spiel.runden=(S.spiel.runden||0)+1;
+  const neu=G.punkte>(S.spiel.best||0);
+  if(neu) S.spiel.best=G.punkte;
+  save();
+  toast(neu?`Neuer Bestwert: ${G.punkte} Punkte`:`${G.punkte} Punkte · ${G.treffer} Signale`,
+        neu?"flame":"spark");
+  X.spielAus&&X.spielAus();
 }
 
 let NEXUS_BIG=null, NEXUS_MINI=null;
@@ -2343,6 +2536,10 @@ R.nexus=function(){
       <div style="padding:18px 20px 0">
         <div class="p-title" style="font-size:var(--t-lg)">${ico("orbit")}Nexus</div>
         <div class="p-note" style="margin-top:4px">Jeder Sechseck-Knoten ist ein Lebensbereich, seine Füllung der Stand von heute. Die Punkte darum sind deine Gewohnheiten. Ziehen dreht die Kugel.</div>
+        <div style="display:flex;gap:9px;align-items:center;margin-top:12px;flex-wrap:wrap">
+          <button class="b b-sm" id="nxSpiel">${ico("spark")}Signale einfangen</button>
+          <span class="p-note" id="nxBest">${(S.spiel&&S.spiel.best)?`Bestwert ${S.spiel.best} Punkte aus ${S.spiel.runden} Runden`:"45 Sekunden, triff die gelben Signale"}</span>
+        </div>
       </div>
       <div id="nxWrap" style="position:relative"><canvas id="nxCv" style="display:block;width:100%"></canvas>
         <div id="nxTip" style="position:absolute;display:none;pointer-events:none;padding:9px 12px;border-radius:var(--r);
@@ -2375,6 +2572,12 @@ R.nexus=function(){
       <div style="color:var(--text-faint);font-size:var(--t-xs);margin-top:4px">${Math.round(n.v*100)} % vom Ziel${n.stale>=3?` · zuletzt vor ${n.stale} Tagen`:""}</div>`;
   }});
   NEXUS_BIG.start();
+  const kn=document.getElementById("nxSpiel"), best=document.getElementById("nxBest");
+  NEXUS_BIG.spielAn=()=>{ kn.textContent="Abbrechen"; kn.classList.add("b-1");
+    best.textContent="Klick die gelben Signale, bevor sie verlöschen."; };
+  NEXUS_BIG.spielAus=()=>{ kn.innerHTML=ico("spark")+"Signale einfangen"; kn.classList.remove("b-1");
+    best.textContent=(S.spiel&&S.spiel.best)?`Bestwert ${S.spiel.best} Punkte aus ${S.spiel.runden} Runden`:"45 Sekunden, triff die gelben Signale"; };
+  kn.onclick=()=>{ NEXUS_BIG.game?NEXUS_BIG.spielStop():NEXUS_BIG.spielStart(); };
 };
 
 /* ============================================================

@@ -521,11 +521,42 @@ select option{ background:#141a26; }
 .mcell-mk{ display:flex; gap:2px; height:4px; }
 .mcell-mk i{ width:4px; height:4px; border-radius:50%; display:block; }
 
+/* Raster, die auf schmalen Schirmen einspaltig werden. Fest gesetzte
+   Pixelbreiten in Inline-Stilen lassen sich nicht überschreiben,
+   deshalb stehen sie hier als Klassen. */
+.rhy-grid{ grid-template-columns:minmax(0,1fr) 300px; align-items:start; }
+.zwei-spalten{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:start; }
+@media(max-width:900px){
+  .rhy-grid,.zwei-spalten{ grid-template-columns:minmax(0,1fr); }
+}
+
+/* Filterreihe: auf dem Handy seitlich schiebbar statt drei Zeilen hoch */
+@media(max-width:640px){
+  .rhy-filter{ flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+               padding-bottom:4px; margin-left:-2px; padding-left:2px; }
+  .rhy-filter::-webkit-scrollbar{ display:none; }
+  .rhy-filter .chip{ flex:0 0 auto; }
+  .rhy-seg{ flex-wrap:wrap; gap:7px; }
+}
+
 /* Planer: drei Spalten am Rechner, gestapelt auf dem Handy */
 .pl-grid{ grid-template-columns:minmax(0,1fr) minmax(0,1fr) 250px; align-items:start; }
 @media(max-width:900px){ .pl-grid{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
   .pl-todo{ grid-column:1/-1; } }
 @media(max-width:640px){ .pl-grid{ grid-template-columns:minmax(0,1fr); } }
+
+/* Aufgabenzeile im Planer */
+.td-row{
+  display:flex; align-items:flex-start; gap:8px; padding:9px 10px;
+  border-radius:var(--r); background:rgba(255,255,255,.035);
+  cursor:pointer; border-left:3px solid;
+  transition:background-color var(--d2) var(--ez), box-shadow var(--d2) var(--ez);
+}
+.td-row:hover{ background:rgba(255,255,255,.06); }
+.td-row.gewaehlt{
+  background:rgba(79,227,210,.13);
+  box-shadow:inset 0 0 0 1px rgba(79,227,210,.42);
+}
 
 .hd-nx-stage{ position:relative; }
 /* Werteleiste: auf großen Schirmen überflüssig, dort beschriftet
@@ -1890,7 +1921,7 @@ R.sport=function(){
   const hrAll=[]; t30.forEach(d=>sportOn(d).forEach(e=>{ if(nv(e.hr)) hrAll.push(e.hr); }));
 
   document.getElementById("v-sport").innerHTML=`
-  <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);align-items:start">
+  <div class="grid zwei-spalten">
     <div class="grid">
       <div class="p">
         <div class="p-head"><div class="p-title">${ico("plus")}Training eintragen</div>
@@ -2430,7 +2461,7 @@ R.rhythmus=function(){
   <div class="p-head" style="margin-bottom:14px">
     <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Rhythmus</div>
     <div class="p-note">Aus Planer, gemessenem Schlaf und Training. ${A.active} Wochen mit Einträgen, Fenster ${rhyWeeks} Wochen.</div></div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div class="rhy-seg" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <div class="seg">
         <button class="${rhyView==="heat"?"on":""}" data-rv="heat">Muster</button>
         <button class="${rhyView==="diff"?"on":""}" data-rv="diff">Diese Woche</button>
@@ -2439,14 +2470,14 @@ R.rhythmus=function(){
     </div>
   </div>
 
-  <div class="chips" style="margin-bottom:14px">
+  <div class="chips rhy-filter" style="margin-bottom:14px">
     <button class="chip${rhyMode==="all"?" on":""}" data-rm="all">Alles</button>
     ${types.map(t=>`<button class="chip${rhyMode===t.id?" on":""}" data-rm="${t.id}">
       <i style="width:8px;height:8px;border-radius:2px;background:${t.bg};display:inline-block;margin-right:6px"></i>${esc(t.label)}</button>`).join("")}
   </div>
 
   ${anyData?`
-  <div class="grid" style="grid-template-columns:minmax(0,1fr) 300px;align-items:start">
+  <div class="grid rhy-grid">
     <div class="grid">
       <div class="p" style="overflow-x:auto">
         <div style="min-width:640px">
@@ -2634,7 +2665,7 @@ R.journal=function(){
       <button class="b b-i" id="jNext">${ico("right")}</button></div>
   </div>
 
-  <div class="grid" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start">
+  <div class="grid zwei-spalten">
     <div class="grid">
       <div class="p">
         <div class="p-title" style="margin-bottom:14px">${ico("smile")}Wie war ${k===today()?"heute":fmtShort(parsedk(k))}?</div>
@@ -2822,7 +2853,7 @@ R.monat=function(){
     ${kpi(A.solid,"Solide Tage",trendBadge(A.solid,P.solid))}
   </div>
 
-  <div class="grid" style="grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:start">
+  <div class="grid zwei-spalten">
     <div class="p">
       <div class="p-head"><div class="p-title">${ico("cal")}Kalender</div>
         <span class="p-note">Punkt unten: Training und solider Tag</span></div>
@@ -2921,7 +2952,7 @@ R.jahr=function(){
       return b?MS[b.mth]:"–";})(),"Bester Monat")}
   </div>
 
-  <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;margin-bottom:14px">
+  <div class="grid zwei-spalten" style="margin-bottom:14px">
     <div class="p">
       <div class="p-head"><div class="p-title">${ico("spark")}Tageswert je Monat</div></div>
       ${lineChart(mLab,[{data:months.map(m=>{const a=avg(m.st.day);return a===null?null:Math.round(a);}),color:"var(--c1)"}],{min:0,max:100,h:170})}
@@ -3107,8 +3138,9 @@ R.planer=function(){
         ${todos.length?`<div style="display:flex;flex-direction:column;gap:5px;max-height:460px;overflow-y:auto">
           ${todos.map(t=>{
             const pc=t.priority==="high"?"var(--bad)":t.priority==="low"?"var(--good)":"var(--warn)";
-            return `<div draggable="true" data-todo="${t.id}"
-              style="display:flex;align-items:flex-start;gap:8px;padding:9px 10px;border-radius:var(--r);background:rgba(255,255,255,.035);cursor:grab;border-left:3px solid ${pc}">
+            const gewaehlt = plDragTodo===t.id;
+            return `<div draggable="true" data-todo="${t.id}" class="td-row${gewaehlt?" gewaehlt":""}"
+              style="border-left-color:${pc}">
               <button data-tdone="${t.id}" style="width:16px;height:16px;border-radius:5px;border:1.5px solid var(--line-2);flex:0 0 auto;margin-top:1px"></button>
               <span style="flex:1;font-size:var(--t-sm);line-height:1.4;min-width:0;word-break:break-word">${esc(t.text)}</span>
               <button data-tcyc="${t.id}" title="Priorität wechseln" style="color:${pc};flex:0 0 auto;font-size:14px;line-height:1">●</button>
@@ -3125,15 +3157,22 @@ R.planer=function(){
   V.querySelector("#plDate").onchange=e=>{ plDate=e.target.value||today(); R.planer(); };
   V.querySelectorAll("[data-chk]").forEach(b=>b.onclick=()=>{ toggleCheck(b.dataset.chk); R.planer(); paintOrb(); });
   V.querySelectorAll("[data-bt]").forEach(b=>{
-    b.onclick=()=>{ plDragType=b.dataset.bt;
+    b.onclick=()=>{ plDragType=b.dataset.bt; plDragTodo=null;
       V.querySelectorAll("[data-bt]").forEach(x=>x.classList.remove("on")); b.classList.add("on");
       toast(blockById(plDragType).label+" gewählt, jetzt Spalte anklicken"); };
     b.ondragstart=()=>{ plDragType=b.dataset.bt; };
   });
   V.querySelectorAll("[data-slot]").forEach(s=>s.onclick=()=>{
-    if(!plDragType){ toast("Erst einen Block wählen","x"); return; }
     const [idx,h]=s.dataset.slot.split("|").map(Number);
-    openBlock(dk(addD(parsedk(plDate),idx)),plDragType,p2(h)+":00",p2(Math.min(23,h+1))+":00",null,null);
+    const k2=dk(addD(parsedk(plDate),idx));
+    if(plDragTodo){
+      const auf=(S.todos||[]).find(x=>x.id===plDragTodo);
+      plDragTodo=null;
+      openBlock(k2,"todo",p2(h)+":00",p2(Math.min(23,h+1))+":00",auf?auf.text:"",null);
+      return;
+    }
+    if(!plDragType){ toast("Erst einen Block oder eine Aufgabe wählen","x"); return; }
+    openBlock(k2,plDragType,p2(h)+":00",p2(Math.min(23,h+1))+":00",null,null);
   });
   V.querySelectorAll("[data-blk]").forEach(b=>b.onclick=e=>{
     e.stopPropagation();
@@ -3151,7 +3190,20 @@ R.planer=function(){
         plDragTodo=null; }
       else if(plDragType) openBlock(k,plDragType,p2(h)+":00",p2(Math.min(23,h+1))+":00",null,null); };
   });
-  V.querySelectorAll("[data-todo]").forEach(t=>t.ondragstart=()=>{ plDragTodo=t.dataset.todo; });
+  /* Ziehen gibt es auf dem Handy nicht. Deshalb: Aufgabe antippen,
+     dann eine Stunde im Tagesplan antippen. Gilt auch am Rechner. */
+  V.querySelectorAll("[data-todo]").forEach(t=>{
+    t.ondragstart=()=>{ plDragTodo=t.dataset.todo; plDragType=null; };
+    t.onclick=e=>{
+      if(e.target.closest("[data-tdone],[data-tdel],[data-tcyc]")) return;
+      const id=t.dataset.todo;
+      plDragTodo = plDragTodo===id ? null : id;
+      if(plDragTodo){ plDragType=null;
+        const auf=(S.todos||[]).find(x=>x.id===plDragTodo);
+        toast(`„${auf?auf.text.slice(0,22):""}“ gewählt, jetzt Uhrzeit antippen`); }
+      R.planer();
+    };
+  });
   V.querySelectorAll("[data-tdone]").forEach(b=>b.onclick=()=>{
     const t=(S.todos||[]).find(x=>x.id===b.dataset.tdone); if(t){ t.done=true; save(); toast("Erledigt"); R.planer(); } });
   V.querySelectorAll("[data-tdel]").forEach(b=>b.onclick=()=>{

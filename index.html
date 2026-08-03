@@ -422,41 +422,6 @@ select option{ background:#141a26; }
 @media(max-width:1180px){ .hd-top{ grid-template-columns:minmax(0,1fr); } }
 
 
-/* ── Erkenntnisse ─────────────────────────────────────── */
-.ek{ margin-bottom:14px; }
-.ek-liste{ display:flex; flex-direction:column; gap:2px; }
-.ek-row{
-  display:grid; grid-template-columns:auto minmax(0,1fr); gap:14px;
-  align-items:start; padding:13px 3px; border-top:1px solid var(--line);
-}
-.ek-row:first-child{ border-top:0; padding-top:4px; }
-.ek-f{
-  font-family:var(--f-disp); font-size:1.55rem; font-weight:700; line-height:1;
-  letter-spacing:-.03em; font-variant-numeric:tabular-nums;
-  min-width:62px; text-align:right; padding-top:2px;
-}
-.ek-f.gut{ color:var(--c1); }
-.ek-f.schlecht{ color:var(--warn); }
-.ek-s{ font-size:var(--t-base); line-height:1.5; }
-.ek-u{
-  display:flex; flex-wrap:wrap; gap:7px; align-items:center;
-  margin-top:6px; font-size:var(--t-xs); color:var(--text-faint);
-}
-.ek-jetzt{
-  font-weight:600; padding:2px 8px; border-radius:var(--r-pill);
-  color:var(--text-dim); background:rgba(120,160,190,.10);
-}
-.ek-jetzt.gut{ color:var(--good); background:color-mix(in srgb, var(--good) 14%, transparent); }
-.ek-fuss{
-  margin-top:13px; padding-top:11px; border-top:1px solid var(--line);
-  display:flex; gap:10px; align-items:center; justify-content:space-between;
-  font-size:var(--t-xs); color:var(--text-faint); line-height:1.5;
-}
-@media(max-width:560px){
-  .ek-row{ grid-template-columns:minmax(0,1fr); gap:4px; }
-  .ek-f{ text-align:left; min-width:0; font-size:1.35rem; }
-  .ek-fuss{ flex-direction:column; align-items:flex-start; }
-}
 
 /* ── Ziele: das Herzstück der Startseite ──────────────── */
 .hd-goals{ margin-bottom:14px; }
@@ -1175,186 +1140,6 @@ const todoWocheFertig=()=>{
 };
 const todoArchivZahl=()=>(S.todos||[]).filter(t=>t.archived&&!t.done).length;
 
-/* ── Erkenntnisse ───────────────────────────────────────
-   Rechnet aus den eigenen Daten, welche Größe welche zieht.
-   Nichts davon ist fest verdrahtet: Es werden alle sinnvollen
-   Paare geprüft und nur gemeldet, was deutlich genug ausfällt
-   UND auf genug Tagen beruht. Dadurch wächst die Aussage mit,
-   je länger du einträgst — und verschwindet wieder, wenn sie
-   sich nicht mehr halten lässt.
-   ──────────────────────────────────────────────────────── */
-const EM_MIN=6;      /* so viele Tage muss jede der beiden Gruppen haben */
-const EM_T=2.0;      /* Prüfgröße; darunter kann es Zufall sein */
-const EM_T_SCAN=2.6; /* strenger, wenn mehrere Trennstellen durchprobiert werden */
-const EM_DIFF=.18;   /* und mindestens so viel Unterschied */
-const EM_GEW=.9;     /* schwächere Funde bleiben stumm — auf so wenig Tagen
-                        wäre sonst jedes Rauschen eine „Erkenntnis" */
-
-const EM_FELD={
-  sleepHours:{label:"Schlaf",           kurz:"Schlaf",     e:"h",  n:1},
-  sleepScore:{label:"Sleep Score",      kurz:"Score",      e:"",   n:0},
-  study     :{label:"Lernzeit",         kurz:"Lernzeit",   e:"h",  n:1},
-  phone     :{label:"Scrolling",        kurz:"Scrolling",  e:"h",  n:1, schlecht:true},
-  sport     :{label:"Training",         kurz:"Training",   e:"min",n:0},
-  habits    :{label:"Gewohnheiten",     kurz:"Gewohnh.",   e:"%",  n:0},
-  plan      :{label:"geplante Stunden", kurz:"Plan",       e:"h",  n:1}
-};
-
-/* Ein Feld als {Datum: Wert}. Leere Tage fehlen, damit sie nicht
-   als Null durchrutschen — eine Lücke ist keine Null. */
-function emReihe(feld){
-  const o={};
-  const tage=new Set([...Object.keys(S.metrics||{}),...Object.keys(S.sport||{}),
-                      ...Object.keys(S.habitLog||{}),...Object.keys(S.planer||{})]);
-  const h=today();
-  tage.forEach(k=>{
-    if(k>h) return;
-    let v=null;
-    if(feld==="sport"){ const x=sportMin(k); v=x>0?x:null; }
-    else if(feld==="habits"){ const c=completion(k); v=c.total?c.pct:null; }
-    else if(feld==="plan"){ const x=planHours(k); v=x>0?x:null; }
-    else { const m=(S.metrics||{})[k]||{}; v=nv(m[feld])?m[feld]:null; }
-    if(v!==null) o[k]=v;
-  });
-  return o;
-}
-
-const emMittel=a=>a.reduce((x,y)=>x+y,0)/a.length;
-function emStreu(a){
-  if(a.length<2) return 0;
-  const m=emMittel(a);
-  return a.reduce((x,y)=>x+(y-m)*(y-m),0)/(a.length-1);
-}
-
-/* Vergleicht zwei Gruppen und sagt, ob der Unterschied trägt.
-   Welch — die Gruppen dürfen verschieden groß sein und
-   verschieden stark streuen, was bei echten Daten der Normalfall ist. */
-function emPruef(tief,hoch,grenze=EM_T){
-  if(tief.length<EM_MIN||hoch.length<EM_MIN) return null;
-  const mt=emMittel(tief), mh=emMittel(hoch);
-  const se=Math.sqrt(emStreu(tief)/tief.length+emStreu(hoch)/hoch.length);
-  if(!(se>0)) return null;
-  const t=(mh-mt)/se;
-  const basis=Math.max(Math.abs(mt),Math.abs(mh));
-  const rel=basis>0?Math.abs(mh-mt)/basis:0;
-  if(Math.abs(t)<grenze||rel<EM_DIFF) return null;
-  return {mt,mh,t,rel,n:tief.length+hoch.length};
-}
-
-/* Teilt die Treibertage am Median und vergleicht die Wirkung.
-   versatz=1 heißt: die Wirkung wird am Folgetag gemessen. */
-function emPaar(treiber,wirkung,versatz){
-  const A=emReihe(treiber), B=emReihe(wirkung);
-  const paare=[];
-  Object.keys(A).forEach(k=>{
-    const kz=versatz?dk(addD(parsedk(k),versatz)):k;
-    if(B[kz]!==undefined) paare.push([A[k],B[kz]]);
-  });
-  if(paare.length<EM_MIN*2) return null;
-  /* Nicht bloß am Median trennen. Zusammenhänge haben meist eine Schwelle:
-     Unter 6,5 h Schlaf bricht der Tag ein, darüber ändert mehr Schlaf wenig.
-     Ein Median-Schnitt sieht davon nichts. Deshalb werden alle Trennstellen
-     durchprobiert und die deutlichste genommen — weil das mehrere Versuche
-     sind, muss sie dafür eine strengere Prüfgröße erreichen. */
-  const stufen=[...new Set(paare.map(p=>p[0]))].sort((x,y)=>x-y);
-  let best=null;
-  stufen.forEach(schwelle=>{
-    const tief=paare.filter(p=>p[0]<schwelle).map(p=>p[1]);
-    const hoch=paare.filter(p=>p[0]>=schwelle).map(p=>p[1]);
-    const r=emPruef(tief,hoch,EM_T_SCAN);
-    if(r&&(!best||Math.abs(r.t)>Math.abs(best.t))) best=Object.assign(r,{med:schwelle});
-  });
-  if(!best) return null;
-  return Object.assign(best,{treiber,wirkung,versatz});
-}
-
-/* Wirkt eine einzelne Gewohnheit auf einen Wert? */
-function emHabit(h,wirkung){
-  const B=emReihe(wirkung);
-  const ohne=[],mit=[];
-  Object.keys(B).forEach(k=>{
-    if(k<h.createdAt) return;
-    (S.habitLog[k]?.[h.id]?mit:ohne).push(B[k]);
-  });
-  const r=emPruef(ohne,mit);
-  if(!r) return null;
-  return Object.assign(r,{habit:h,wirkung});
-}
-
-const emZahl=(v,feld)=>{
-  const f=EM_FELD[feld];
-  const z=f.n?v.toFixed(1).replace(".",","):String(Math.round(v));
-  return f.e?`${z} ${f.e}`:z;
-};
-
-/* Alles prüfen, das Stärkste zuerst. */
-function erkenntnisse(){
-  const raus=[];
-  /* Schlaf wirkt auf den Tag danach — die Nacht liegt ja davor. */
-  ["sleepHours","sleepScore"].forEach(tr=>
-    ["study","habits","sport","phone"].forEach(wi=>{
-      const r=emPaar(tr,wi,0); if(r) raus.push(r); }));
-  /* Was der Tag bringt, wirkt auf die Nacht danach. */
-  ["sport","study","phone","habits"].forEach(tr=>
-    ["sleepHours","sleepScore"].forEach(wi=>{
-      const r=emPaar(tr,wi,1); if(r) raus.push(r); }));
-  /* Ein voller Plan — bringt er auch Lernzeit? */
-  ["study","habits"].forEach(wi=>{ const r=emPaar("plan",wi,0); if(r) raus.push(r); });
-  /* Und jede Gewohnheit gegen die harten Werte. */
-  activeHabits().forEach(h=>
-    ["study","sleepHours","phone","sport"].forEach(wi=>{
-      const r=emHabit(h,wi); if(r) raus.push(r); }));
-
-  raus.forEach(r=>{
-    const f=EM_FELD[r.wirkung];
-    const besser = f.schlecht ? r.mh<r.mt : r.mh>r.mt;
-    /* Wie oft passt der bessere Wert in den schlechteren? */
-    const gr=Math.max(r.mt,r.mh), kl=Math.min(r.mt,r.mh);
-    r.faktor = kl>0 ? gr/kl : null;
-    r.besser = besser;
-    r.gewicht = Math.abs(r.t)*r.rel;     /* belegt UND deutlich */
-
-    if(r.habit){
-      r.titel = r.faktor&&r.faktor>=1.35
-        ? r.faktor.toFixed(1).replace(".",",")+"×"
-        : (r.rel*100).toFixed(0)+" %";
-      r.satz = `An Tagen mit „${esc(r.habit.name)}“ liegt ${f.label} bei `
-             + `${emZahl(r.mh,r.wirkung)} statt ${emZahl(r.mt,r.wirkung)}.`;
-      r.beleg = `${r.n} Tage`;
-    } else {
-      const tf=EM_FELD[r.treiber];
-      const schwelle=emZahl(r.med,r.treiber);
-      r.titel = r.faktor&&r.faktor>=1.35
-        ? r.faktor.toFixed(1).replace(".",",")+"×"
-        : (r.rel*100).toFixed(0)+" %";
-      r.satz = `Ab ${schwelle} ${tf.label} ${r.versatz?"liegt am Tag darauf":"liegt"} `
-             + `${f.label} bei ${emZahl(r.mh,r.wirkung)} statt ${emZahl(r.mt,r.wirkung)}.`;
-      r.beleg = `${r.n} Tage · Schwelle ${schwelle}`;
-    }
-  });
-  return raus.filter(r=>r.gewicht>=EM_GEW).sort((a,b)=>b.gewicht-a.gewicht);
-}
-
-/* Der Bezug zum Jetzt — ohne den ist eine Erkenntnis nur eine Vitrine. */
-function emHeute(r){
-  const k=today();
-  if(r.habit){
-    const an=!!(S.habitLog[k]||{})[r.habit.id];
-    return {txt:an?"heute abgehakt":"heute noch offen", gut:an};
-  }
-  const tag = r.versatz ? dk(addD(new Date(),-r.versatz)) : k;
-  const wert = emReihe(r.treiber)[tag];
-  if(wert===undefined) return null;
-  const drueber = wert>=r.med;
-  return {txt:`${r.versatz?"gestern":"heute"} ${emZahl(wert,r.treiber)} — `
-             +`${drueber?"über":"unter"} der Schwelle`, gut:drueber};
-}
-
-/* Wie viele Tage fehlen noch, bis überhaupt etwas gerechnet werden kann? */
-function emFehlt(){
-  const n=Object.keys(emReihe("sleepHours")).length;
-  return Math.max(0,EM_MIN*2-n);
-}
 
 /* ── Cloud ── */
 const cloudOn=()=>localStorage.getItem(CLOUD_ON)==="1";
@@ -1848,58 +1633,6 @@ function cloudModal(){
    5 — DIAGRAMME
    Eine Achse pro Bild. Lücke statt Rahmen zwischen Segmenten.
    ============================================================ */
-/* Eine Erkenntnis als Zeile. Wird auf der Startseite und im
-   vollständigen Verzeichnis gleich gerendert. */
-function ekZeile(r){
-  const j=emHeute(r);
-  return `<div class="ek-row">
-    <div class="ek-f ${r.besser?"gut":"schlecht"}">${r.titel}</div>
-    <div>
-      <div class="ek-s">${r.satz}</div>
-      <div class="ek-u">
-        ${j?`<span class="ek-jetzt${j.gut?" gut":""}">${j.txt}</span>`:""}
-        <span>${r.beleg}</span>
-      </div>
-    </div>
-  </div>`;
-}
-
-function ekPanel(){
-  const alle=erkenntnisse();
-  if(!alle.length){
-    const fehlt=emFehlt();
-    return `<div class="p ek">
-      <div class="p-title" style="margin-bottom:9px">${ico("spark")}Was deine Daten sagen</div>
-      <div class="empty" style="padding:22px 8px">${ico("chart")}<div>
-        ${fehlt?`Noch ${fehlt} ${fehlt===1?"Tag":"Tage"} mit Werten, dann rechnet NOVA hier.`
-               :"Noch kein Zusammenhang, der deutlich genug ist. Das ändert sich mit jedem Tag."}
-      </div></div></div>`;
-  }
-  const zeigen=alle.slice(0,3);
-  return `<div class="p ek">
-    <div class="p-head" style="margin-bottom:4px">
-      <div class="p-title">${ico("spark")}Was deine Daten sagen</div>
-      ${alle.length>3?`<button class="b b-sm" id="ekMehr">Alle ${alle.length}</button>`:""}
-    </div>
-    <div class="ek-liste">${zeigen.map(ekZeile).join("")}</div>
-    <div class="ek-fuss">
-      <span>Aus deinen eigenen Tagen gerechnet, nicht vorgegeben.
-            Es sind Zusammenhänge, keine Ursachen.</span>
-    </div>
-  </div>`;
-}
-
-function ekModal(){
-  const alle=erkenntnisse();
-  modal(`<h3>Alle Erkenntnisse</h3>
-    <div class="ek-liste" style="max-height:58vh;overflow-y:auto">${alle.map(ekZeile).join("")}</div>
-    <div class="ek-fuss">
-      <span>Geprüft wird jedes Paar aus deinen Werten. Gezeigt wird nur, was
-            auf mindestens ${EM_MIN*2} Tagen beruht und deutlich genug ausfällt.
-            Zusammenhang heißt nicht Ursache — die Richtung musst du selbst kennen.</span>
-    </div>
-    <div class="mo-act"><button class="b b-1" onclick="closeModal()">Schließen</button></div>`);
-}
 
 const noData=t=>`<div class="empty">${ico("chart")}<div>${esc(t)}</div></div>`;
 
@@ -2138,8 +1871,6 @@ R.heute=function(){
       </div>`;}).join("")}
   </div>
 
-  ${ekPanel()}
-
   <div class="grid hd-main">
     <div class="grid">
       <div class="p">
@@ -2211,7 +1942,6 @@ R.heute=function(){
   </div>`;
 
   const V=document.getElementById("v-heute");
-  V.querySelector("#ekMehr")?.addEventListener("click",ekModal);
   V.querySelectorAll("[data-fdone]").forEach(r=>r.onclick=()=>{
     todoErledigt(r.dataset.fdone);
     const n=todoWocheFertig();

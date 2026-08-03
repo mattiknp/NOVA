@@ -310,7 +310,42 @@ select option{ background:#141a26; }
 .hb-dot{ width:7px; height:7px; border-radius:50%; flex:0 0 auto; }
 .hb-n{ flex:1; font-size:var(--t-base); font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; }
 .hb.on .hb-n{ color:var(--text-dim); }
-.hb-s{ font-family:var(--f-mono); font-size:var(--t-xs); color:var(--text-faint); font-variant-numeric:tabular-nums; }
+/* Stärke: die Zahl bekommt eine eigene Fläche, deren Füllung den
+   Wert nochmal zeigt — so liest man sie auch im Vorbeigehen. */
+.hb-s{
+  font-family:var(--f-mono); font-size:var(--t-xs); font-variant-numeric:tabular-nums;
+  flex:0 0 auto; min-width:44px; text-align:right; padding:3px 7px;
+  border-radius:var(--r-pill); color:var(--text-dim); position:relative; overflow:hidden;
+  background:rgba(255,255,255,.04);
+}
+.hb-s::before{
+  content:""; position:absolute; inset:0; width:var(--kf,0%);
+  background:var(--c1); opacity:.16;
+}
+/* Wochenziel schon erfüllt: die Zeile tritt zurück, verschwindet aber
+   nicht — sonst wäre unklar, wo sie hin ist. */
+.hb-w{
+  font-family:var(--f-mono); font-size:var(--t-xs); flex:0 0 auto;
+  padding:2px 7px; border-radius:var(--r-pill); color:var(--text-faint);
+  border:1px solid var(--line);
+}
+.hb-w.voll{
+  color:var(--good); border-color:color-mix(in srgb, var(--good) 34%, transparent);
+  background:color-mix(in srgb, var(--good) 12%, transparent);
+}
+.hb.fertig{ opacity:.55; }
+.hb.fertig:hover{ opacity:1; }
+
+/* Stärke in der Gewohnheiten-Ansicht */
+.hk-kraft{ display:flex; align-items:center; gap:14px; margin-bottom:13px; }
+.hk-z{
+  font-family:var(--f-disp); font-size:1.9rem; font-weight:700; line-height:1;
+  letter-spacing:-.02em; color:var(--kc); font-variant-numeric:tabular-nums;
+  flex:0 0 auto; min-width:74px;
+}
+.hk-bar{ height:6px; border-radius:var(--r-pill); background:var(--track); overflow:hidden; }
+.hk-bar i{ display:block; height:100%; border-radius:var(--r-pill); }
+.hk-u{ font-size:var(--t-xs); color:var(--text-faint); margin-top:7px; line-height:1.45; }
 .hb-mini{ display:flex; gap:2px; flex:0 0 auto; }
 .hb-mini i{ width:4px; height:14px; border-radius:2px; background:var(--track); }
 .hb-mini i.f{ background:var(--c1); opacity:.75; }
@@ -422,6 +457,17 @@ select option{ background:#141a26; }
 @media(max-width:1180px){ .hd-top{ grid-template-columns:minmax(0,1fr); } }
 
 
+
+/* ── Kurzbefehl-Adressen ──────────────────────────────── */
+.kb-z{
+  display:flex; align-items:center; gap:10px; padding:9px 11px;
+  border-radius:var(--r); background:rgba(255,255,255,.035);
+}
+.kb-t{ font-size:var(--t-sm); }
+.kb-u{
+  font-family:var(--f-mono); font-size:10px; color:var(--text-faint);
+  margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
 
 /* ── Ziele: das Herzstück der Startseite ──────────────── */
 .hd-goals{ margin-bottom:14px; }
@@ -882,13 +928,99 @@ const f=n=>Number(n).toFixed(1);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const avg=a=>{ const v=a.filter(x=>x!==null&&x!==undefined&&!isNaN(x)); return v.length?v.reduce((x,y)=>x+y,0)/v.length:null; };
 
-/* ── Gewohnheiten ── */
+/* ── Gewohnheiten ───────────────────────────────────────
+   Zwei Dinge waren hier falsch gemessen.
+
+   Erstens galt jede Gewohnheit als täglich. Fünf von neun hakst du
+   aber nur zwei- bis dreimal die Woche ab — die standen damit
+   dauerhaft als Versagen da, obwohl zweimal die Woche vielleicht
+   genau das Richtige ist. Jetzt hat jede ein Wochenziel.
+
+   Zweitens gab es nur die Serie, und die fällt bei einem
+   ausgelassenen Tag auf null. Ein Tag wird damit so hart bestraft
+   wie zehn. Daneben steht jetzt eine Stärke, die langsam zerfällt:
+   Jede Wiederholung hebt sie, jeder leere Tag senkt sie ein wenig.
+   Nach einer langen Serie ist ein Aussetzer damit ein Dämpfer,
+   kein Totalverlust.
+   ──────────────────────────────────────────────────────── */
 const activeHabits=()=>(S.habits||[]).filter(h=>!h.archived);
+
+/* Wie oft pro Woche ist die Gewohnheit vorgesehen? 7 heißt täglich
+   und ist der Grundwert — alte Einträge verhalten sich damit
+   genauso wie vorher. */
+const habitSoll=h=>clamp(h.proWoche||7,1,7);
+
+/* Treffer in der Woche, in der k liegt, bis einschließlich k. */
+function wochenTreffer(h,k){
+  const mo=sow(parsedk(k));
+  let n=0;
+  for(let i=0;i<7;i++){
+    const t=dk(addD(mo,i));
+    if(t>k) break;
+    if(S.habitLog[t]?.[h.id]) n++;
+  }
+  return n;
+}
+
+/* Steht sie an diesem Tag an? Eine Gewohnheit mit Wochenziel ist
+   fällig, solange das Ziel in dieser Woche noch nicht erreicht ist —
+   danach verschwindet sie bis Montag aus der Tagesliste, statt als
+   offener Posten stehen zu bleiben. */
+function habitFaellig(h,k){
+  if(h.createdAt>k) return false;
+  if(S.habitLog[k]?.[h.id]) return true;      /* getan zählt immer */
+  const soll=habitSoll(h);
+  if(soll>=7) return true;
+  return wochenTreffer(h,k)<soll;
+}
+
 function completion(k){
-  const hs=activeHabits().filter(h=>h.createdAt<=k);
+  const hs=activeHabits().filter(h=>habitFaellig(h,k));
   const log=S.habitLog[k]||{};
   const done=hs.filter(h=>log[h.id]).length;
   return {done,total:hs.length,pct:hs.length?Math.round(done/hs.length*100):0};
+}
+
+/* ── Stärke ─────────────────────────────────────────────
+   Gleitender Durchschnitt mit Halbwertszeit: Ohne jede Wiederholung
+   halbiert sich die Stärke in STAERKE_HW Tagen. Der Gewinn je Haken
+   ist am Wochenziel ausgerichtet, damit eine Gewohnheit, die ihr
+   Ziel genau trifft, gegen 100 % läuft — egal ob täglich oder
+   zweimal die Woche.
+   ──────────────────────────────────────────────────────── */
+const STAERKE_HW=14;
+
+function habitStaerke(h,bis){
+  const ende=bis||today();
+  if(h.createdAt>ende) return 0;
+  const zerfall=Math.pow(.5,1/STAERKE_HW);
+  const gewinn=(1-zerfall)*7/habitSoll(h);
+  let st=0;
+  for(let d=parsedk(h.createdAt); ; d=addD(d,1)){
+    const k=dk(d);
+    if(k>ende) break;
+    st=st*zerfall+(S.habitLog[k]?.[h.id]?gewinn:0);
+    if(st>1) st=1;
+  }
+  return Math.round(st*100);
+}
+
+/* Serie. Bei täglichen Gewohnheiten in Tagen, bei allen anderen in
+   Wochen — eine Tagesserie wäre dort ohne Aussage. */
+function habitSerie(h){
+  const soll=habitSoll(h);
+  if(soll>=7) return {n:streak(h), e:"Tage", kurz:"d"};
+  let n=0, mo=sow(new Date());
+  /* Die laufende Woche zählt nur, wenn das Ziel schon erreicht ist. */
+  for(;;){
+    const k=dk(addD(mo,6));
+    if(dk(mo)<h.createdAt) break;
+    const treffer=wochenTreffer(h, k>today()?today():k);
+    if(treffer>=soll) n++;
+    else if(dk(mo)!==dk(sow(new Date()))) break;
+    mo=addD(mo,-7);
+  }
+  return {n, e:"Wochen", kurz:"W"};
 }
 function toggleHabit(k,id){
   if(!S.habitLog[k]) S.habitLog[k]={};
@@ -1573,6 +1705,7 @@ function settingsModal(){
       <button class="b b-1" id="gSave">Speichern</button>
     </div>
     <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="b b-sm" onclick="closeModal();kurzbefehlModal()">${ico("phone")}Kurzbefehle</button>
       <button class="b b-sm" onclick="exportData()">${ico("down")}Backup</button>
       <button class="b b-sm" onclick="importData()">${ico("up")}Einspielen</button>
       <button class="b b-sm" onclick="reimportOld()">${ico("cloud")}Aus altem Tracker</button>
@@ -1900,14 +2033,21 @@ R.heute=function(){
           </div>
         </div>
         ${hs.length?`<div style="display:flex;flex-direction:column;gap:2px">${hs.map(h=>{
-          const on=!!log[h.id], st=streak(h);
+          const on=!!log[h.id];
+          const soll=habitSoll(h), wo=wochenTreffer(h,k);
+          /* Ziel erreicht und heute nicht angehakt: bleibt sichtbar,
+             zählt aber nicht mehr als offener Posten. */
+          const erledigt = soll<7 && !on && wo>=soll;
+          const kraft=habitStaerke(h,k), se=habitSerie(h);
           const last7=[...Array(7)].map((_,i)=>!!S.habitLog[dk(addD(parsedk(k),-6+i))]?.[h.id]);
-          return `<button class="hb${on?" on":""}" data-h="${h.id}" aria-pressed="${on}">
+          return `<button class="hb${on?" on":""}${erledigt?" fertig":""}" data-h="${h.id}" aria-pressed="${on}"
+            title="Stärke ${kraft} %${se.n?` · ${se.n} ${se.e} in Folge`:""}">
             <span class="hb-box">${ico("check")}</span>
             <span class="hb-dot" style="background:${h.color}"></span>
             <span class="hb-n">${esc(h.name)}</span>
+            ${soll<7?`<span class="hb-w${wo>=soll?" voll":""}">${wo}/${soll}</span>`:""}
             <span class="hb-mini">${last7.map(d=>`<i class="${d?"f":""}"></i>`).join("")}</span>
-            ${st>0?`<span class="hb-s">${st}d</span>`:""}
+            <span class="hb-s" style="--kf:${kraft}%">${kraft} %</span>
           </button>`;}).join("")}</div>`
         :`<div class="empty">${ico("list")}<div>Noch keine Gewohnheiten.<br>Lege unter „Gewohnheiten“ die erste an.</div></div>`}
       </div>
@@ -2000,17 +2140,73 @@ function smartCapture(raw){
    ============================================================ */
 const PALETTE=["#4fe3d2","#5a9ded","#9d7bff","#ff6b9d","#ff7a5c","#d9a441","#34d99a","#7dd87d","#8b96a8","#e879f9"];
 
+/* Schlägt für jede Gewohnheit das Wochenziel vor, das zu ihrem
+   tatsächlichen Verlauf passt — gerundet auf die nächste ganze Zahl.
+   Vorgeschlagen, nicht gesetzt: was du vorhast, weiß nur du. */
+function zielVorschlaege(){
+  return activeHabits().map(h=>{
+    const tage=Math.max(7,Math.round((new Date()-parsedk(h.createdAt))/86400000));
+    const treffer=Object.values(S.habitLog||{}).filter(t=>t[h.id]).length;
+    const proWoche=treffer/tage*7;
+    const neu=clamp(Math.round(proWoche),1,7);
+    return {h, ist:proWoche, neu, aendert:neu!==habitSoll(h)&&treffer>=4};
+  }).filter(v=>v.aendert);
+}
+
+function zielModal(){
+  const v=zielVorschlaege();
+  if(!v.length){ toast("Die Ziele passen schon"); return; }
+  modal(`<h3>Wochenziele anpassen</h3>
+    <p style="font-size:var(--t-sm);color:var(--text-dim);line-height:1.55;margin-bottom:14px">
+      Vorgeschlagen ist, was du bisher tatsächlich geschafft hast. Damit misst
+      NOVA an dem, was du vorhast, statt jede Gewohnheit als täglich zu behandeln.
+      Du entscheidest je Zeile.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto">
+      ${v.map(x=>`<div class="td-alt-row" data-zrow="${x.h.id}">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:var(--t-sm);word-break:break-word">${esc(x.h.name)}</div>
+          <div style="font-size:var(--t-xs);color:var(--text-faint);margin-top:3px">
+            bisher ${habitSoll(x.h)===7?"täglich":habitSoll(x.h)+"×/Woche"} ·
+            tatsächlich ${x.ist.toFixed(1).replace(".",",")}×/Woche</div>
+        </div>
+        <button class="b b-sm b-1" data-zset="${x.h.id}|${x.neu}">auf ${x.neu}×</button>
+        <button class="b b-sm" data-zskip="${x.h.id}">lassen</button>
+      </div>`).join("")}
+    </div>
+    <div class="mo-act"><button class="b b-1" onclick="closeModal()">Fertig</button></div>`);
+  const M=document.getElementById("modal");
+  const weg=id=>{ M.querySelector(`[data-zrow="${id}"]`)?.remove();
+    if(!M.querySelector("[data-zrow]")){ closeModal(); R.habits(); } };
+  M.querySelectorAll("[data-zset]").forEach(bt=>bt.onclick=()=>{
+    const [id,n]=bt.dataset.zset.split("|");
+    const h=S.habits.find(x=>x.id===id); if(h){ h.proWoche=+n; save(); }
+    weg(id); });
+  M.querySelectorAll("[data-zskip]").forEach(bt=>bt.onclick=()=>{
+    const h=S.habits.find(x=>x.id===bt.dataset.zskip);
+    if(h){ h.proWoche=habitSoll(h); save(); }   /* Wunsch festhalten, nicht erneut fragen */
+    weg(bt.dataset.zskip); });
+}
+
 R.habits=function(){
   const hs=(S.habits||[]).filter(h=>!h.archived);
   const arch=(S.habits||[]).filter(h=>h.archived);
+  const vs=zielVorschlaege();
+  const vorschlag = vs.length ? `<div class="td-hinweis" style="margin-bottom:14px">
+      <span>Bei ${vs.length} ${vs.length===1?"Gewohnheit passt das Wochenziel"
+        :"Gewohnheiten passt das Wochenziel"} nicht zu deinem Verlauf.</span>
+      <button class="b b-sm" id="hZiel">Ansehen</button></div>` : "";
   document.getElementById("v-habits").innerHTML=`
     <div class="p-head" style="margin-bottom:16px">
       <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Gewohnheiten</div>
-      <div class="p-note">${hs.length} aktiv${arch.length?` · ${arch.length} archiviert`:""}</div></div>
+      <div class="p-note">${hs.length} aktiv${arch.length?` · ${arch.length} archiviert`:""} ·
+        Die Stärke steigt mit jedem Haken und fällt ohne langsam ab —
+        ohne Wiederholung halbiert sie sich in ${STAERKE_HW} Tagen.</div></div>
       <button class="b b-1" id="hAdd">${ico("plus")}Neue Gewohnheit</button>
     </div>
+    ${vorschlag}
     ${hs.length?`<div class="grid c2">${hs.map(h=>{
-      const st=streak(h), r30=habitRate(h,30), r7=habitRate(h,7);
+      const se=habitSerie(h), kraft=habitStaerke(h), r30=habitRate(h,30);
+      const soll=habitSoll(h), wo=wochenTreffer(h,today());
       const cells=[...Array(84)].map((_,i)=>{ const d=addD(new Date(),-83+i), k=dk(d);
         const on=!!S.habitLog[k]?.[h.id], fut=k>today(), pre=k<h.createdAt;
         return `<i title="${k}" style="width:9px;height:9px;border-radius:2px;background:${fut||pre?"transparent":on?h.color:"var(--track)"};opacity:${on?1:.85}"></i>`;}).join("");
@@ -2022,8 +2218,17 @@ R.habits=function(){
             <button class="b b-i b-sm" data-arch="${h.id}" title="Archivieren" style="width:30px;height:30px">${ico("trash")}</button>
           </div>
         </div>
-        <div style="display:flex;gap:20px;margin-bottom:12px">
-          ${[[st,"Serie"],[r7+" %","7 Tage"],[r30+" %","30 Tage"]].map(([v,l])=>
+        <div class="hk-kraft">
+          <div class="hk-z" style="--kc:${h.color}">${kraft} %</div>
+          <div style="flex:1;min-width:0">
+            <div class="hk-bar"><i style="width:${kraft}%;background:${h.color}"></i></div>
+            <div class="hk-u">Stärke</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:20px;margin-bottom:12px;flex-wrap:wrap">
+          ${[[soll>=7?"täglich":`${wo}/${soll}`, soll>=7?"Ziel":"diese Woche"],
+             [se.n, se.e+" in Folge"],
+             [r30+" %","letzte 30 Tage"]].map(([v,l])=>
             `<div><div style="font-family:var(--f-disp);font-size:var(--t-lg);font-weight:700;font-variant-numeric:tabular-nums">${v}</div>
              <div style="font-size:var(--t-xs);color:var(--text-faint)">${l}</div></div>`).join("")}
         </div>
@@ -2039,6 +2244,7 @@ R.habits=function(){
 
   const V=document.getElementById("v-habits");
   V.querySelector("#hAdd").onclick=()=>habitModal(null);
+  V.querySelector("#hZiel")?.addEventListener("click",zielModal);
   V.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>habitModal(b.dataset.edit));
   V.querySelectorAll("[data-arch]").forEach(b=>b.onclick=()=>{
     const h=S.habits.find(x=>x.id===b.dataset.arch); if(!h)return;
@@ -2053,12 +2259,25 @@ function habitModal(id){
   let col=h?h.color:PALETTE[(S.habits||[]).length%PALETTE.length];
   modal(`<h3>${h?"Gewohnheit bearbeiten":"Neue Gewohnheit"}</h3>
     <label>Name</label><input id="hnName" value="${h?esc(h.name):""}" placeholder="z. B. 20 Minuten lesen">
+    <label>Wie oft pro Woche?</label>
+    <div class="chips" id="hnSoll">${[1,2,3,4,5,6,7].map(n=>
+      `<button data-s="${n}" class="chip${(h?habitSoll(h):7)===n?" on":""}">${n===7?"täglich":n+"×"}</button>`).join("")}</div>
+    <div style="font-size:var(--t-xs);color:var(--text-faint);margin:-4px 0 12px;line-height:1.5">
+      Unter „täglich" gilt die Gewohnheit als erledigt, sobald das Wochenziel
+      erreicht ist — sie zählt dann nicht mehr als offener Posten.</div>
     <label>Farbe</label>
     <div class="chips" id="hnCols">${PALETTE.map(c=>
       `<button data-c="${c}" style="width:28px;height:28px;padding:0;border-radius:50%;background:${c};border:2px solid ${c===col?"var(--text)":"transparent"};transform:${c===col?"scale(1.12)":"none"};transition:transform var(--d1) var(--ez)"></button>`).join("")}</div>
     <div class="mo-act">
       <button class="b" onclick="closeModal()">Abbrechen</button>
       <button class="b b-1" id="hnSave">${h?"Speichern":"Anlegen"}</button></div>`);
+  let soll=h?habitSoll(h):7;
+  const sbox=document.getElementById("hnSoll");
+  sbox.querySelectorAll("[data-s]").forEach(bt=>bt.onclick=()=>{
+    soll=+bt.dataset.s;
+    sbox.querySelectorAll("[data-s]").forEach(x=>x.classList.remove("on"));
+    bt.classList.add("on");
+  });
   const box=document.getElementById("hnCols");
   box.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{
     col=b.dataset.c;
@@ -2069,8 +2288,8 @@ function habitModal(id){
   document.getElementById("hnSave").onclick=()=>{
     const n=document.getElementById("hnName").value.trim();
     if(!n){ toast("Bitte einen Namen angeben","x"); return; }
-    if(h){ h.name=n; h.color=col; }
-    else S.habits.push({id:uid(),name:n,color:col,createdAt:today(),archived:false});
+    if(h){ h.name=n; h.color=col; h.proWoche=soll; }
+    else S.habits.push({id:uid(),name:n,color:col,proWoche:soll,createdAt:today(),archived:false});
     save(); closeModal(); toast(h?"Gespeichert":"Angelegt"); go(VIEW);
   };
 }
@@ -3701,6 +3920,89 @@ function openBlock(k,type,start,end,note,id){
     save(); closeModal(); toast("Gelöscht"); R.planer(); };
 }
 
+/* ── Eintragen von außen ────────────────────────────────
+   Damit man vom Sperrbildschirm oder per Siri etwas eintragen kann,
+   ohne die App zu durchsuchen. Ein Kurzbefehl braucht dafür nur
+   „URL öffnen" — kein Zugangsschlüssel, keine Schnittstelle: NOVA
+   liest den Anhang der Adresse, trägt ein und speichert.
+
+   Beispiele:
+     #haken=<kennung>     Gewohnheit für heute umschalten
+     #wert=schlaf:7.5     Schlaf, lernen, handy oder score setzen
+     #aufgabe=Milch       neue Aufgabe anlegen
+     #solide              heutigen Tag als solide abhaken
+   ──────────────────────────────────────────────────────── */
+const URL_WERTE={schlaf:"sleepHours", lernen:"study", handy:"phone", score:"sleepScore"};
+
+function ausUrl(){
+  const roh=(location.hash||"").replace(/^#/,"");
+  if(!roh) return;
+  history.replaceState(null,"",location.pathname+location.search);
+  let meldung=null;
+  try{
+    const [feld,...rest]=decodeURIComponent(roh).split("=");
+    const wert=rest.join("=");
+    if(feld==="haken"){
+      const h=activeHabits().find(x=>x.id===wert||x.name===wert);
+      if(!h) meldung=["Gewohnheit nicht gefunden","x"];
+      else{ toggleHabit(today(),h.id);
+        meldung=[`${h.name} ${S.habitLog[today()]?.[h.id]?"abgehakt":"zurückgenommen"}`]; }
+    }
+    else if(feld==="wert"){
+      const [was,zahl]=wert.split(":");
+      const f2=URL_WERTE[String(was).toLowerCase()];
+      const v=parseFloat(String(zahl).replace(",","."));
+      if(!f2||isNaN(v)) meldung=["Wert nicht verstanden","x"];
+      else{ S.metrics[today()]=Object.assign({},S.metrics[today()],{[f2]:v});
+        save(); meldung=[`${was} auf ${v} gesetzt`]; }
+    }
+    else if(feld==="aufgabe"&&wert.trim()){
+      S.todos.push({id:uid(),text:wert.trim(),done:false,type:"short",
+        priority:"mid",date:today(),createdAt:Date.now()});
+      save(); meldung=["Aufgabe angelegt"];
+    }
+    else if(feld==="solide"){
+      toggleCheck(today());
+      meldung=[isChecked(today())?"Tag als solide markiert":"Markierung zurückgenommen"];
+    }
+  }catch(e){ meldung=["Konnte den Aufruf nicht lesen","x"]; }
+  if(meldung) setTimeout(()=>toast(meldung[0],meldung[1]||"check"),700);
+}
+
+/* Fertige Adressen zum Kopieren — je Gewohnheit eine. */
+function kurzbefehlModal(){
+  const basis=location.origin+location.pathname;
+  const zeile=(t,u)=>`<div class="kb-z">
+    <div style="flex:1;min-width:0">
+      <div class="kb-t">${esc(t)}</div>
+      <div class="kb-u">${esc(u)}</div>
+    </div>
+    <button class="b b-sm" data-kb="${esc(u)}">Kopieren</button></div>`;
+  modal(`<h3>Vom Sperrbildschirm eintragen</h3>
+    <p style="font-size:var(--t-sm);color:var(--text-dim);line-height:1.6;margin-bottom:14px">
+      Lege in der Kurzbefehle-App einen Kurzbefehl mit der einzigen Aktion
+      <b>„URL öffnen"</b> an und setze eine dieser Adressen ein. NOVA öffnet sich,
+      trägt ein und speichert. Dein Zugangsschlüssel bleibt außen vor — die App
+      hat ihn auf diesem Gerät ohnehin.</p>
+    <div style="display:flex;flex-direction:column;gap:7px;max-height:46vh;overflow-y:auto">
+      ${activeHabits().map(h=>zeile(h.name, `${basis}#haken=${h.id}`)).join("")}
+      ${zeile("Tag als solide abhaken", basis+"#solide")}
+      ${zeile("Schlaf eintragen (Zahl anpassen)", basis+"#wert=schlaf:7.5")}
+      ${zeile("Lernzeit eintragen", basis+"#wert=lernen:3")}
+      ${zeile("Aufgabe anlegen", basis+"#aufgabe=Text%20hier")}
+    </div>
+    <p style="font-size:var(--t-xs);color:var(--text-faint);line-height:1.55;margin-top:13px">
+      Jeder Aufruf wirkt sofort. Ein versehentlicher Haken lässt sich in der App
+      mit einem Tipp zurücknehmen — öffne solche Adressen trotzdem nur, wenn du
+      sie selbst angelegt hast.</p>
+    <div class="mo-act"><button class="b b-1" onclick="closeModal()">Schließen</button></div>`);
+  document.querySelectorAll("[data-kb]").forEach(bt=>bt.onclick=()=>{
+    navigator.clipboard?.writeText(bt.dataset.kb)
+      .then(()=>toast("Adresse kopiert"))
+      .catch(()=>toast("Kopieren ging nicht — Adresse von Hand übernehmen","x"));
+  });
+}
+
 /* ============================================================
    15 — START
    ============================================================ */
@@ -3709,6 +4011,7 @@ garminNeu=mergeGarmin();
 if(garminNeu) persist();
 shell();
 if(cloudOn()){ setSync("busy"); pullCloud().then(ok=>{ if(ok) go(VIEW); }); } else setSync("off");
+ausUrl();
 if(garminNeu) setTimeout(()=>toast(`${garminNeu} Werte von Garmin ergänzt`,"heart"),1400);
 if(imported) setTimeout(()=>toast(imported==="seed"
   ? "Dein Stand vom 1. August geladen" : "Daten aus deinem Tracker übernommen","cloud"),600);

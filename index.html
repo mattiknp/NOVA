@@ -458,6 +458,29 @@ select option{ background:#141a26; }
 
 
 
+/* Zeile im Ziel-Dialog: Name oben, Knöpfe darunter. Nebeneinander
+   quetschten drei Knöpfe den Namen auf zwei Zeilen. */
+.zl-row{ padding:11px 12px; border-radius:var(--r); background:rgba(255,255,255,.035); }
+.zl-akt{ display:flex; gap:6px; margin-top:9px; flex-wrap:wrap; }
+.zl-akt .b{ flex:1; min-width:92px; justify-content:center; }
+
+/* ── Gesamtstärke ─────────────────────────────────────── */
+.gs{ margin:2px 0 12px; }
+.gs-kopf{ display:flex; align-items:baseline; gap:9px; margin-bottom:7px; flex-wrap:wrap; }
+.gs-l{ font-size:var(--t-sm); color:var(--text-dim); }
+.gs-z{
+  font-family:var(--f-disp); font-size:var(--t-lg); font-weight:700;
+  font-variant-numeric:tabular-nums; color:var(--c1);
+}
+.gs-d{
+  font-size:var(--t-xs); font-weight:600; padding:2px 7px; border-radius:var(--r-pill);
+  margin-left:auto;
+}
+.gs-d.auf{ color:var(--good); background:color-mix(in srgb, var(--good) 13%, transparent); }
+.gs-d.ab{ color:var(--warn); background:color-mix(in srgb, var(--warn) 13%, transparent); }
+.gs-bar{ height:5px; border-radius:var(--r-pill); background:var(--track); overflow:hidden; }
+.gs-bar i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--c1); }
+
 /* ── Kurzbefehl-Adressen ──────────────────────────────── */
 .kb-z{
   display:flex; align-items:center; gap:10px; padding:9px 11px;
@@ -1003,6 +1026,17 @@ function habitStaerke(h,bis){
     if(st>1) st=1;
   }
   return Math.round(st*100);
+}
+
+/* Eine Zahl über alle Gewohnheiten. Der Mittelwert der einzelnen
+   Stärken — ungewichtet, weil keine Gewohnheit mehr wiegt als eine
+   andere. Gewohnheiten, die es an dem Tag noch nicht gab, bleiben
+   draußen, sonst würde eine neu angelegte den Schnitt drücken. */
+function gesamtStaerke(bis){
+  const ende=bis||today();
+  const hs=activeHabits().filter(h=>h.createdAt<=ende);
+  if(!hs.length) return null;
+  return Math.round(hs.reduce((a,h)=>a+habitStaerke(h,ende),0)/hs.length);
 }
 
 /* Serie. Bei täglichen Gewohnheiten in Tagen, bei allen anderen in
@@ -1925,6 +1959,7 @@ R.heute=function(){
   const hs=activeHabits().filter(h=>h.createdAt<=k);
   const offen=todoOffen();
   const fok=fokusIds().map(id=>offen.find(t=>t.id===id)).filter(Boolean);
+  const gs=gesamtStaerke(k), gsAlt=gesamtStaerke(dk(addD(parsedk(k),-7)));
   const log=S.habitLog[k]||{};
   const plan=daySegments(k);
   const sp=sportOn(k);
@@ -2032,6 +2067,15 @@ R.heute=function(){
             ${!isT?`<button class="b b-sm" id="hToday">Heute</button>`:""}
           </div>
         </div>
+        ${gs!==null?`<div class="gs">
+          <div class="gs-kopf">
+            <span class="gs-l">Gesamtstärke</span>
+            <span class="gs-z">${gs} %</span>
+            ${gsAlt!==null&&gs!==gsAlt?`<span class="gs-d ${gs>gsAlt?"auf":"ab"}">
+              ${gs>gsAlt?"+":""}${gs-gsAlt} seit letzter Woche</span>`:""}
+          </div>
+          <div class="gs-bar"><i style="width:${gs}%"></i></div>
+        </div>`:""}
         ${hs.length?`<div style="display:flex;flex-direction:column;gap:2px">${hs.map(h=>{
           const on=!!log[h.id];
           const soll=habitSoll(h), wo=wochenTreffer(h,k);
@@ -2140,16 +2184,22 @@ function smartCapture(raw){
    ============================================================ */
 const PALETTE=["#4fe3d2","#5a9ded","#9d7bff","#ff6b9d","#ff7a5c","#d9a441","#34d99a","#7dd87d","#8b96a8","#e879f9"];
 
-/* Schlägt für jede Gewohnheit das Wochenziel vor, das zu ihrem
-   tatsächlichen Verlauf passt — gerundet auf die nächste ganze Zahl.
-   Vorgeschlagen, nicht gesetzt: was du vorhast, weiß nur du. */
+/* Zwei Vorschläge je Gewohnheit.
+
+   „Passend" ist dein eigener Schnitt, gerundet — ein Spiegel. Wer den
+   nimmt, steht sofort bei 90 % und bleibt dort: fair gemessen, aber
+   ohne Zug. „Fordernd" liegt eine Wiederholung darüber. Nah genug,
+   dass es erreichbar bleibt, weit genug, dass es etwas kostet.
+   Gesetzt wird nichts von selbst. */
 function zielVorschlaege(){
   return activeHabits().map(h=>{
     const tage=Math.max(7,Math.round((new Date()-parsedk(h.createdAt))/86400000));
     const treffer=Object.values(S.habitLog||{}).filter(t=>t[h.id]).length;
     const proWoche=treffer/tage*7;
-    const neu=clamp(Math.round(proWoche),1,7);
-    return {h, ist:proWoche, neu, aendert:neu!==habitSoll(h)&&treffer>=4};
+    const passend =clamp(Math.round(proWoche),1,7);
+    const fordernd=clamp(passend+1,1,7);
+    return {h, ist:proWoche, passend, fordernd,
+            aendert:treffer>=4&&(passend!==habitSoll(h)||fordernd!==habitSoll(h))};
   }).filter(v=>v.aendert);
 }
 
@@ -2158,19 +2208,24 @@ function zielModal(){
   if(!v.length){ toast("Die Ziele passen schon"); return; }
   modal(`<h3>Wochenziele anpassen</h3>
     <p style="font-size:var(--t-sm);color:var(--text-dim);line-height:1.55;margin-bottom:14px">
-      Vorgeschlagen ist, was du bisher tatsächlich geschafft hast. Damit misst
-      NOVA an dem, was du vorhast, statt jede Gewohnheit als täglich zu behandeln.
-      Du entscheidest je Zeile.</p>
+      <b>Fordernd</b> liegt eine Wiederholung über dem, was du bisher schaffst —
+      damit das Ziel dich zieht. <b>Passend</b> ist genau dein bisheriger Schnitt:
+      fair gemessen, aber ohne Anspruch. Du entscheidest je Zeile.</p>
     <div style="display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow-y:auto">
-      ${v.map(x=>`<div class="td-alt-row" data-zrow="${x.h.id}">
+      ${v.map(x=>`<div class="zl-row" data-zrow="${x.h.id}">
         <div style="flex:1;min-width:0">
           <div style="font-size:var(--t-sm);word-break:break-word">${esc(x.h.name)}</div>
           <div style="font-size:var(--t-xs);color:var(--text-faint);margin-top:3px">
             bisher ${habitSoll(x.h)===7?"täglich":habitSoll(x.h)+"×/Woche"} ·
             tatsächlich ${x.ist.toFixed(1).replace(".",",")}×/Woche</div>
         </div>
-        <button class="b b-sm b-1" data-zset="${x.h.id}|${x.neu}">auf ${x.neu}×</button>
+        <div class="zl-akt">
+        <button class="b b-sm b-1" data-zset="${x.h.id}|${x.fordernd}"
+          title="eine Wiederholung über deinem Schnitt">${x.fordernd}× fordernd</button>
+        <button class="b b-sm" data-zset="${x.h.id}|${x.passend}"
+          title="genau dein bisheriger Schnitt">${x.passend}× passend</button>
         <button class="b b-sm" data-zskip="${x.h.id}">lassen</button>
+        </div>
       </div>`).join("")}
     </div>
     <div class="mo-act"><button class="b b-1" onclick="closeModal()">Fertig</button></div>`);
@@ -2192,13 +2247,14 @@ R.habits=function(){
   const arch=(S.habits||[]).filter(h=>h.archived);
   const vs=zielVorschlaege();
   const vorschlag = vs.length ? `<div class="td-hinweis" style="margin-bottom:14px">
-      <span>Bei ${vs.length} ${vs.length===1?"Gewohnheit passt das Wochenziel"
-        :"Gewohnheiten passt das Wochenziel"} nicht zu deinem Verlauf.</span>
+      <span>Für ${vs.length} ${vs.length===1?"Gewohnheit gibt es ein passenderes Wochenziel"
+        :"Gewohnheiten gibt es passendere Wochenziele"}.</span>
       <button class="b b-sm" id="hZiel">Ansehen</button></div>` : "";
   document.getElementById("v-habits").innerHTML=`
     <div class="p-head" style="margin-bottom:16px">
       <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Gewohnheiten</div>
-      <div class="p-note">${hs.length} aktiv${arch.length?` · ${arch.length} archiviert`:""} ·
+      <div class="p-note">${hs.length} aktiv${arch.length?` · ${arch.length} archiviert`:""}${
+        gesamtStaerke()!==null?` · Gesamtstärke ${gesamtStaerke()} %`:""} ·
         Die Stärke steigt mit jedem Haken und fällt ohne langsam ab —
         ohne Wiederholung halbiert sie sich in ${STAERKE_HW} Tagen.</div></div>
       <button class="b b-1" id="hAdd">${ico("plus")}Neue Gewohnheit</button>

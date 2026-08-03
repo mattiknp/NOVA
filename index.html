@@ -521,7 +521,22 @@ select option{ background:#141a26; }
 .mcell-mk{ display:flex; gap:2px; height:4px; }
 .mcell-mk i{ width:4px; height:4px; border-radius:50%; display:block; }
 
+/* Planer: drei Spalten am Rechner, gestapelt auf dem Handy */
+.pl-grid{ grid-template-columns:minmax(0,1fr) minmax(0,1fr) 250px; align-items:start; }
+@media(max-width:900px){ .pl-grid{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  .pl-todo{ grid-column:1/-1; } }
+@media(max-width:640px){ .pl-grid{ grid-template-columns:minmax(0,1fr); } }
+
 .hd-nx-stage{ position:relative; }
+/* Werteleiste: auf großen Schirmen überflüssig, dort beschriftet
+   die Kugel sich selbst. */
+.nx-werte{ display:none; }
+.nx-wert{ display:flex; align-items:baseline; gap:5px; min-width:0; }
+.nx-wert i{ width:6px; height:6px; border-radius:2px; flex:0 0 auto; align-self:center; }
+.nx-wert b{ font-family:var(--f-disp); font-size:var(--t-sm); font-weight:700;
+  font-variant-numeric:tabular-nums; white-space:nowrap; }
+.nx-wert em{ font-style:normal; font-size:10px; color:var(--text-faint);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .hd-nx-stage::after{
   content:""; position:absolute; inset:0; pointer-events:none;
   background:radial-gradient(80% 70% at 50% 50%, transparent 55%, rgba(5,7,12,.55) 100%);
@@ -531,6 +546,12 @@ select option{ background:#141a26; }
 @media(max-width:860px){
   .hd-top,.hd-main{ grid-template-columns:minmax(0,1fr); }
   .wk-row{ grid-template-columns:78px minmax(0,1fr) auto; gap:9px; }
+
+  /* Kugel kompakter, Werte darunter in zwei Spalten */
+  .hd-nexus{ padding:14px 14px 12px; }
+  .nx-werte{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+             gap:6px 12px; margin-top:10px; padding-top:11px;
+             border-top:1px solid var(--line); }
 
   /* Ziele nebeneinander statt drei volle Bildschirme untereinander */
   .hd-goals{ grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
@@ -565,27 +586,31 @@ select option{ background:#141a26; }
   
 }
 
-/* Sehr schmal: jedes Ziel eine Zeile, Name bleibt sichtbar */
+/* Sehr schmal: jedes Ziel eine Zeile, Knopf darunter über die Breite */
 @media(max-width:430px){
   .hd-goals{ grid-template-columns:minmax(0,1fr); gap:7px; }
-  .goal{ display:grid; grid-template-columns:auto minmax(0,1fr) auto;
-         align-items:center; gap:2px 10px; padding:12px 13px; }
+  .goal{ display:grid; grid-template-columns:auto minmax(0,1fr);
+         align-items:center; gap:1px 11px; padding:12px 13px; }
   .goal-top{ margin:0; grid-column:1; grid-row:1/3; }
-  .goal-ico svg{ width:18px; height:18px; }
+  .goal-ico svg{ width:19px; height:19px; }
   .goal-name{ display:block; grid-column:2; grid-row:1; font-size:var(--t-sm); }
-  .goal-num{ grid-column:2; grid-row:2; flex-direction:row; align-items:baseline; gap:7px; }
-  .goal-num b{ font-size:1.45rem; }
-  .goal-num span{ font-size:var(--t-xs); }
-  .goal-act{ grid-column:3; grid-row:1/3; width:auto; margin:0; white-space:nowrap; }
-  .goal-bar{ grid-column:1/-1; margin:9px 0 0; }
-  .goal-foot{ grid-column:1/-1; flex-direction:row; justify-content:space-between; margin-top:5px; }
+  .goal-num{ grid-column:2; grid-row:2; flex-direction:row; align-items:baseline;
+             gap:6px; min-width:0; }
+  .goal-num b{ font-size:1.4rem; }
+  .goal-num span{ font-size:10.5px; color:var(--text-faint); }
+  .goal-bar{ grid-column:1/-1; margin:10px 0 0; }
+  .goal-foot{ grid-column:1/-1; flex-direction:row; justify-content:space-between;
+              margin-top:6px; gap:10px; }
+  .goal-foot span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .goal-act{ grid-column:1/-1; width:100%; margin-top:10px; padding:9px; font-size:var(--t-sm); }
 }
 
 /* Leere Karten sollen nicht ganze Bildschirme belegen */
 @media(max-width:860px){
-  .hd-plan{ padding-bottom:8px; }
-  .hd-plan .empty{ padding:10px 12px 14px; }
+  .hd-plan{ padding-bottom:10px; }
+  .hd-plan .empty{ padding:6px 4px 8px; text-align:left; font-size:var(--t-sm); }
   .hd-plan .empty svg{ display:none; }
+  .hd-plan .p-head{ margin-bottom:4px; }
 }
 @media(max-width:860px){
   .shell{ grid-template-columns:1fr; }
@@ -700,7 +725,11 @@ function mergeGarmin(){
     const tag=S.sport[k]||(S.sport[k]=[]);
     /* Von Hand erfasste Einheit derselben Art und Länge: die bekommt
        nur die Kennung, damit sie nicht ein zweites Mal auftaucht. */
-    const treffer=tag.find(e=>!e.gid&&e.type===GARMIN_MAP[typ]&&Math.abs((e.duration||0)-min)<=20);
+    /* Garmin misst die reine Bewegungszeit, von Hand notiert man meist
+       die ganze Einheit. Deshalb nicht über die Dauer abgleichen,
+       sondern über Tag und Art — sonst entsteht ein zweiter Eintrag
+       für dasselbe Training. */
+    const treffer=tag.find(e=>!e.gid&&e.type===GARMIN_MAP[typ]);
     if(treffer){ treffer.gid=gid; if(!nv(treffer.hr)) treffer.hr=hr; if(von&&!treffer.start) treffer.start=von; continue; }
     tag.push({id:uid(),gid,type:GARMIN_MAP[typ]||"other",duration:min,hr,
               rpe:null,notes:name,kraftSubtype:null,start:von||null});
@@ -821,7 +850,13 @@ const min2hm=v=>`${p2(Math.floor(v/60)%24)}:${p2(Math.round(v%60))}`;
    Vortag. Alle Ansichten rechnen darüber, damit sie sich einig sind. */
 function daySegments(k,typeFilter){
   const out=[];
-  const take=b=>!typeFilter||typeFilter==="all"||b.type===typeFilter;
+  /* Schlaf färbt unter „Alles“ die halbe Karte und erschlägt alles
+     andere. Er erscheint nur, wenn man ihn ausdrücklich wählt —
+     egal ob er aus dem Planer oder von der Uhr kommt. */
+  const take=b=>{
+    if(!typeFilter||typeFilter==="all") return b.type!=="schlafen";
+    return b.type===typeFilter;
+  };
   planDay(k).forEach(b=>{
     if(!take(b)) return;
     const s=hm2min(b.start), e=hm2min(b.end);
@@ -1592,6 +1627,7 @@ R.heute=function(){
         </div>
       </div>
       <div class="hd-nx-stage"><canvas id="nxMini" style="display:block;width:100%"></canvas></div>
+      <div class="nx-werte" id="nxWerte"></div>
     </div>
 
     <div class="p hd-plan">
@@ -1725,6 +1761,10 @@ R.heute=function(){
   if(mini){
     NEXUS_MINI=makeNexus(mini,{mini:true,ratio:.78,maxH:380});
     NEXUS_MINI.start();
+    const wl=V.querySelector("#nxWerte");
+    if(wl) wl.innerHTML=NEXUS_MINI.nodes.map(n=>
+      `<span class="nx-wert"><i style="background:${n.color}"></i>
+        <b>${n.sub}</b><em>${n.key}</em></span>`).join("");
     mini.onclick=()=>{ if(Math.abs(NEXUS_MINI.vy)<.004) go("nexus"); };
   }
 };
@@ -2142,9 +2182,8 @@ function makeNexus(cv,opt={}){
         const ly=below?p.y+r+(X.mini?11:14):p.y-r-(X.mini?13:18);
         ctx.textAlign="center";
         if(X.eng){
-          /* nur der Wert, direkt am Knoten */
-          ctx.fillStyle="#eaf2f6"; ctx.font='700 10px system-ui, sans-serif';
-          ctx.fillText(n.sub,p.x,ly+3);
+          /* Auf schmalen Schirmen bleibt die Kugel stumm — die Werte
+             stehen darunter als Leiste, dort kollidiert nichts. */
         } else {
           ctx.fillStyle="#93a7b8"; ctx.font=`${X.mini?8.5:10}px system-ui, sans-serif`;
           ctx.fillText(n.key,p.x,ly);
@@ -3051,9 +3090,9 @@ R.planer=function(){
       `<button class="chip" data-bt="${t.id}" draggable="true"
         style="border-color:${t.bg}66;background:${t.bg}1f;color:${t.bg}">${esc(t.label)}</button>`).join("")}</div>
   </div>
-  <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) 250px;align-items:start">
+  <div class="grid pl-grid">
     ${colHtml(cols[0],0)}${colHtml(cols[1],1)}
-    <div class="p" style="padding:0;overflow:hidden">
+    <div class="p pl-todo" style="padding:0;overflow:hidden">
       <div style="padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:var(--t-base)">Offene Aufgaben</div>
       <div style="padding:11px">
         <div style="display:flex;gap:6px;margin-bottom:10px">

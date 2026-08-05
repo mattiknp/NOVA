@@ -310,6 +310,58 @@ select option{ background:#141a26; }
 .hb-dot{ width:7px; height:7px; border-radius:50%; flex:0 0 auto; }
 .hb-n{ flex:1; font-size:var(--t-base); font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; }
 .hb.on .hb-n{ color:var(--text-dim); }
+/* ── Gewohnheitszeile im Stil von uhabits ─────────────────
+   Die letzten sieben Tage stehen dauerhaft in der Zeile und sind
+   einzeln antippbar. Vorher gab es nur den heutigen Haken und sieben
+   dünne Striche zum Ansehen — gestern nachtragen ging gar nicht. */
+.hb-kopf{
+  display:flex; align-items:center; gap:12px; padding:0 12px 7px;
+  border-bottom:1px solid var(--line); margin-bottom:5px;
+  font-size:var(--t-xs); color:var(--text-faint);
+}
+.hb-kopf-n{ flex:1; min-width:0; }
+.hb-kopf-s{ flex:0 0 auto; min-width:44px; text-align:right; }
+.hb2{
+  display:flex; align-items:center; gap:12px; width:100%;
+  padding:8px 12px; border-radius:var(--r);
+  border:1px solid transparent;
+  transition:background-color var(--d2) var(--ez), border-color var(--d2) var(--ez);
+}
+.hb2:hover{ background:rgba(255,255,255,.04); border-color:var(--line); }
+.hb2.on{ background:rgba(79,227,210,.07); border-color:rgba(79,227,210,.22); }
+.hb2.fertig{ opacity:.6; }
+.hb2.fertig:hover{ opacity:1; }
+.hb-tage{ display:flex; gap:4px; flex:0 0 auto; }
+.ht-l{
+  width:24px; text-align:center; font-family:var(--f-mono);
+  font-size:9.5px; letter-spacing:-.03em; color:var(--text-faint);
+}
+.ht-l.heute{ color:var(--c1); }
+.ht{
+  width:24px; height:24px; border-radius:7px; flex:0 0 auto;
+  border:1.5px solid var(--line-2); background:transparent;
+  transition:background-color var(--d1) var(--ez), border-color var(--d1) var(--ez), transform var(--d1) var(--ez);
+}
+.ht:hover:not(:disabled){ border-color:var(--hc); transform:scale(1.08); }
+.ht.an{ background:var(--hc); border-color:var(--hc); }
+.ht.heute{ box-shadow:0 0 0 2px rgba(79,227,210,.28); }
+.ht.aus{ border-color:transparent; background:rgba(255,255,255,.02); cursor:default; }
+
+@media(max-width:640px){
+  /* Auf dem Handy bekommen die Tage eine eigene Zeile — nebeneinander
+     bliebe für den Namen nichts übrig. Größere Felder, besser zu treffen.
+     Die Wochentage bleiben stehen, sonst weiß man nicht, welche Spalte
+     welcher Tag ist. */
+  .hb-kopf{ padding:0 12px 6px; }
+  .hb-kopf-n, .hb-kopf-s{ display:none; }
+  .hb-kopf .hb-tage{ flex:1 1 100%; justify-content:space-between; gap:5px; }
+  .hb-kopf .ht-l{ width:34px; }
+  .hb2{ flex-wrap:wrap; gap:8px 10px; padding:11px 12px; }
+  .hb-n{ flex:1 1 auto; }
+  .hb-tage{ order:3; flex:1 1 100%; justify-content:space-between; gap:5px; }
+  .ht{ width:34px; height:30px; border-radius:8px; }
+}
+
 /* Stärke: die Zahl bekommt eine eigene Fläche, deren Füllung den
    Wert nochmal zeigt — so liest man sie auch im Vorbeigehen. */
 .hb-s{
@@ -536,15 +588,14 @@ select option{ background:#141a26; }
   letter-spacing:-.03em; color:var(--gc); font-variant-numeric:tabular-nums;
 }
 .goal-num span{ font-size:var(--t-sm); color:var(--text-dim); }
-.goal-woche{
-  margin-left:auto; font-family:var(--f-mono); font-size:var(--t-xs);
-  padding:3px 8px; border-radius:var(--r-pill); white-space:nowrap;
-  color:var(--text-faint); border:1px solid var(--line);
+/* Schutztage: drei Plätze, gefüllte leuchten. Mehr Erklärung steckt
+   im Tooltip — auf der Karte wäre sie zu viel. */
+.goal-schutz{ margin-left:auto; display:flex; gap:4px; align-items:center; cursor:help; }
+.goal-schutz i{
+  width:8px; height:8px; border-radius:50%; display:block;
+  border:1px solid color-mix(in srgb, var(--gc) 30%, transparent);
 }
-.goal-woche.voll{
-  color:var(--gc); border-color:color-mix(in srgb, var(--gc) 36%, transparent);
-  background:color-mix(in srgb, var(--gc) 13%, transparent);
-}
+.goal-schutz i.an{ background:var(--gc); border-color:var(--gc); }
 .goal-num{ flex-wrap:wrap; }
 .goal-bar{ height:5px; border-radius:var(--r-pill); background:var(--track); overflow:hidden; margin:12px 0 8px; }
 .goal-bar > i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--gc);
@@ -1246,6 +1297,38 @@ function phoneAnteil(v){
   return clamp(1-(v-max)/(max*2),0,1);
 }
 
+/* ── Serie mit Schutztagen ──────────────────────────────
+   Eine harte Serie bestraft einen ausgelassenen Tag so hart wie zehn.
+   Deshalb verdienst du dir Schutz: für je SCHUTZ_ALLE erfüllte Tage am
+   Stück einen Schutztag, höchstens SCHUTZ_MAX auf Vorrat. Ein leerer
+   Tag verbraucht einen davon — die Serie hält, wächst aber nicht.
+   Erst ohne Vorrat reißt sie. (Nach dem Vorbild von Duolingo.)
+   ──────────────────────────────────────────────────────── */
+const SCHUTZ_ALLE=7, SCHUTZ_MAX=3;
+
+function serieSchutz(ok,von,bis){
+  let serie=0, schutz=0, best=0, seitSchutz=0, genutzt=0;
+  /* Der heutige Tag darf keine Serie reißen — er ist noch nicht vorbei.
+     Erfüllt zählt er sofort, unerfüllt wird er einfach nicht bewertet. */
+  const heuteOk=ok(bis);
+  const ende=heuteOk?bis:dk(addD(parsedk(bis),-1));
+  for(let d=parsedk(von); ; d=addD(d,1)){
+    const k=dk(d);
+    if(k>ende) break;
+    if(ok(k)){
+      serie++; seitSchutz++;
+      if(seitSchutz>=SCHUTZ_ALLE&&schutz<SCHUTZ_MAX){ schutz++; seitSchutz=0; }
+      if(serie>best) best=serie;
+    } else if(schutz>0){
+      schutz--; genutzt++;          /* Schutztag greift, Serie bleibt stehen */
+    } else {
+      serie=0; schutz=0; seitSchutz=0; genutzt=0;
+    }
+  }
+  return {serie, schutz, best, genutzt,
+          bisSchutz: schutz<SCHUTZ_MAX ? SCHUTZ_ALLE-seitSchutz : null};
+}
+
 function buildGoals(){
   const g=G(), z=ZG(), t=today(), von=ersterTag();
   const m=k=>S.metrics[k]||{};
@@ -1253,20 +1336,18 @@ function buildGoals(){
   const okStudy  = k=>nv(m(k).study)&&m(k).study>=g.study;
   const okScroll = k=>nv(m(k).phone)&&m(k).phone<=z.phoneMax;
 
-  const bau=(key,label,icon,color,ok,soll,regel)=>({
-    key,label,icon,color,regel,soll,
-    woche:wochenOk(ok,t),
-    staerke:emaStaerke(von,t,ok,soll),
-    todayOk:ok(t),
-    serie:zielWochenSerie(ok,soll)
-  });
+  const bau=(key,label,icon,color,ok,regel)=>{
+    const S2=serieSchutz(ok,von,t);
+    return {key,label,icon,color,regel,todayOk:ok(t),
+            serie:S2.serie, schutz:S2.schutz, best:S2.best,
+            genutzt:S2.genutzt, bisSchutz:S2.bisSchutz};
+  };
 
   return [
-    bau("solid","Solide Tage","check","var(--c1)",okSolid,z.solidTage,
-        "von dir abgehakt"),
-    bau("study","Gelernt","book","var(--m-study)",okStudy,z.studyTage,
+    bau("solid","Solide Tage","check","var(--c1)",okSolid,"von dir abgehakt"),
+    bau("study","Gelernt","book","var(--m-study)",okStudy,
         `mindestens ${f(g.study)} h gelernt`),
-    bau("scroll","Scroll-Ziel","phone","var(--m-phone)",okScroll,z.phoneTage,
+    bau("scroll","Scroll-Ziel","phone","var(--m-phone)",okScroll,
         `höchstens ${f(z.phoneMax)} h Scrolling`)
   ];
 }
@@ -2067,6 +2148,7 @@ R.heute=function(){
   const offen=todoOffen();
   const fok=fokusIds().map(id=>offen.find(t=>t.id===id)).filter(Boolean);
   const gs=gesamtStaerke(k), gsAlt=gesamtStaerke(dk(addD(parsedk(k),-7)));
+  const LETZTE7=[...Array(7)].map((_,i)=>addD(parsedk(k),-6+i));
   const log=S.habitLog[k]||{};
   const plan=daySegments(k);
   const sp=sportOn(k);
@@ -2127,19 +2209,23 @@ R.heute=function(){
   <!-- Ziele: das Wichtigste, deshalb groß und mit Fortschritt zum nächsten Rekord -->
   <div class="grid c3 hd-goals">
     ${GOALS.map(G2=>{
-      const heute=G2.todayOk, voll=G2.woche>=G2.soll;
+      const heute=G2.todayOk;
+      const pct=G2.best>0?clamp(G2.serie/G2.best*100,0,100):(G2.serie?100:0);
       return `<div class="p goal${heute?" hit":""}" style="--gc:${G2.color}">
         <div class="goal-top">
           <span class="goal-ico">${ico(G2.icon)}</span>
           <span class="goal-name">${G2.label}</span>
           ${heute?`<span class="goal-badge">heute erfüllt</span>`:""}
         </div>
-        <div class="goal-num"><b>${G2.staerke}</b><span>% Stärke</span>
-          <span class="goal-woche${voll?" voll":""}">${G2.woche}/${G2.soll} diese Woche</span></div>
-        <div class="goal-bar"><i style="width:${G2.staerke}%"></i></div>
+        <div class="goal-num"><b>${G2.serie}</b><span>${G2.serie===1?"Tag":"Tage"} in Folge</span>
+          <span class="goal-schutz" title="${G2.schutz} Schutztag${G2.schutz===1?"":"e"} auf Vorrat.${
+            G2.bisSchutz!==null?` Nächster nach ${G2.bisSchutz} weiteren Tagen.`:" Vorrat voll."}">
+            ${[0,1,2].map(i=>`<i class="${i<G2.schutz?"an":""}"></i>`).join("")}
+          </span></div>
+        <div class="goal-bar"><i style="width:${pct}%"></i></div>
         <div class="goal-foot">
           <span>${G2.regel}</span>
-          <span>${G2.serie>0?`${G2.serie} ${G2.serie===1?"Woche":"Wochen"} in Folge`:"noch keine volle Woche"}</span>
+          <span>${G2.best>0?(G2.serie>=G2.best?"Bestwert":"Rekord "+G2.best):"noch kein Rekord"}</span>
         </div>
         ${G2.key==="solid"?`<button class="b b-sm goal-act ${heute?"b-1":""}" id="hCheck">
           ${ico("check")}${heute?"Heute abgehakt":"Heute abhaken"}</button>`:""}
@@ -2183,23 +2269,33 @@ R.heute=function(){
           </div>
           <div class="gs-bar"><i style="width:${gs}%"></i></div>
         </div>`:""}
-        ${hs.length?`<div style="display:flex;flex-direction:column;gap:2px">${hs.map(h=>{
+        ${hs.length?`
+        <div class="hb-kopf">
+          <span class="hb-kopf-n">Gewohnheit</span>
+          <span class="hb-tage">${LETZTE7.map(d=>
+            `<span class="ht-l${dk(d)===today()?" heute":""}">${WD[(d.getDay()+6)%7]}</span>`).join("")}</span>
+          <span class="hb-kopf-s">Stärke</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px">${hs.map(h=>{
           const on=!!log[h.id];
           const soll=habitSoll(h), wo=wochenTreffer(h,k);
-          /* Ziel erreicht und heute nicht angehakt: bleibt sichtbar,
-             zählt aber nicht mehr als offener Posten. */
           const erledigt = soll<7 && !on && wo>=soll;
           const kraft=habitStaerke(h,k), se=habitSerie(h);
-          const last7=[...Array(7)].map((_,i)=>!!S.habitLog[dk(addD(parsedk(k),-6+i))]?.[h.id]);
-          return `<button class="hb${on?" on":""}${erledigt?" fertig":""}" data-h="${h.id}" aria-pressed="${on}"
+          return `<div class="hb2${on?" on":""}${erledigt?" fertig":""}"
             title="Stärke ${kraft} %${se.n?` · ${se.n} ${se.e} in Folge`:""}">
-            <span class="hb-box">${ico("check")}</span>
             <span class="hb-dot" style="background:${h.color}"></span>
             <span class="hb-n">${esc(h.name)}</span>
             ${soll<7?`<span class="hb-w${wo>=soll?" voll":""}">${wo}/${soll}</span>`:""}
-            <span class="hb-mini">${last7.map(d=>`<i class="${d?"f":""}"></i>`).join("")}</span>
+            <span class="hb-tage">${LETZTE7.map(d=>{
+              const t2=dk(d), an=!!S.habitLog[t2]?.[h.id];
+              const vorher=t2<h.createdAt, kuenftig=t2>today();
+              return `<button class="ht${an?" an":""}${t2===today()?" heute":""}${vorher||kuenftig?" aus":""}"
+                ${vorher||kuenftig?"disabled":`data-hd="${h.id}|${t2}"`}
+                style="--hc:${h.color}" aria-pressed="${an}"
+                aria-label="${esc(h.name)}, ${fmtShort(d)}"
+                title="${fmtShort(d)}"></button>`;}).join("")}</span>
             <span class="hb-s" style="--kf:${kraft}%">${kraft} %</span>
-          </button>`;}).join("")}</div>`
+          </div>`;}).join("")}</div>`
         :`<div class="empty">${ico("list")}<div>Noch keine Gewohnheiten.<br>Lege unter „Gewohnheiten“ die erste an.</div></div>`}
       </div>
     </div>
@@ -2238,7 +2334,9 @@ R.heute=function(){
     const n=todoWocheFertig();
     toast(n>1?`Erledigt — ${n} diese Woche`:"Erledigt");
     R.heute(); paintOrb(); });
-  V.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{ toggleHabit(k,b.dataset.h); R.heute(); paintOrb(); });
+  V.querySelectorAll("[data-hd]").forEach(b=>b.onclick=()=>{
+    const [id,tag]=b.dataset.hd.split("|");
+    toggleHabit(tag,id); R.heute(); paintOrb(); });
   V.querySelector("#hDate").onchange=e=>{ dayView=e.target.value||today(); R.heute(); };
   V.querySelector("#hToday")?.addEventListener("click",()=>{ dayView=today(); R.heute(); });
   V.querySelector("#hCheck").onclick=()=>{ toggleCheck(k); R.heute(); paintOrb(); };

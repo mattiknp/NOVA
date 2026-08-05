@@ -464,6 +464,24 @@ select option{ background:#141a26; }
 .zl-akt{ display:flex; gap:6px; margin-top:9px; flex-wrap:wrap; }
 .zl-akt .b{ flex:1; min-width:92px; justify-content:center; }
 
+/* ── Schema-Übernahme ─────────────────────────────────── */
+.sm-kopf{
+  font-size:var(--t-xs); color:var(--text-faint); letter-spacing:.06em;
+  text-transform:uppercase; margin:14px 0 7px;
+}
+.sm-kopf:first-of-type{ margin-top:0; }
+.sm-z{
+  display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+  padding:9px 11px; border-radius:var(--r); margin-bottom:5px;
+  background:rgba(255,255,255,.035); font-size:var(--t-sm);
+}
+.sm-n{ flex:1 1 130px; min-width:0; word-break:break-word; }
+.sm-v{ color:var(--text-faint); }
+.ti-pfeil{ font-style:normal; color:var(--text-faint); }
+.sm-b{ color:var(--c1); font-weight:600; }
+.sm-r{ flex-basis:100%; font-size:var(--t-xs); color:var(--text-faint); }
+.sm-leer{ font-size:var(--t-sm); color:var(--text-faint); padding:8px 2px; }
+
 /* ── Gesamtstärke ─────────────────────────────────────── */
 .gs{ margin:2px 0 12px; }
 .gs-kopf{ display:flex; align-items:baseline; gap:9px; margin-bottom:7px; flex-wrap:wrap; }
@@ -518,6 +536,16 @@ select option{ background:#141a26; }
   letter-spacing:-.03em; color:var(--gc); font-variant-numeric:tabular-nums;
 }
 .goal-num span{ font-size:var(--t-sm); color:var(--text-dim); }
+.goal-woche{
+  margin-left:auto; font-family:var(--f-mono); font-size:var(--t-xs);
+  padding:3px 8px; border-radius:var(--r-pill); white-space:nowrap;
+  color:var(--text-faint); border:1px solid var(--line);
+}
+.goal-woche.voll{
+  color:var(--gc); border-color:color-mix(in srgb, var(--gc) 36%, transparent);
+  background:color-mix(in srgb, var(--gc) 13%, transparent);
+}
+.goal-num{ flex-wrap:wrap; }
 .goal-bar{ height:5px; border-radius:var(--r-pill); background:var(--track); overflow:hidden; margin:12px 0 8px; }
 .goal-bar > i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--gc);
   transition:width .7s var(--ez); }
@@ -856,7 +884,7 @@ const GH_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_F
 
 const blank=()=>({habits:[],habitLog:{},metrics:{},sport:{},todos:[],planer:{},
   dayCheck:{},planerTypes:[],planerHidden:[],sportTypes:[],sportHidden:[],
-  goals:{sleep:8,study:3,phone:0,sport:300},notes:{},mood:{},water:{},todoFocus:null});
+  goals:{sleep:8,study:3,phone:0,sport:300},zielTage:null,notes:{},mood:{},water:{},todoFocus:null});
 
 /* Mitgelieferter Stand: dein Backup vom 1. August, direkt eingebacken.
    Greift nur beim allerersten Start oder auf ausdrückliche Anforderung. */
@@ -1013,19 +1041,38 @@ function completion(k){
    ──────────────────────────────────────────────────────── */
 const STAERKE_HW=14;
 
-function habitStaerke(h,bis){
-  const ende=bis||today();
-  if(h.createdAt>ende) return 0;
+function emaStaerke(von,bis,ok,soll){
   const zerfall=Math.pow(.5,1/STAERKE_HW);
-  const gewinn=(1-zerfall)*7/habitSoll(h);
+  const gewinn=(1-zerfall)*7/clamp(soll,1,7);
   let st=0;
-  for(let d=parsedk(h.createdAt); ; d=addD(d,1)){
+  for(let d=parsedk(von); ; d=addD(d,1)){
     const k=dk(d);
-    if(k>ende) break;
-    st=st*zerfall+(S.habitLog[k]?.[h.id]?gewinn:0);
+    if(k>bis) break;
+    st=st*zerfall+(ok(k)?gewinn:0);
     if(st>1) st=1;
   }
   return Math.round(st*100);
+}
+
+function habitStaerke(h,bis){
+  const ende=bis||today();
+  if(h.createdAt>ende) return 0;
+  return emaStaerke(h.createdAt,ende,k=>!!S.habitLog[k]?.[h.id],habitSoll(h));
+}
+
+/* Treffer in der laufenden Woche für eine beliebige Bedingung. */
+function wochenOk(ok,k){
+  const mo=sow(parsedk(k));
+  let n=0;
+  for(let i=0;i<7;i++){ const t=dk(addD(mo,i)); if(t>k) break; if(ok(t)) n++; }
+  return n;
+}
+
+/* Der erste Tag, an dem überhaupt etwas erfasst wurde. */
+function ersterTag(){
+  const alle=[...Object.keys(S.metrics||{}),...Object.keys(S.habitLog||{}),
+              ...Object.keys(S.sport||{}),...Object.keys(S.dayCheck||{})].sort();
+  return alle[0]||today();
 }
 
 /* Eine Zahl über alle Gewohnheiten. Der Mittelwert der einzelnen
@@ -1146,7 +1193,7 @@ function dayScore(k){
   if(total) parts.push({w:.34,v:pct/100});
   if(nv(m.sleepHours)) parts.push({w:.24,v:clamp(m.sleepHours/g.sleep,0,1.1)});
   if(nv(m.study))      parts.push({w:.18,v:clamp(m.study/g.study,0,1.2)});
-  if(nv(m.phone))      parts.push({w:.12,v:clamp(1-(m.phone-g.phone)/(g.phone*2),0,1)});
+  if(nv(m.phone))      parts.push({w:.12,v:phoneAnteil(m.phone)});
   const sm=sportMin(k); if(sm) parts.push({w:.12,v:clamp(sm/60,0,1.2)});
   if(!parts.length) return null;
   const wsum=parts.reduce((a,p)=>a+p.w,0);
@@ -1177,24 +1224,68 @@ function bestRun(ok){
 
 /* Die drei Ziele, die zählen. Solide Tage hakst du selbst ab; die
    anderen beiden ergeben sich aus deinen Werten. */
+/* ── Ziele ──────────────────────────────────────────────
+   Vorher: „jeden Tag" plus Serie. Das hatte denselben Fehler wie die
+   Gewohnheiten — und beim Scrolling war es schlimmer als das: Das Ziel
+   stand auf null Stunden, und in 46 erfassten Tagen lag der niedrigste
+   Wert bei 0,2. Es war nicht schwer, es war unerreichbar, und die Serie
+   stand folglich für immer auf null.
+
+   Jetzt hat jedes Ziel eine Schwelle UND ein Wochenziel, dazu dieselbe
+   zerfallende Stärke wie die Gewohnheiten. Beides ist einstellbar.
+   ──────────────────────────────────────────────────────── */
+const ZIEL_STD={ studyTage:5, phoneTage:3, solidTage:3, phoneMax:1 };
+const ZG=()=>Object.assign({},ZIEL_STD,S.zielTage||{});
+
+/* Scroll-Bewertung. Vorher wurde durch das Ziel geteilt. Stand das Ziel
+   auf null — und bei dir stand es das —, war der Nenner null, das
+   Ergebnis minus unendlich und der Handy-Anteil an JEDEM Tag null.
+   Die Schwelle hat jetzt eine Untergrenze, damit das nicht wieder geht. */
+function phoneAnteil(v){
+  const max=Math.max(.25,ZG().phoneMax);
+  return clamp(1-(v-max)/(max*2),0,1);
+}
+
 function buildGoals(){
-  const g=G(), t=today();
+  const g=G(), z=ZG(), t=today(), von=ersterTag();
   const m=k=>S.metrics[k]||{};
   const okSolid  = k=>isChecked(k);
   const okStudy  = k=>nv(m(k).study)&&m(k).study>=g.study;
-  const okScroll = k=>nv(m(k).phone)&&m(k).phone<=g.phone;
-  const scrollRule = g.phone<=0 ? "kein Scrolling" : `höchstens ${f(g.phone)} h Scrolling`;
+  const okScroll = k=>nv(m(k).phone)&&m(k).phone<=z.phoneMax;
+
+  const bau=(key,label,icon,color,ok,soll,regel)=>({
+    key,label,icon,color,regel,soll,
+    woche:wochenOk(ok,t),
+    staerke:emaStaerke(von,t,ok,soll),
+    todayOk:ok(t),
+    serie:zielWochenSerie(ok,soll)
+  });
+
   return [
-    {key:"solid", label:"Solide Tage", icon:"check", color:"var(--c1)",
-     streak:checkStreak(), best:bestRun(okSolid), todayOk:okSolid(t),
-     rule:"von dir abgehakt"},
-    {key:"study", label:"Gelernt", icon:"book", color:"var(--m-study)",
-     streak:goalStreak(x=>nv(x.study)&&x.study>=g.study), best:bestRun(okStudy), todayOk:okStudy(t),
-     rule:`mindestens ${f(g.study)} h gelernt`},
-    {key:"scroll", label:"Scroll-Ziel", icon:"phone", color:"var(--m-phone)",
-     streak:goalStreak(x=>nv(x.phone)&&x.phone<=g.phone), best:bestRun(okScroll), todayOk:okScroll(t),
-     rule:scrollRule},
+    bau("solid","Solide Tage","check","var(--c1)",okSolid,z.solidTage,
+        "von dir abgehakt"),
+    bau("study","Gelernt","book","var(--m-study)",okStudy,z.studyTage,
+        `mindestens ${f(g.study)} h gelernt`),
+    bau("scroll","Scroll-Ziel","phone","var(--m-phone)",okScroll,z.phoneTage,
+        `höchstens ${f(z.phoneMax)} h Scrolling`)
   ];
+}
+
+/* Wie viele Wochen am Stück wurde das Wochenziel erreicht? Die laufende
+   Woche zählt nur mit, wenn sie schon voll ist — sonst stünde am Montag
+   jede Serie auf null. */
+function zielWochenSerie(ok,soll){
+  let n=0, mo=sow(new Date());
+  const von=ersterTag();
+  for(;;){
+    if(dk(mo)<von) break;
+    const ende=dk(addD(mo,6));
+    const treffer=wochenOk(ok, ende>today()?today():ende);
+    if(treffer>=soll) n++;
+    else if(dk(mo)!==dk(sow(new Date()))) break;
+    mo=addD(mo,-7);
+  }
+  return n;
 }
 
 function goalStreak(fn){ let n=0,d=new Date();
@@ -1728,17 +1819,30 @@ function reimportOld(){
 }
 
 function settingsModal(){
-  const g=G();
+  const g=G(), z=ZG();
   modal(`<h3>Einstellungen</h3>
     <label>Schlafziel (Std.)</label><input type="number" step=".5" id="gSleep" value="${g.sleep}">
     <label>Lernziel (Std.)</label><input type="number" step=".5" id="gStudy" value="${g.study}">
-    <label>Scrolling-Obergrenze (Std.), 0 = gar nicht</label><input type="number" step=".5" id="gPhone" value="${g.phone}">
+    <label>Scrolling-Obergrenze (Std.)</label><input type="number" step=".25" id="gPhone" value="${z.phoneMax}">
     <label>Trainingsziel pro Woche (Min.)</label><input type="number" step="15" id="gSport" value="${g.sport}">
+    <div style="margin:16px 0 4px;border-top:1px solid var(--line);padding-top:14px">
+      <div style="font-size:var(--t-sm);font-weight:600;margin-bottom:4px">An wie vielen Tagen pro Woche?</div>
+      <div style="font-size:var(--t-xs);color:var(--text-faint);line-height:1.55;margin-bottom:11px">
+        Ein Ziel, das jeden Tag gelten soll, steht nach einem Ausrutscher für immer
+        auf null. Mit einem Wochenziel misst NOVA, was du dir vornimmst.</div>
+    </div>
+    <div class="grid c3" style="gap:10px">
+      ${[["zSolid","Solide Tage",z.solidTage],["zStudy","Gelernt",z.studyTage],
+         ["zPhone","Scroll-Ziel",z.phoneTage]].map(([id,l,v])=>
+        `<div><label style="margin-top:0">${l}</label>
+         <input type="number" min="1" max="7" step="1" id="${id}" value="${v}"></div>`).join("")}
+    </div>
     <div class="mo-act">
       <button class="b" onclick="closeModal()">Abbrechen</button>
       <button class="b b-1" id="gSave">Speichern</button>
     </div>
     <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="b b-sm b-1" onclick="closeModal();schemaModal()">${ico("spark")}Schema übernehmen</button>
       <button class="b b-sm" onclick="closeModal();kurzbefehlModal()">${ico("phone")}Kurzbefehle</button>
       <button class="b b-sm" onclick="exportData()">${ico("down")}Backup</button>
       <button class="b b-sm" onclick="importData()">${ico("up")}Einspielen</button>
@@ -1746,10 +1850,13 @@ function settingsModal(){
       <button class="b b-sm" onclick="loadSeed()">${ico("down")}Mitgelieferter Stand</button>
     </div>`);
   document.getElementById("gSave").onclick=()=>{
+    const nz=n=>clamp(parseInt(document.getElementById(n).value,10)||1,1,7);
     S.goals={sleep:+document.getElementById("gSleep").value||8,
              study:+document.getElementById("gStudy").value||3,
              phone:parseFloat(document.getElementById("gPhone").value)||0,
              sport:+document.getElementById("gSport").value||300};
+    S.zielTage={ solidTage:nz("zSolid"), studyTage:nz("zStudy"), phoneTage:nz("zPhone"),
+                 phoneMax:Math.max(0,parseFloat(document.getElementById("gPhone").value)||0) };
     save(); closeModal(); toast("Ziele gespeichert"); go(VIEW);
   };
 }
@@ -2020,19 +2127,19 @@ R.heute=function(){
   <!-- Ziele: das Wichtigste, deshalb groß und mit Fortschritt zum nächsten Rekord -->
   <div class="grid c3 hd-goals">
     ${GOALS.map(G2=>{
-      const st=G2.streak, best=G2.best, pct=best>0?clamp(st/best*100,0,100):(st?100:0);
-      const heute=G2.todayOk;
+      const heute=G2.todayOk, voll=G2.woche>=G2.soll;
       return `<div class="p goal${heute?" hit":""}" style="--gc:${G2.color}">
         <div class="goal-top">
           <span class="goal-ico">${ico(G2.icon)}</span>
           <span class="goal-name">${G2.label}</span>
           ${heute?`<span class="goal-badge">heute erfüllt</span>`:""}
         </div>
-        <div class="goal-num"><b>${st}</b><span>${st===1?"Tag":"Tage"} in Folge</span></div>
-        <div class="goal-bar"><i style="width:${pct}%"></i></div>
+        <div class="goal-num"><b>${G2.staerke}</b><span>% Stärke</span>
+          <span class="goal-woche${voll?" voll":""}">${G2.woche}/${G2.soll} diese Woche</span></div>
+        <div class="goal-bar"><i style="width:${G2.staerke}%"></i></div>
         <div class="goal-foot">
-          <span>${G2.rule}</span>
-          <span>${best>0?(st>=best?"Bestwert":"Rekord "+best):"noch kein Rekord"}</span>
+          <span>${G2.regel}</span>
+          <span>${G2.serie>0?`${G2.serie} ${G2.serie===1?"Woche":"Wochen"} in Folge`:"noch keine volle Woche"}</span>
         </div>
         ${G2.key==="solid"?`<button class="b b-sm goal-act ${heute?"b-1":""}" id="hCheck">
           ${ico("check")}${heute?"Heute abgehakt":"Heute abhaken"}</button>`:""}
@@ -2201,6 +2308,99 @@ function zielVorschlaege(){
     return {h, ist:proWoche, passend, fordernd,
             aendert:treffer>=4&&(passend!==habitSoll(h)||fordernd!==habitSoll(h))};
   }).filter(v=>v.aendert);
+}
+
+/* Wie oft pro Woche wird eine Bedingung tatsächlich erfüllt? */
+function istProWoche(ok){
+  const von=ersterTag(), bis=today();
+  const tage=Math.max(7,Math.round((parsedk(bis)-parsedk(von))/86400000)+1);
+  let n=0;
+  for(let d=parsedk(von); ; d=addD(d,1)){
+    const k=dk(d); if(k>bis) break; if(ok(k)) n++;
+  }
+  return n/tage*7;
+}
+
+/* Vorschlag für die drei Ziele nach demselben Schema wie bei den
+   Gewohnheiten: eine Wiederholung über dem, was du bisher schaffst.
+   Beim Scrolling kommt die Schwelle dazu — die stand auf null, und
+   null hast du an keinem einzigen erfassten Tag erreicht. Deshalb
+   wird sie auf den nächsten Wert gesetzt, den du überhaupt triffst. */
+function zielSchemaVorschlag(){
+  const g=G(), z=ZG(), m=k=>S.metrics[k]||{};
+  const raus=[];
+
+  const solidIst=istProWoche(k=>isChecked(k));
+  raus.push({id:"solidTage", label:"Solide Tage", ist:solidIst,
+    alt:z.solidTage, neu:clamp(Math.round(solidIst)+1,1,7),
+    text:t=>`an ${t} Tagen pro Woche`});
+
+  const studyIst=istProWoche(k=>nv(m(k).study)&&m(k).study>=g.study);
+  raus.push({id:"studyTage", label:"Gelernt", ist:studyIst,
+    alt:z.studyTage, neu:clamp(Math.round(studyIst)+1,1,7),
+    text:t=>`an ${t} Tagen mindestens ${f(g.study)} h`});
+
+  /* Erreichbare Scroll-Schwelle: die kleinste aus einer festen Leiter,
+     die du wenigstens einmal pro Woche schaffst. */
+  const leiter=[.5,1,1.5,2,2.5,3];
+  let schwelle=leiter[leiter.length-1];
+  for(const sw of leiter){
+    if(istProWoche(k=>nv(m(k).phone)&&m(k).phone<=sw)>=1){ schwelle=sw; break; }
+  }
+  const phoneIst=istProWoche(k=>nv(m(k).phone)&&m(k).phone<=schwelle);
+  raus.push({id:"phoneTage", label:"Scroll-Ziel", ist:phoneIst,
+    alt:z.phoneTage, neuMax:schwelle, altMax:z.phoneMax,
+    neu:clamp(Math.round(phoneIst)+1,1,7),
+    text:t=>`an ${t} Tagen höchstens ${f(schwelle)} h`});
+
+  return raus;
+}
+
+/* Alles auf einmal: Wochenziele für die Gewohnheiten und für die drei
+   Ziele. Gezeigt wird vorher, was sich ändert — gesetzt wird erst auf
+   Knopfdruck. */
+function schemaModal(){
+  const hv=zielVorschlaege(), zv=zielSchemaVorschlag();
+  const zeile=(name,vorher,nachher,rand)=>`<div class="sm-z">
+    <span class="sm-n">${esc(name)}</span>
+    <span class="sm-v">${esc(vorher)}</span>
+    <i class="ti-pfeil">→</i>
+    <span class="sm-b">${esc(nachher)}</span>
+    ${rand?`<span class="sm-r">${esc(rand)}</span>`:""}
+  </div>`;
+  modal(`<h3>Empfohlenes Schema übernehmen</h3>
+    <p style="font-size:var(--t-sm);color:var(--text-dim);line-height:1.6;margin-bottom:15px">
+      Jede Gewohnheit und jedes Ziel bekommt ein Wochenziel — eine Wiederholung über
+      dem, was du bisher schaffst. Damit misst NOVA an dem, was du dir vornimmst,
+      und ein einzelner ausgelassener Tag setzt nichts mehr auf null.</p>
+
+    <div class="sm-kopf">Ziele</div>
+    ${zv.map(v=>zeile(v.label,
+       S.zielTage ? (v.id==="phoneTage" ? `höchstens ${f(v.altMax)} h, ${v.alt}×/Woche`
+                                        : `${v.alt}×/Woche`)
+                  : (v.id==="phoneTage" ? `höchstens ${f(G().phone)} h, jeden Tag` : "jeden Tag"),
+       v.text(v.neu),
+       `bisher ${v.ist.toFixed(1).replace(".",",")}×/Woche`)).join("")}
+
+    <div class="sm-kopf">Gewohnheiten</div>
+    ${hv.length?hv.map(v=>zeile(v.h.name,
+        habitSoll(v.h)===7?"täglich":habitSoll(v.h)+"×/Woche",
+        v.fordernd+"×/Woche",
+        `bisher ${v.ist.toFixed(1).replace(".",",")}×/Woche`)).join("")
+      :`<div class="sm-leer">Alle Wochenziele passen bereits.</div>`}
+
+    <div class="mo-act">
+      <button class="b" onclick="closeModal()">Abbrechen</button>
+      <button class="b b-1" id="smGo">Übernehmen</button></div>`);
+  document.getElementById("smGo").onclick=()=>{
+    const z=Object.assign({},ZG());
+    zv.forEach(v=>{ z[v.id]=v.neu; if(v.neuMax!==undefined) z.phoneMax=v.neuMax; });
+    S.zielTage=z;
+    hv.forEach(v=>{ v.h.proWoche=v.fordernd; });
+    save(); closeModal();
+    toast(`${zv.length} Ziele und ${hv.length} Gewohnheiten umgestellt`);
+    go(VIEW);
+  };
 }
 
 function zielModal(){
@@ -2483,7 +2683,7 @@ function nexusData(){
      lat:-.36,lon:0.9, stale:stale(d=>nv((S.metrics[d]||{}).sleepHours))},
     {key:"Lernen",sub:nv(m.study)?f(m.study)+" h":"–",v:nv(m.study)?clamp(m.study/g.study,0,1):0,color:"#9d7bff",
      lat:.54,lon:1.9, stale:stale(d=>nv((S.metrics[d]||{}).study)&&(S.metrics[d]||{}).study>0)},
-    {key:"Handy",sub:nv(m.phone)?f(m.phone)+" h":"–",v:nv(m.phone)?clamp(1-(m.phone-g.phone)/(g.phone*2),0,1):0,color:"#ff7a5c",
+    {key:"Handy",sub:nv(m.phone)?f(m.phone)+" h":"–",v:nv(m.phone)?phoneAnteil(m.phone):0,color:"#ff7a5c",
      lat:-.18,lon:2.8, stale:stale(d=>nv((S.metrics[d]||{}).phone))},
     {key:"Training",sub:sm?sm+" min":"–",v:clamp(sm/60,0,1),color:"#34d99a",
      lat:.12,lon:3.8, stale:stale(d=>sportMin(d)>0)},
@@ -3422,7 +3622,7 @@ R.woche=function(){
     <div class="p"><div class="p-head"><div class="p-title">${ico("book")}Lernzeit</div><span class="p-note">Ziel ${g.study} h</span></div>
       ${lineChart(days.map(d=>WD[(d.getDay()+6)%7]),[{data:days.map(d=>{const m=S.metrics[dk(d)]||{};return nv(m.study)?m.study:null;}),color:"var(--m-study)"}],{min:0,h:180})}</div>
     <div class="p"><div class="p-head"><div class="p-title">${ico("phone")}Scrolling</div>
-      <span class="p-note">${g.phone>0?`Ziel höchstens ${f(g.phone)} h`:"Ziel: gar nicht"}</span></div>
+      <span class="p-note">Ziel höchstens ${f(ZG().phoneMax)} h an ${ZG().phoneTage} Tagen</span></div>
       ${lineChart(days.map(d=>WD[(d.getDay()+6)%7]),[{data:days.map(d=>{const m=S.metrics[dk(d)]||{};return nv(m.phone)?m.phone:null;}),color:"var(--m-phone)"}],{min:0,h:180})}</div>
     <div class="p"><div class="p-head"><div class="p-title">${ico("run")}Training</div>
       <span class="p-note">Minuten je Tag</span></div>

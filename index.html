@@ -610,6 +610,14 @@ select option{ background:#141a26; }
   letter-spacing:-.03em; color:var(--gc); font-variant-numeric:tabular-nums;
 }
 .goal-num span{ font-size:var(--t-sm); color:var(--text-dim); }
+.goal-rettung{
+  display:flex; align-items:center; gap:8px; margin-top:10px;
+  padding:7px 10px; border-radius:var(--r); font-size:var(--t-xs);
+  color:var(--gc); background:color-mix(in srgb, var(--gc) 11%, transparent);
+  border:1px solid color-mix(in srgb, var(--gc) 24%, transparent);
+}
+.goal-rettung svg{ width:13px; height:13px; flex:0 0 auto; }
+
 /* Puffer. Drei anonyme Punkte musste man erst deuten — ein Schild mit
    Zahl liest sich sofort, und der Tooltip sagt, was er bewirkt. */
 .goal-schutz{
@@ -872,6 +880,9 @@ select option{ background:#141a26; }
               margin-top:6px; gap:10px; }
   .goal-foot span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .goal-act{ grid-column:1/-1; width:100%; margin-top:10px; padding:9px; font-size:var(--t-sm); }
+  .goal-rettung{ grid-column:1/-1; margin-top:8px; }
+  /* Das Schild rutscht in die Zahlenzeile, sonst sprengt es die Spalte. */
+  .goal-schutz{ padding:2px 7px 2px 5px; }
 }
 
 /* Leere Karten sollen nicht ganze Bildschirme belegen */
@@ -1334,7 +1345,7 @@ function phoneAnteil(v){
 const SCHUTZ_ALLE=7, SCHUTZ_MAX=3;
 
 function serieSchutz(ok,von,bis){
-  let serie=0, schutz=0, best=0, seitSchutz=0, genutzt=0;
+  let serie=0, schutz=0, best=0, seitSchutz=0, genutzt=0, gerettet=[];
   /* Der heutige Tag darf keine Serie reißen — er ist noch nicht vorbei.
      Erfüllt zählt er sofort, unerfüllt wird er einfach nicht bewertet. */
   const heuteOk=ok(bis);
@@ -1347,13 +1358,25 @@ function serieSchutz(ok,von,bis){
       if(seitSchutz>=SCHUTZ_ALLE&&schutz<SCHUTZ_MAX){ schutz++; seitSchutz=0; }
       if(serie>best) best=serie;
     } else if(schutz>0){
-      schutz--; genutzt++;          /* Schutztag greift, Serie bleibt stehen */
+      schutz--; genutzt++; gerettet.push(k);   /* Serie bleibt stehen */
     } else {
-      serie=0; schutz=0; seitSchutz=0; genutzt=0;
+      serie=0; schutz=0; seitSchutz=0; genutzt=0; gerettet=[];
     }
   }
-  return {serie, schutz, best, genutzt,
+  return {serie, schutz, best, genutzt, gerettet,
           bisSchutz: schutz<SCHUTZ_MAX ? SCHUTZ_ALLE-seitSchutz : null};
+}
+
+/* „Donnerstag gerettet" statt einer Zahl. Nur so erklärt sich der
+   Puffer von selbst — nämlich in dem Moment, in dem er hilft. */
+function gerettetText(tage){
+  const letzter=tage[tage.length-1];
+  const d=parsedk(letzter);
+  const alt=Math.round((parsedk(today())-d)/86400000);
+  const wann = alt===0 ? "Heute" : alt===1 ? "Gestern"
+             : alt<7 ? WDL[d.getDay()] : fmtShort(d);
+  return tage.length===1 ? `${wann} gerettet`
+       : `${tage.length} Tage gerettet — zuletzt ${wann.toLowerCase()==="heute"||wann.toLowerCase()==="gestern"?wann.toLowerCase():wann}`;
 }
 
 function buildGoals(){
@@ -1367,7 +1390,7 @@ function buildGoals(){
     const S2=serieSchutz(ok,von,t);
     return {key,label,icon,color,regel,todayOk:ok(t),
             serie:S2.serie, schutz:S2.schutz, best:S2.best,
-            genutzt:S2.genutzt, bisSchutz:S2.bisSchutz};
+            genutzt:S2.genutzt, gerettet:S2.gerettet, bisSchutz:S2.bisSchutz};
   };
 
   return [
@@ -2254,9 +2277,10 @@ R.heute=function(){
         <div class="goal-bar"><i style="width:${pct}%"></i></div>
         <div class="goal-foot">
           <span>${G2.regel}</span>
-          <span>${G2.genutzt?`${G2.genutzt} Tag${G2.genutzt===1?"":"e"} gerettet · `:""}${
-            G2.best>0?(G2.serie>=G2.best?"Bestwert":"Rekord "+G2.best):"noch kein Rekord"}</span>
+          <span>${G2.best>0?(G2.serie>=G2.best?"Bestwert":"Rekord "+G2.best):"noch kein Rekord"}</span>
         </div>
+        ${G2.gerettet.length?`<div class="goal-rettung">
+          ${ico("schild")}<span>${gerettetText(G2.gerettet)}</span></div>`:""}
         ${G2.key==="solid"?`<button class="b b-sm goal-act ${heute?"b-1":""}" id="hCheck">
           ${ico("check")}${heute?"Heute abgehakt":"Heute abhaken"}</button>`:""}
       </div>`;}).join("")}

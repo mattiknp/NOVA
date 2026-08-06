@@ -2356,9 +2356,9 @@ R.heute=function(){
         <div style="display:flex;flex-direction:column;gap:2px">${hs.map(h=>{
           const on=!!log[h.id];
           const soll=habitSoll(h), wo=rollTreffer(h,k);
-          /* An welcher Stelle im Fenster wurde das Ziel voll? Erst ab da
-             sind die leeren Felder frei — links davon war es noch offen,
-             dort bleiben sie leer. */
+          /* An welcher Stelle im Fenster wurde das Ziel voll? Die leeren
+             Tage links davon hast du nicht gebraucht — sie bekommen den
+             Anzeige-Haken. Rechts davon bleibt es offen. */
           let vollAb=-1;
           if(soll<7){
             let n=0;
@@ -2377,8 +2377,9 @@ R.heute=function(){
             <span class="hb-tage">${LETZTE7.map((d,idx)=>{
               const t2=dk(d), an=!!S.habitLog[t2]?.[h.id];
               const vorher=t2<h.createdAt, kuenftig=t2>today();
-              /* Nur rechts von der Erfüllung — dort zählt kein Tag mehr gegen dich. */
-              const schein = geschafft && idx>vollAb && !an && !vorher && !kuenftig;
+              /* Nur links von der Erfüllung: diese Tage hast du ausgelassen,
+                 und es hat trotzdem gereicht. */
+              const schein = geschafft && idx<vollAb && !an && !vorher && !kuenftig;
               return `<button class="ht${an?" an":""}${schein?" schein":""}${t2===today()?" heute":""}${vorher||kuenftig?" aus":""}"
                 ${vorher||kuenftig?"disabled":`data-hd="${h.id}|${t2}"`}
                 style="--hc:${h.color}" aria-pressed="${an}"

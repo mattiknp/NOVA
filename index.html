@@ -365,7 +365,18 @@ select option{ background:#141a26; }
   transition:background-color var(--d1) var(--ez), border-color var(--d1) var(--ez), transform var(--d1) var(--ez);
 }
 .ht:hover:not(:disabled){ border-color:var(--hc); transform:scale(1.08); }
+.ht svg{ width:13px; height:13px; stroke-width:3; }
 .ht.an{ background:var(--hc); border-color:var(--hc); }
+.ht.an svg{ stroke:#08131a; }
+/* Nur zur Anzeige: Ziel ist erreicht, dieser Tag zählt nicht gegen dich.
+   Gestrichelter Rand und blasser Haken — damit man ihn nie mit einem
+   echten Eintrag verwechselt. Gespeichert wird hier nichts. */
+.ht.schein{
+  border-style:dashed;
+  border-color:color-mix(in srgb, var(--hc) 42%, transparent);
+  background:color-mix(in srgb, var(--hc) 7%, transparent);
+}
+.ht.schein svg{ stroke:var(--hc); opacity:.5; }
 .ht.heute{ box-shadow:0 0 0 2px rgba(79,227,210,.28); }
 .ht.aus{ border-color:transparent; background:rgba(255,255,255,.02); cursor:default; }
 
@@ -1102,16 +1113,28 @@ function wochenTreffer(h,k){
   return n;
 }
 
+/* Treffer in den sieben Tagen, die auf dem Startbildschirm auch zu
+   sehen sind — also k und die sechs davor. Ein rollendes Fenster statt
+   der Kalenderwoche: Sonst wäre das Ziel montags schlagartig wieder
+   offen, obwohl man am Samstag zweimal abgehakt hat. */
+function rollTreffer(h,k){
+  let n=0;
+  for(let i=0;i<7;i++){
+    const t=dk(addD(parsedk(k),-i));
+    if(S.habitLog[t]?.[h.id]) n++;
+  }
+  return n;
+}
+
 /* Steht sie an diesem Tag an? Eine Gewohnheit mit Wochenziel ist
-   fällig, solange das Ziel in dieser Woche noch nicht erreicht ist —
-   danach verschwindet sie bis Montag aus der Tagesliste, statt als
-   offener Posten stehen zu bleiben. */
+   fällig, solange das Ziel in den letzten sieben Tagen noch nicht
+   erreicht ist — danach zählt sie nicht mehr als offener Posten. */
 function habitFaellig(h,k){
   if(h.createdAt>k) return false;
   if(S.habitLog[k]?.[h.id]) return true;      /* getan zählt immer */
   const soll=habitSoll(h);
   if(soll>=7) return true;
-  return wochenTreffer(h,k)<soll;
+  return rollTreffer(h,k)<soll;
 }
 
 function completion(k){
@@ -2332,22 +2355,28 @@ R.heute=function(){
         </div>
         <div style="display:flex;flex-direction:column;gap:2px">${hs.map(h=>{
           const on=!!log[h.id];
-          const soll=habitSoll(h), wo=wochenTreffer(h,k);
-          const erledigt = soll<7 && !on && wo>=soll;
+          const soll=habitSoll(h), wo=rollTreffer(h,k);
+          /* Ziel in den letzten sieben Tagen erreicht: die noch leeren
+             Felder bekommen einen blassen Haken. Der steht nur da —
+             gespeichert wird nichts, im Verlauf taucht er nirgends auf. */
+          const geschafft = soll<7 && wo>=soll;
+          const erledigt = geschafft && !on;
           const kraft=habitStaerke(h,k), se=habitSerie(h);
           return `<div class="hb2${on?" on":""}${erledigt?" fertig":""}"
             title="Stärke ${kraft} %${se.n?` · ${se.n} ${se.e} in Folge`:""}">
             <span class="hb-dot" style="background:${h.color}"></span>
             <span class="hb-n">${esc(h.name)}</span>
-            ${soll<7?`<span class="hb-w${wo>=soll?" voll":""}">${wo}/${soll}</span>`:""}
+            ${soll<7?`<span class="hb-w${geschafft?" voll":""}" title="in den letzten 7 Tagen">${wo}/${soll}</span>`:""}
             <span class="hb-tage">${LETZTE7.map(d=>{
               const t2=dk(d), an=!!S.habitLog[t2]?.[h.id];
               const vorher=t2<h.createdAt, kuenftig=t2>today();
-              return `<button class="ht${an?" an":""}${t2===today()?" heute":""}${vorher||kuenftig?" aus":""}"
+              const schein = geschafft && !an && !vorher && !kuenftig;
+              return `<button class="ht${an?" an":""}${schein?" schein":""}${t2===today()?" heute":""}${vorher||kuenftig?" aus":""}"
                 ${vorher||kuenftig?"disabled":`data-hd="${h.id}|${t2}"`}
                 style="--hc:${h.color}" aria-pressed="${an}"
-                aria-label="${esc(h.name)}, ${fmtShort(d)}"
-                title="${fmtShort(d)}"></button>`;}).join("")}</span>
+                aria-label="${esc(h.name)}, ${fmtShort(d)}${schein?", Ziel bereits erreicht":""}"
+                title="${fmtShort(d)}${schein?" · Ziel erreicht, dieser Tag zählt nicht gegen dich":""}"
+                >${an||schein?ico("check"):""}</button>`;}).join("")}</span>
             <span class="hb-s" style="--kf:${kraft}%">${kraft} %</span>
           </div>`;}).join("")}</div>`
         :`<div class="empty">${ico("list")}<div>Noch keine Gewohnheiten.<br>Lege unter „Gewohnheiten“ die erste an.</div></div>`}

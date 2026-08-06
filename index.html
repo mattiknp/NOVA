@@ -373,10 +373,10 @@ select option{ background:#141a26; }
    echten Eintrag verwechselt. Gespeichert wird hier nichts. */
 .ht.schein{
   border-style:dashed;
-  border-color:color-mix(in srgb, var(--hc) 42%, transparent);
-  background:color-mix(in srgb, var(--hc) 7%, transparent);
+  border-color:color-mix(in srgb, var(--hc) 68%, transparent);
+  background:color-mix(in srgb, var(--hc) 20%, transparent);
 }
-.ht.schein svg{ stroke:var(--hc); opacity:.5; }
+.ht.schein svg{ stroke:var(--hc); opacity:.9; }
 .ht.heute{ box-shadow:0 0 0 2px rgba(79,227,210,.28); }
 .ht.aus{ border-color:transparent; background:rgba(255,255,255,.02); cursor:default; }
 
@@ -2356,10 +2356,17 @@ R.heute=function(){
         <div style="display:flex;flex-direction:column;gap:2px">${hs.map(h=>{
           const on=!!log[h.id];
           const soll=habitSoll(h), wo=rollTreffer(h,k);
-          /* Ziel in den letzten sieben Tagen erreicht: die noch leeren
-             Felder bekommen einen blassen Haken. Der steht nur da —
-             gespeichert wird nichts, im Verlauf taucht er nirgends auf. */
-          const geschafft = soll<7 && wo>=soll;
+          /* An welcher Stelle im Fenster wurde das Ziel voll? Erst ab da
+             sind die leeren Felder frei — links davon war es noch offen,
+             dort bleiben sie leer. */
+          let vollAb=-1;
+          if(soll<7){
+            let n=0;
+            for(let i=0;i<LETZTE7.length;i++){
+              if(S.habitLog[dk(LETZTE7[i])]?.[h.id]){ n++; if(n>=soll){ vollAb=i; break; } }
+            }
+          }
+          const geschafft = vollAb>=0;
           const erledigt = geschafft && !on;
           const kraft=habitStaerke(h,k), se=habitSerie(h);
           return `<div class="hb2${on?" on":""}${erledigt?" fertig":""}"
@@ -2367,10 +2374,11 @@ R.heute=function(){
             <span class="hb-dot" style="background:${h.color}"></span>
             <span class="hb-n">${esc(h.name)}</span>
             ${soll<7?`<span class="hb-w${geschafft?" voll":""}" title="in den letzten 7 Tagen">${wo}/${soll}</span>`:""}
-            <span class="hb-tage">${LETZTE7.map(d=>{
+            <span class="hb-tage">${LETZTE7.map((d,idx)=>{
               const t2=dk(d), an=!!S.habitLog[t2]?.[h.id];
               const vorher=t2<h.createdAt, kuenftig=t2>today();
-              const schein = geschafft && !an && !vorher && !kuenftig;
+              /* Nur rechts von der Erfüllung — dort zählt kein Tag mehr gegen dich. */
+              const schein = geschafft && idx>vollAb && !an && !vorher && !kuenftig;
               return `<button class="ht${an?" an":""}${schein?" schein":""}${t2===today()?" heute":""}${vorher||kuenftig?" aus":""}"
                 ${vorher||kuenftig?"disabled":`data-hd="${h.id}|${t2}"`}
                 style="--hc:${h.color}" aria-pressed="${an}"

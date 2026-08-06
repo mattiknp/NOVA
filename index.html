@@ -310,6 +310,28 @@ select option{ background:#141a26; }
 .hb-dot{ width:7px; height:7px; border-radius:50%; flex:0 0 auto; }
 .hb-n{ flex:1; font-size:var(--t-base); font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; }
 .hb.on .hb-n{ color:var(--text-dim); }
+/* Wochenziel in der Wochenansicht: direkt dort verstellbar, wo man
+   sieht, ob es passt. */
+.wz{
+  display:flex; align-items:center; gap:2px; justify-content:flex-end;
+}
+.wz button{
+  width:22px; height:26px; border-radius:var(--r-xs); flex:0 0 auto;
+  color:var(--text-faint); font-size:15px; line-height:1;
+  border:1px solid transparent; transition:all var(--d1) var(--ez);
+}
+.wz button:hover:not(:disabled){ color:var(--wc); border-color:color-mix(in srgb, var(--wc) 34%, transparent); }
+.wz button:disabled{ opacity:.25; cursor:default; }
+.wz-v{
+  font-family:var(--f-mono); font-size:var(--t-xs); font-variant-numeric:tabular-nums;
+  min-width:38px; text-align:center; padding:3px 0; border-radius:var(--r-pill);
+  color:var(--text-dim); border:1px solid var(--line);
+}
+.wz-v.voll{
+  color:var(--wc); border-color:color-mix(in srgb, var(--wc) 38%, transparent);
+  background:color-mix(in srgb, var(--wc) 13%, transparent);
+}
+
 /* ── Gewohnheitszeile im Stil von uhabits ─────────────────
    Die letzten sieben Tage stehen dauerhaft in der Zeile und sind
    einzeln antippbar. Vorher gab es nur den heutigen Haken und sieben
@@ -588,14 +610,19 @@ select option{ background:#141a26; }
   letter-spacing:-.03em; color:var(--gc); font-variant-numeric:tabular-nums;
 }
 .goal-num span{ font-size:var(--t-sm); color:var(--text-dim); }
-/* Schutztage: drei Plätze, gefüllte leuchten. Mehr Erklärung steckt
-   im Tooltip — auf der Karte wäre sie zu viel. */
-.goal-schutz{ margin-left:auto; display:flex; gap:4px; align-items:center; cursor:help; }
-.goal-schutz i{
-  width:8px; height:8px; border-radius:50%; display:block;
-  border:1px solid color-mix(in srgb, var(--gc) 30%, transparent);
+/* Puffer. Drei anonyme Punkte musste man erst deuten — ein Schild mit
+   Zahl liest sich sofort, und der Tooltip sagt, was er bewirkt. */
+.goal-schutz{
+  margin-left:auto; display:flex; align-items:center; gap:5px; cursor:help;
+  font-family:var(--f-mono); font-size:var(--t-xs); font-variant-numeric:tabular-nums;
+  padding:3px 9px 3px 7px; border-radius:var(--r-pill);
+  color:var(--text-faint); border:1px solid var(--line);
 }
-.goal-schutz i.an{ background:var(--gc); border-color:var(--gc); }
+.goal-schutz svg{ width:12px; height:12px; }
+.goal-schutz.hat{
+  color:var(--gc); border-color:color-mix(in srgb, var(--gc) 34%, transparent);
+  background:color-mix(in srgb, var(--gc) 12%, transparent);
+}
 .goal-num{ flex-wrap:wrap; }
 .goal-bar{ height:5px; border-radius:var(--r-pill); background:var(--track); overflow:hidden; margin:12px 0 8px; }
 .goal-bar > i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--gc);
@@ -1570,6 +1597,7 @@ const I=(()=>{
     face1:  w('<circle cx="12" cy="12" r="9"/><path d="M8 15.5s1.5-2 4-2 4 2 4 2"/><path d="M9 9.5h.01M15 9.5h.01"/>'),
     face2:  w('<circle cx="12" cy="12" r="9"/><path d="M8.5 15h7"/><path d="M9 9.5h.01M15 9.5h.01"/>'),
     face3:  w('<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/>'),
+    schild: w('<path d="M12 3l7.5 3v5.4c0 4.4-3 8.2-7.5 9.6-4.5-1.4-7.5-5.2-7.5-9.6V6z"/>'),
     bulb:   w('<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/>'),
   };
 })();
@@ -2218,14 +2246,16 @@ R.heute=function(){
           ${heute?`<span class="goal-badge">heute erfüllt</span>`:""}
         </div>
         <div class="goal-num"><b>${G2.serie}</b><span>${G2.serie===1?"Tag":"Tage"} in Folge</span>
-          <span class="goal-schutz" title="${G2.schutz} Schutztag${G2.schutz===1?"":"e"} auf Vorrat.${
-            G2.bisSchutz!==null?` Nächster nach ${G2.bisSchutz} weiteren Tagen.`:" Vorrat voll."}">
-            ${[0,1,2].map(i=>`<i class="${i<G2.schutz?"an":""}"></i>`).join("")}
-          </span></div>
+          <span class="goal-schutz${G2.schutz?" hat":""}"
+            title="${G2.schutz?`${G2.schutz} Tag${G2.schutz===1?"":"e"} darfst du auslassen, ohne dass die Serie reißt.`
+                            :"Kein Puffer — der nächste ausgelassene Tag beendet die Serie."}${
+              G2.bisSchutz!==null?` Der nächste kommt nach ${G2.bisSchutz} weiteren erfüllten Tag${G2.bisSchutz===1?"":"en"}.`:" Vorrat voll."}">
+            ${ico("schild")}${G2.schutz}</span></div>
         <div class="goal-bar"><i style="width:${pct}%"></i></div>
         <div class="goal-foot">
           <span>${G2.regel}</span>
-          <span>${G2.best>0?(G2.serie>=G2.best?"Bestwert":"Rekord "+G2.best):"noch kein Rekord"}</span>
+          <span>${G2.genutzt?`${G2.genutzt} Tag${G2.genutzt===1?"":"e"} gerettet · `:""}${
+            G2.best>0?(G2.serie>=G2.best?"Bestwert":"Rekord "+G2.best):"noch kein Rekord"}</span>
         </div>
         ${G2.key==="solid"?`<button class="b b-sm goal-act ${heute?"b-1":""}" id="hCheck">
           ${ico("check")}${heute?"Heute abgehakt":"Heute abhaken"}</button>`:""}
@@ -3692,22 +3722,35 @@ R.woche=function(){
   </div>
   <div class="p" style="overflow-x:auto;margin-bottom:14px">
     <div style="min-width:640px">
-      <div style="display:grid;grid-template-columns:170px repeat(7,minmax(0,1fr));gap:4px;margin-bottom:6px">
+      <div style="display:grid;grid-template-columns:170px repeat(7,minmax(0,1fr)) 104px;gap:4px;margin-bottom:6px">
         <span></span>
         ${days.map(d=>{const k=dk(d);return `<div style="text-align:center;padding:6px 0;border-radius:var(--r);${k===t?"background:rgba(79,227,210,.10)":""}">
           <div style="font-size:var(--t-xs);color:${k===t?"var(--c1)":"var(--text-faint)"}">${WD[(d.getDay()+6)%7]}</div>
           <div style="font-family:var(--f-disp);font-weight:700;font-size:var(--t-md);color:${k===t?"var(--c1)":"var(--text)"};font-variant-numeric:tabular-nums">${d.getDate()}</div></div>`;}).join("")}
+        <div style="text-align:center;font-size:var(--t-xs);color:var(--text-faint);align-self:end;padding-bottom:7px">Wochenziel</div>
       </div>
-      ${hs.map(h=>`<div style="display:grid;grid-template-columns:170px repeat(7,minmax(0,1fr));gap:4px;margin-bottom:4px;align-items:center">
+      ${hs.map(h=>{
+        const soll=habitSoll(h);
+        const treffer=days.filter(d=>S.habitLog[dk(d)]?.[h.id]).length;
+        const erfuellt=treffer>=soll;
+        return `<div style="display:grid;grid-template-columns:170px repeat(7,minmax(0,1fr)) 104px;gap:4px;margin-bottom:4px;align-items:center">
         <div style="display:flex;align-items:center;gap:8px;font-size:var(--t-sm);min-width:0">
           <i style="width:7px;height:7px;border-radius:50%;background:${h.color};flex:0 0 auto"></i>
           <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.name)}</span></div>
         ${days.map(d=>{const k=dk(d),on=!!S.habitLog[k]?.[h.id],ex=k>=h.createdAt,fut=k>t;
-          return ex?`<button data-wc="${k}|${h.id}" style="height:30px;border-radius:var(--r-xs);border:1.5px solid ${on?"var(--c1)":"var(--line-2)"};background:${on?"var(--c1)":"transparent"};opacity:${fut?.35:1};display:grid;place-items:center;transition:all var(--d1) var(--ez)">
+          /* Ist das Wochenziel erfüllt, sind die leeren Felder keine
+             Versäumnisse mehr — sie treten deshalb zurück. */
+          const ueber = erfuellt&&!on;
+          return ex?`<button data-wc="${k}|${h.id}" style="height:30px;border-radius:var(--r-xs);border:1.5px solid ${on?h.color:"var(--line-2)"};background:${on?h.color:"transparent"};opacity:${fut?.3:ueber?.32:1};display:grid;place-items:center;transition:all var(--d1) var(--ez)">
             ${on?ico("check").replace("<svg",'<svg width="13" height="13" style="stroke:#04231f;stroke-width:3"'):""}</button>`
           :`<div></div>`;}).join("")}
-      </div>`).join("")}
-      <div style="display:grid;grid-template-columns:170px repeat(7,minmax(0,1fr));gap:4px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
+        <div class="wz" style="--wc:${h.color}">
+          <button data-wm="${h.id}" title="Wochenziel senken" ${soll<=1?"disabled":""}>−</button>
+          <span class="wz-v${erfuellt?" voll":""}" title="${treffer} von ${soll} in dieser Woche">${treffer}/${soll}</span>
+          <button data-wp="${h.id}" title="Wochenziel erhöhen" ${soll>=7?"disabled":""}>+</button>
+        </div>
+      </div>`;}).join("")}
+      <div style="display:grid;grid-template-columns:170px repeat(7,minmax(0,1fr)) 104px;gap:4px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">
         <span style="font-size:var(--t-sm);color:var(--text-dim);font-weight:600">Tageswert</span>
         ${days.map(d=>{const s=dayScore(dk(d));
           return `<div style="text-align:center"><div style="font-family:var(--f-disp);font-weight:700;font-variant-numeric:tabular-nums;color:${s===null?"var(--text-faint)":s>=60?"var(--good)":s>=35?"var(--c1)":"var(--warn)"}">${s===null?"–":s}</div></div>`;}).join("")}
@@ -3730,6 +3773,14 @@ R.woche=function(){
   V.querySelector("#wPrev").onclick=()=>{ CW=addD(CW,-7); R.woche(); };
   V.querySelector("#wNext").onclick=()=>{ CW=addD(CW,7); R.woche(); };
   V.querySelector("#wNow").onclick=()=>{ CW=sow(new Date()); R.woche(); };
+  const zielSetzen=(id,d)=>{
+    const h=(S.habits||[]).find(x=>x.id===id); if(!h) return;
+    h.proWoche=clamp(habitSoll(h)+d,1,7); save();
+    toast(`${h.name}: ${h.proWoche===7?"täglich":h.proWoche+"× pro Woche"}`);
+    R.woche(); paintOrb();
+  };
+  V.querySelectorAll("[data-wm]").forEach(b=>b.onclick=()=>zielSetzen(b.dataset.wm,-1));
+  V.querySelectorAll("[data-wp]").forEach(b=>b.onclick=()=>zielSetzen(b.dataset.wp,+1));
   V.querySelectorAll("[data-wc]").forEach(b=>b.onclick=()=>{
     const [k,id]=b.dataset.wc.split("|"); toggleHabit(k,id); R.woche(); paintOrb(); });
 };

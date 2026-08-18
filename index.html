@@ -1552,6 +1552,49 @@ const todoWocheFertig=()=>{
 const todoArchivZahl=()=>(S.todos||[]).filter(t=>t.archived&&!t.done).length;
 
 
+/* ── Einheiten aus SATZ ─────────────────────────────────
+   SATZ ist die Trainings-App und legt ihre Einheiten als eigene
+   Datei ab. NOVA liest sie und trägt nach, was hier noch fehlt —
+   genau wie beim Garmin-Abgleich: nur ergänzen, nie überschreiben,
+   und über die Kennung jedes Eintrags gegen Doppelte gesichert.
+   Zwei getrennte Dateien heißt: Beide dürfen gleichzeitig offen
+   sein, ohne sich die Arbeit des anderen zu löschen.
+   ──────────────────────────────────────────────────────── */
+const SATZ_FILE="training.json";
+const SATZ_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${SATZ_FILE}`;
+
+function mergeSatz(daten){
+  if(!daten||!daten.sport) return 0;
+  let n=0;
+  Object.entries(daten.sport).forEach(([k,liste])=>{
+    if(!Array.isArray(liste)) return;
+    const vorhanden=new Set((S.sport[k]||[]).map(e=>e.id));
+    liste.forEach(e=>{
+      if(!e||!e.id||vorhanden.has(e.id)) return;
+      if(!S.sport[k]) S.sport[k]=[];
+      S.sport[k].push({id:e.id,type:e.type||"other",duration:e.duration||0,
+        hr:e.hr??null, rpe:e.rpe??null, notes:e.notes??null,
+        kraftSubtype:e.kraftSubtype??null});
+      n++;
+    });
+  });
+  return n;
+}
+
+async function holeSatz(){
+  if(!cloudOn()) return 0;
+  try{
+    const r=await fetch(SATZ_API,{headers:{Authorization:"Bearer "+cloudTok(),
+      Accept:"application/vnd.github+json"}});
+    if(!r.ok) return 0;                       /* keine Datei = SATZ noch nicht benutzt */
+    const j=await r.json();
+    const daten=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))));
+    const n=mergeSatz(daten);
+    if(n){ persist(); queueSync(); }
+    return n;
+  }catch(e){ return 0; }
+}
+
 /* ── Cloud ── */
 const cloudOn=()=>localStorage.getItem(CLOUD_ON)==="1";
 const cloudTok=()=>localStorage.getItem(CLOUD_TOK)||"";
@@ -4477,7 +4520,14 @@ load();
 garminNeu=mergeGarmin();
 if(garminNeu) persist();
 shell();
-if(cloudOn()){ setSync("busy"); pullCloud().then(ok=>{ if(ok) go(VIEW); }); } else setSync("off");
+if(cloudOn()){
+  setSync("busy");
+  pullCloud().then(async ok=>{
+    const n=await holeSatz();
+    if(ok||n) go(VIEW);
+    if(n) setTimeout(()=>toast(`${n} Einheit${n===1?"":"en"} aus SATZ übernommen`,"run"),1000);
+  });
+} else setSync("off");
 ausUrl();
 if(garminNeu) setTimeout(()=>toast(`${garminNeu} Werte von Garmin ergänzt`,"heart"),1400);
 if(imported) setTimeout(()=>toast(imported==="seed"

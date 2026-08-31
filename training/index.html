@@ -610,6 +610,21 @@ function sichern(){
   try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
   if(syncAn()) syncPlanen();
 }
+/* Für die Stellen, an denen wirklich etwas Bedeutsames entsteht:
+   eine fertige Einheit, ein Nachtrag, eine Löschung. Kein Warten —
+   auf dem Handy ist die App oft schon weggewischt, bevor der
+   Zeitgeber unten losläuft. */
+function sichernSofort(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  if(syncAn()){ clearTimeout(syncTimer); hochladen(); }
+}
+/* Sicherheitsnetz: Wechselt die Seite in den Hintergrund — Handy
+   gesperrt, App gewechselt — während noch eine verzögerte Sicherung
+   aussteht, wird sofort hochgeladen statt zu warten. iOS pausiert
+   Zeitgeber im Hintergrund fast augenblicklich. */
+function beimVerstecken(){ if(syncTimer){ clearTimeout(syncTimer); hochladen(); } }
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) beimVerstecken(); });
+window.addEventListener("pagehide",beimVerstecken);
 
 /* ── Symbole ────────────────────────────────────────
    Gezeichnet, nicht Emoji — eine Strichstärke durchgehend. */
@@ -1154,7 +1169,7 @@ R.einstellungen=function(){
         Diese App legt deine Einheiten als <span class="mono">training.json</span> in derselben
         privaten Ablage ab, aus der NOVA liest. NOVA trägt sie dann von selbst
         unter Training ein — du erfasst nur noch hier.</p>
-      <input id="tok" type="password" placeholder="ghp_…" value="${esc(tok)}" style="margin-bottom:9px">
+      <input id="tok" type="password" placeholder="ghp_…" value="${esc(tok)}" style="margin-bottom:9px" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       <div style="display:flex;gap:9px">
         <button class="b" style="flex:1" onclick="tokSpeichern()">Schlüssel sichern</button>
         <button class="b ${an?"":"b-1"}" style="flex:1" onclick="syncSchalten()">${an?"Abschalten":"Einschalten"}</button>
@@ -1348,7 +1363,7 @@ function ntSichern(){
       dauer:NT.dauer,rpe:NT.rpe,notiz,uebungen:[],beendet:Date.now()});
   }
   S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
-  sichern(); zu(); zeichnen();
+  sichernSofort(); zu(); zeichnen();
   toast(`${dz(NT.disz).n} ${NT.bearbeitet?"geändert":"eingetragen"} — ${hmm(NT.dauer)}`);
 }
 function setUnter(x){ S.laufend.unter=S.laufend.unter===x?null:x; sichern(); zeichnen(); }
@@ -1419,7 +1434,7 @@ function beenden(){
   }
   S.einheiten.push(e);
   S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||a.beendet-b.beendet);
-  S.laufend=null; sichern(); VIEW="start"; zeichnen();
+  S.laufend=null; sichernSofort(); VIEW="start"; zeichnen();
   toast(`${d.n} gesichert — ${hmm(min)}`);
 }
 function abbrechen(){
@@ -1454,7 +1469,7 @@ function einheitOeffnen(id){
 
 function loeschen(id){
   if(!confirm("Einheit löschen?")) return;
-  S.einheiten=S.einheiten.filter(e=>e.id!==id); sichern(); zeichnen();
+  S.einheiten=S.einheiten.filter(e=>e.id!==id); sichernSofort(); zeichnen();
 }
 function ubWeg(id){
   const u=S.uebungen.find(x=>x.id===id); if(!u) return;

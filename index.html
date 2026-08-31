@@ -4529,6 +4529,21 @@ if(cloudOn()){
   });
 } else setSync("off");
 ausUrl();
+
+/* ── Zwei Absicherungen für Handy und Rechner gleichzeitig ──────
+   1. Eigene Sicherung im Hintergrund: Ist noch eine verzögerte
+      Sicherung fällig, wenn die Seite verschwindet — Handy gesperrt,
+      App gewechselt —, wird sofort hochgeladen statt zu warten.
+      iOS pausiert Zeitgeber im Hintergrund fast augenblicklich.
+   2. Wechselst du zurück zu NOVA, holt es sich unaufgefordert nach,
+      was inzwischen aus SATZ dazukam — sonst müsste man von Hand
+      neu laden, um Trainingsdaten vom Handy zu sehen. */
+window.addEventListener("pagehide",()=>{ if(syncTimer){ clearTimeout(syncTimer); pushCloud(); } });
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){ if(syncTimer){ clearTimeout(syncTimer); pushCloud(); } return; }
+  if(!cloudOn()) return;
+  holeSatz().then(n=>{ if(n){ go(VIEW); toast(`${n} Einheit${n===1?"":"en"} aus SATZ übernommen`,"run"); } });
+});
 if(garminNeu) setTimeout(()=>toast(`${garminNeu} Werte von Garmin ergänzt`,"heart"),1400);
 if(imported) setTimeout(()=>toast(imported==="seed"
   ? "Dein Stand vom 1. August geladen" : "Daten aus deinem Tracker übernommen","cloud"),600);

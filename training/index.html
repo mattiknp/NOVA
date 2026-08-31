@@ -345,6 +345,22 @@ main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
   font-family:var(--f-mono);font-size:11px;font-weight:600;color:var(--dc);
   background:color-mix(in srgb,var(--dc) 20%,transparent);
 }
+/* Programme ohne Übungsliste (Mobility) zeigen ihr Disziplin-Symbol
+   statt Übungs-Kacheln. */
+.wp-eig svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* Auswahlliste unten: feste Workouts einer Disziplin, wie bei
+   Alpha Progression — Name links, Übungsvorschau rechts. */
+.prog-wahl{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.prog-wahl-z{
+  display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  padding:13px 14px;border-radius:var(--r);background:var(--surf);
+  transition:background-color var(--d1) var(--ez);
+}
+.prog-wahl-z:hover{background:var(--surf-2)}
+.prog-wahl-n{flex:1;min-width:0}
+.prog-wahl-t{display:block;font-size:16px;font-weight:600}
+.prog-wahl-s{display:block;font-size:12px;color:var(--faint);margin-top:2px}
 
 /* Wochenstreifen: sieben Tage, heute hervorgehoben, Punkt an Tagen
    mit erfasster Einheit. */
@@ -485,7 +501,7 @@ const DISZ=[
    sub:["Training","Match","Medenspiel","Turnier","Paddel"], std:120},
   {id:"kraft",    n:"Kraft",        nova:"kraft",    art:"satz",  farbe:"var(--kraft)", kf:"var(--k-kraft)", ico:"hantel",
    sub:["Oberkörper","Unterkörper","Rumpf","Ganzkörper"], std:60},
-  {id:"athletik", n:"Athletik",     nova:"kraft",    art:"dauer", farbe:"var(--athletik)", kf:"var(--k-athletik)", ico:"blitz",
+  {id:"athletik", n:"Athletik",     nova:"kraft",    art:"satz",  farbe:"var(--athletik)", kf:"var(--k-athletik)", ico:"blitz",
    sub:["Sprünge","Würfe","Antritte","Koordination","Kondition"], std:45},
   {id:"zone2",    n:"Zone 2",       nova:"zone2",    art:"dauer", farbe:"var(--zone2)", kf:"var(--k-zone2)", ico:"herz",
    sub:["Laufen","Rad","Ergometer","Schwimmen"], std:45},
@@ -616,13 +632,39 @@ const PROG_STD=[
              ["Medizinball Slam",4,8],["Koordinationsleiter",4,1]]},
   {id:"p_ru", name:"Rumpf", disz:"kraft", proWoche:2, tag:null,
    uebungen:[["Pallof Press",3,12],["Hanging Leg Raise",3,10],
-             ["Seitstütz",3,45],["Bird Dog",3,10]]}
+             ["Seitstütz",3,45],["Bird Dog",3,10]]},
+  /* Kein Satzprotokoll — Mobility bleibt eine Dauer-Disziplin, taucht
+     hier nur mit ihrem Wochenziel auf. Deshalb keine Übungen: Start
+     läuft weiterhin über „nachtragen", nie über progStarten(). */
+  {id:"p_mob", name:"Mobility", disz:"mobility", proWoche:5, tag:null, uebungen:[]}
 ];
 const progAlle=()=>S.programme&&S.programme.length?S.programme:PROG_STD;
 const progById=id=>progAlle().find(p=>p.id===id)||null;
-function progDieseWoche(id){
+/* Tage dieser Woche, an denen das Programm als erledigt zählt —
+   entweder durch eine echte Einheit (unten erfasst) oder durch ein
+   Häkchen (oben angetippt). Eine Menge statt zwei Zahlen, damit
+   derselbe Tag nie doppelt zählt, egal woher er kommt. */
+function progTage(id){
   const mo=dk(mow(new Date())), bis=dk(addT(mow(new Date()),6));
-  return S.einheiten.filter(e=>e.programm===id&&e.datum>=mo&&e.datum<=bis).length;
+  const tage=new Set();
+  S.einheiten.forEach(e=>{ if(e.programm===id&&e.datum>=mo&&e.datum<=bis) tage.add(e.datum); });
+  (S.haken?.[id]||[]).forEach(k=>{ if(k>=mo&&k<=bis) tage.add(k); });
+  return tage;
+}
+function progDieseWoche(id){ return progTage(id).size; }
+
+/* Häkchen setzen oder zurücknehmen — reines Merkmal, unabhängig von
+   echten Einheiten. Ungefährlich beim Zurücknehmen: zählt der Tag
+   noch über eine echte Einheit, bleibt er trotzdem erfasst. */
+function tickToggle(id){
+  const p=progById(id); if(!p) return;
+  const k=heute();
+  S.haken=S.haken||{};
+  const liste=S.haken[id]=S.haken[id]||[];
+  const i=liste.indexOf(k);
+  if(i>=0){ liste.splice(i,1); toast(`${p.name}: Häkchen entfernt`); }
+  else { liste.push(k); toast(`${p.name} abgehakt`); }
+  sichernSofort(); zeichnen();
 }
 /* Sieben Tage der laufenden Woche, heute hervorgehoben, mit einem
    kleinen Punkt an Tagen, die schon eine Einheit haben. */
@@ -649,7 +691,17 @@ function wochenPlan(){
 
 /* ── Zustand ───────────────────────────────────────── */
 const leer=()=>({einheiten:[],uebungen:UEB_STD.map(([g,n,kg])=>({id:uid(),gruppe:g,name:n,kg:!!kg})),
-  programme:PROG_STD.map(p=>({...p,uebungen:p.uebungen.map(u=>[...u])})), laufend:null});
+  programme:PROG_STD.map(p=>({...p,uebungen:p.uebungen.map(u=>[...u])})), haken:{}, laufend:null});
+
+/* Neue voreingestellte Programme (wie Mobility) bei bestehenden Nutzern
+   nachtragen, ohne etwas Vorhandenes anzurühren — nur was an Kennung
+   fehlt, kommt dazu. */
+function migriereProgramme(){
+  if(!S.programme) S.programme=PROG_STD.map(p=>({...p,uebungen:p.uebungen.map(u=>[...u])}));
+  const vorhanden=new Set(S.programme.map(p=>p.id));
+  PROG_STD.forEach(p=>{ if(!vorhanden.has(p.id)) S.programme.push({...p,uebungen:p.uebungen.map(u=>[...u])}); });
+  if(!S.haken) S.haken={};
+}
 let S=leer(), VIEW="start", TICK=null;
 
 function laden(){
@@ -816,16 +868,17 @@ R.start=function(){
           : p.proWoche>1 ? `<span class="wp-punkte">${[...Array(p.proWoche)].map((_,i)=>
               `<i class="${i<p.ist?"voll":""}"></i>`).join("")}</span>`
           : `<span class="wp-ring"></span>`;
+        const bilderHtml = bilder.length
+          ? `${bilder.map(([n])=>`<span class="wp-bild">${koerper(n,d.farbe,26)}</span>`).join("")}${
+              rest>0?`<span class="wp-bild wp-mehr">+${rest}</span>`:""}`
+          : `<span class="wp-bild wp-eig" style="color:${d.farbe}">${ico(d.ico)}</span>`;
         return `<button class="wp-row${p.fertig?" fertig":""}" style="--dc:${d.farbe}"
-          onclick="progStarten('${p.id}')">
+          onclick="tickToggle('${p.id}')" title="Antippen, um heute abzuhaken">
           ${status}
           <span class="wp-n">${esc(p.name)}
-            <span class="wp-s">${p.uebungen.length} Übungen${
+            <span class="wp-s">${p.uebungen.length?`${p.uebungen.length} Übungen`:"Wochenziel"}${
               p.tag?` · meist ${p.tag}${heuteEmpf&&!p.fertig?", also heute":""}`:""}</span></span>
-          <span class="wp-bilder">
-            ${bilder.map(([n])=>`<span class="wp-bild">${koerper(n,d.farbe,26)}</span>`).join("")}
-            ${rest>0?`<span class="wp-bild wp-mehr">+${rest}</span>`:""}
-          </span>
+          <span class="wp-bilder">${bilderHtml}</span>
         </button>`;}).join("")}
     </div>`:""}
 
@@ -1336,9 +1389,37 @@ function zuUebung(i){
 function starten(id){
   const d=dz(id);
   if(d.art==="dauer") return nachtragen(id);    /* nichts läuft mit */
+  const passend=progAlle().filter(p=>p.disz===id&&p.uebungen.length);
+  if(passend.length) return programWaehlen(id,passend);
+  freiesTraining(id);      /* keine festen Workouts hinterlegt — frei starten */
+}
+function freiesTraining(id){
   S.laufend={id:uid(),disz:id,start:Date.now(),unter:null,rpe:null,notiz:"",
              uebungen:[],aktiv:-1,kg:20,wdh:10,rir:null,pause:null};
   sichern(); zeichnen();
+}
+/* Wie bei Alpha Progression: erst das feste Workout wählen, statt
+   direkt in eine leere Übungsliste zu springen. */
+function programWaehlen(diszId,programme){
+  const d=dz(diszId);
+  blatt(`<div style="--dc:${d.farbe}">
+    <h3>${esc(d.n)}</h3>
+    <div class="prog-wahl">
+      ${programme.map(p=>{
+        const bilder=p.uebungen.slice(0,3), rest=p.uebungen.length-bilder.length;
+        return `<button class="prog-wahl-z" onclick="zu();progStarten('${p.id}')">
+          <span class="prog-wahl-n">
+            <span class="prog-wahl-t">${esc(p.name)}</span>
+            <span class="prog-wahl-s">${p.uebungen.length} Übungen${p.tag?` · meist ${p.tag}`:""}</span>
+          </span>
+          <span class="wp-bilder">
+            ${bilder.map(([n])=>`<span class="wp-bild">${koerper(n,d.farbe,26)}</span>`).join("")}
+            ${rest>0?`<span class="wp-bild wp-mehr">+${rest}</span>`:""}
+          </span>
+        </button>`;}).join("")}
+    </div>
+    <button class="b b-w" style="margin-top:6px" onclick="zu();freiesTraining('${diszId}')">Freies Training — Übung frei wählen</button>
+  </div>`);
 }
 
 /* ── Nachtragen ─────────────────────────────────────────
@@ -1426,12 +1507,18 @@ function ntDatumFrei(){
 }
 function ntSichern(){
   const notiz=document.getElementById("ntNotiz")?.value.trim()||null;
+  /* Passt genau ein Wochenziel zu dieser Disziplin — bei Mobility der
+     Fall —, zählt der Eintrag automatisch dafür, ohne dass zusätzlich
+     oben angehakt werden müsste. */
+  const passendesProgramm=progAlle().find(p=>p.disz===NT.disz);
   if(NT.bearbeitet){
     const e=S.einheiten.find(x=>x.id===NT.bearbeitet);
-    if(e) Object.assign(e,{datum:NT.datum,dauer:NT.dauer,unter:NT.unter,rpe:NT.rpe,notiz});
+    if(e) Object.assign(e,{datum:NT.datum,dauer:NT.dauer,unter:NT.unter,rpe:NT.rpe,notiz,
+      programm:passendesProgramm?passendesProgramm.id:e.programm||null});
   } else {
     S.einheiten.push({id:uid(),datum:NT.datum,disz:NT.disz,unter:NT.unter,
-      dauer:NT.dauer,rpe:NT.rpe,notiz,uebungen:[],beendet:Date.now()});
+      dauer:NT.dauer,rpe:NT.rpe,notiz,programm:passendesProgramm?passendesProgramm.id:null,
+      uebungen:[],beendet:Date.now()});
   }
   S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
   sichernSofort(); zu(); zeichnen();
@@ -1650,30 +1737,36 @@ async function hochladen(){
 /* Die eigentliche Sicherung: alle Einheiten mit Sätzen, Gewichten,
    Programm-Zugehörigkeit, plus selbst angelegte Übungen. Damit
    gleichen sich zwei Geräte über dieselbe private Ablage ab. */
+function mischeFerneDaten(fern){
+  let n=0;
+  const vorhanden=new Set(S.einheiten.map(e=>e.id));
+  (fern.einheiten||[]).forEach(e=>{ if(e&&e.id&&!vorhanden.has(e.id)){ S.einheiten.push(e); vorhanden.add(e.id); n++; } });
+  const ubVorhanden=new Set(S.uebungen.map(u=>u.name));
+  (fern.uebungen||[]).forEach(u=>{ if(u&&u.name&&!ubVorhanden.has(u.name)) S.uebungen.push(u); });
+  S.haken=S.haken||{};
+  Object.entries(fern.haken||{}).forEach(([pid,tage])=>{
+    const eig=S.haken[pid]=S.haken[pid]||[];
+    (tage||[]).forEach(k=>{ if(!eig.includes(k)) eig.push(k); });
+  });
+  if(n) S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  return n;
+}
+
 async function hochladenVoll(){
   if(!syncAn()) return;
   try{
     const kopf={Authorization:"Bearer "+token(),Accept:"application/vnd.github+json"};
-    /* Vor jedem Hochladen erst einmischen, was der Server schon hat.
-       Sonst würde ein Gerät, das seit dem letzten Laden nichts vom
-       anderen gesehen hat, dessen Einträge beim eigenen Speichern
-       lautlos überschreiben — genau der Fehler, der Trainingseinträge
-       verschwinden ließ. */
     const g=await fetch(VOLL_API+"?v="+Date.now(),{headers:kopf});
     if(g.ok){
       const j=await g.json(); vollSha=j.sha;
       try{
         const fern=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))));
-        const vorhanden=new Set(S.einheiten.map(e=>e.id));
-        (fern.einheiten||[]).forEach(e=>{ if(e&&e.id&&!vorhanden.has(e.id)){ S.einheiten.push(e); vorhanden.add(e.id); } });
-        const ubVorhanden=new Set(S.uebungen.map(u=>u.name));
-        (fern.uebungen||[]).forEach(u=>{ if(u&&u.name&&!ubVorhanden.has(u.name)) S.uebungen.push(u); });
-        S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
-        try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+        mischeFerneDaten(fern);
       }catch(e){}
     }
     const inhalt=btoa(unescape(encodeURIComponent(JSON.stringify(
-      {einheiten:S.einheiten,uebungen:S.uebungen}))));
+      {einheiten:S.einheiten,uebungen:S.uebungen,haken:S.haken||{}}))));
     const r=await fetch(VOLL_API,{method:"PUT",headers:{...kopf,"Content-Type":"application/json"},
       body:JSON.stringify({message:"Training "+new Date().toISOString(),content:inhalt,sha:vollSha||undefined})});
     if(r.ok){ vollSha=(await r.json()).content.sha; zeichnen(); }
@@ -1706,26 +1799,13 @@ async function herunterladenVoll(){
     const j=await r.json();
     vollSha=j.sha;
     const fern=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))));
-    let n=0;
-    const vorhanden=new Set(S.einheiten.map(e=>e.id));
-    (fern.einheiten||[]).forEach(e=>{
-      if(!e||!e.id||vorhanden.has(e.id)) return;
-      S.einheiten.push(e); n++;
-    });
-    const ubVorhanden=new Set(S.uebungen.map(u=>u.name));
-    (fern.uebungen||[]).forEach(u=>{
-      if(u&&u.name&&!ubVorhanden.has(u.name)) S.uebungen.push(u);
-    });
-    if(n){
-      S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
-      try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
-    }
-    return n;
+    return mischeFerneDaten(fern);
   }catch(e){ return 0; }
 }
 
 /* ── Start ─────────────────────────────────────────── */
 laden();
+migriereProgramme();
 zeichnen();
 if(syncAn()) herunterladenVoll().then(n=>{ if(n){ zeichnen(); toast(`${n} Einheit${n===1?"":"en"} vom anderen Gerät`); } });
 document.addEventListener("visibilitychange",()=>{

@@ -322,6 +322,44 @@ main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
 .wp-st{flex:0 0 auto;font-family:var(--f-mono);font-size:12px;color:var(--dc);display:grid;place-items:center}
 .wp-st svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 
+/* Status links: Ring wächst zum Haken, sonst dieselben Punkte wie oben. */
+.wp-ring{
+  width:23px;height:23px;flex:0 0 auto;border-radius:50%;
+  border:2px solid color-mix(in srgb,var(--dc) 45%,transparent);
+}
+.wp-haken{
+  width:23px;height:23px;flex:0 0 auto;border-radius:50%;
+  background:var(--good);color:#08210f;display:grid;place-items:center;
+}
+.wp-haken svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+
+/* Übungsvorschau rechts: kleine Kacheln mit der Muskelkarte statt
+   Fotos, die es dafür nicht gibt. */
+.wp-bilder{display:flex;gap:5px;flex:0 0 auto}
+.wp-bild{
+  width:30px;height:30px;border-radius:8px;flex:0 0 auto;
+  background:color-mix(in srgb,var(--dc) 13%,transparent);
+  display:grid;place-items:center;overflow:hidden;
+}
+.wp-mehr{
+  font-family:var(--f-mono);font-size:11px;font-weight:600;color:var(--dc);
+  background:color-mix(in srgb,var(--dc) 20%,transparent);
+}
+
+/* Wochenstreifen: sieben Tage, heute hervorgehoben, Punkt an Tagen
+   mit erfasster Einheit. */
+.wtag-streifen{display:flex;justify-content:space-between;margin-bottom:18px;padding:0 2px}
+.wtag{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+.wtag-t{font-size:11px;color:var(--faint)}
+.wtag-z{
+  width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--f-mono);font-size:13px;color:var(--dim);font-weight:600;
+}
+.wtag.heute .wtag-z{background:var(--c1);color:#04231f}
+.wtag-p{width:4px;height:4px;border-radius:50%;background:transparent;display:block}
+.wtag-p.an{background:var(--faint)}
+.wtag.heute .wtag-p.an{background:var(--c1)}
+
 /* Übungsliste innerhalb eines laufenden Programms */
 .prog-liste{display:flex;flex-direction:column;gap:3px;margin:14px 0 4px}
 .prog-z{
@@ -586,6 +624,22 @@ function progDieseWoche(id){
   const mo=dk(mow(new Date())), bis=dk(addT(mow(new Date()),6));
   return S.einheiten.filter(e=>e.programm===id&&e.datum>=mo&&e.datum<=bis).length;
 }
+/* Sieben Tage der laufenden Woche, heute hervorgehoben, mit einem
+   kleinen Punkt an Tagen, die schon eine Einheit haben. */
+function wochenstreifen(){
+  const mo=mow(new Date());
+  return `<div class="wtag-streifen">
+    ${[...Array(7)].map((_,i)=>{
+      const d=addT(mo,i), k=dk(d), istHeute=k===heute();
+      const hat=S.einheiten.some(e=>e.datum===k);
+      return `<div class="wtag${istHeute?" heute":""}">
+        <span class="wtag-t">${WD[i]}</span>
+        <span class="wtag-z">${d.getDate()}</span>
+        <i class="wtag-p${hat?" an":""}"></i>
+      </div>`;}).join("")}
+  </div>`;
+}
+
 function wochenPlan(){
   return progAlle().map(p=>{
     const ist=progDieseWoche(p.id);
@@ -746,6 +800,7 @@ R.start=function(){
   <main>
     ${plan.length?`
     <div class="wp">
+      ${wochenstreifen()}
       <div class="wp-kopf">
         <span class="wp-t">Diese Woche</span>
         <span class="wp-z mono">${plan.filter(p=>p.fertig).length}/${plan.length} erledigt</span>
@@ -753,14 +808,24 @@ R.start=function(){
       ${plan.map(p=>{
         const d=dz(p.disz);
         const heuteEmpf = p.tag===WD[(new Date().getDay()+6)%7];
+        const bilder=p.uebungen.slice(0,3), rest=p.uebungen.length-bilder.length;
+        /* Status links: bei mehr als einer Einheit pro Woche zeigen Punkte
+           den Teilfortschritt (2 von 3 usw.), sonst reicht ein Ring, der
+           sich zum Haken füllt. */
+        const status = p.fertig ? `<span class="wp-haken">${ico("check")}</span>`
+          : p.proWoche>1 ? `<span class="wp-punkte">${[...Array(p.proWoche)].map((_,i)=>
+              `<i class="${i<p.ist?"voll":""}"></i>`).join("")}</span>`
+          : `<span class="wp-ring"></span>`;
         return `<button class="wp-row${p.fertig?" fertig":""}" style="--dc:${d.farbe}"
           onclick="progStarten('${p.id}')">
-          <span class="wp-punkte">${[...Array(p.proWoche)].map((_,i)=>
-            `<i class="${i<p.ist?"voll":""}"></i>`).join("")}</span>
+          ${status}
           <span class="wp-n">${esc(p.name)}
             <span class="wp-s">${p.uebungen.length} Übungen${
               p.tag?` · meist ${p.tag}${heuteEmpf&&!p.fertig?", also heute":""}`:""}</span></span>
-          <span class="wp-st">${p.fertig?ico("check"):p.ist?`${p.ist}/${p.proWoche}`:"offen"}</span>
+          <span class="wp-bilder">
+            ${bilder.map(([n])=>`<span class="wp-bild">${koerper(n,d.farbe,26)}</span>`).join("")}
+            ${rest>0?`<span class="wp-bild wp-mehr">+${rest}</span>`:""}
+          </span>
         </button>`;}).join("")}
     </div>`:""}
 
@@ -1067,7 +1132,7 @@ R.verlauf=function(){
   return `
   <div class="kopf">
     <span class="marke">Auswertung</span>
-    <span class="kopf-sub mono">${S.einheiten.length} Einheiten</span>
+    <span class="kopf-sub mono">${S.einheiten.length} ${S.einheiten.length===1?"Einheit":"Einheiten"}</span>
   </div>
   <main>
     <div class="kpi">
@@ -1588,15 +1653,29 @@ async function hochladenVoll(){
   if(!syncAn()) return;
   try{
     const kopf={Authorization:"Bearer "+token(),Accept:"application/vnd.github+json"};
-    if(!vollSha){
-      const g=await fetch(VOLL_API,{headers:kopf});
-      if(g.ok) vollSha=(await g.json()).sha;
+    /* Vor jedem Hochladen erst einmischen, was der Server schon hat.
+       Sonst würde ein Gerät, das seit dem letzten Laden nichts vom
+       anderen gesehen hat, dessen Einträge beim eigenen Speichern
+       lautlos überschreiben — genau der Fehler, der Trainingseinträge
+       verschwinden ließ. */
+    const g=await fetch(VOLL_API+"?v="+Date.now(),{headers:kopf});
+    if(g.ok){
+      const j=await g.json(); vollSha=j.sha;
+      try{
+        const fern=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))));
+        const vorhanden=new Set(S.einheiten.map(e=>e.id));
+        (fern.einheiten||[]).forEach(e=>{ if(e&&e.id&&!vorhanden.has(e.id)){ S.einheiten.push(e); vorhanden.add(e.id); } });
+        const ubVorhanden=new Set(S.uebungen.map(u=>u.name));
+        (fern.uebungen||[]).forEach(u=>{ if(u&&u.name&&!ubVorhanden.has(u.name)) S.uebungen.push(u); });
+        S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
+        try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+      }catch(e){}
     }
     const inhalt=btoa(unescape(encodeURIComponent(JSON.stringify(
       {einheiten:S.einheiten,uebungen:S.uebungen}))));
     const r=await fetch(VOLL_API,{method:"PUT",headers:{...kopf,"Content-Type":"application/json"},
       body:JSON.stringify({message:"Training "+new Date().toISOString(),content:inhalt,sha:vollSha||undefined})});
-    if(r.ok){ vollSha=(await r.json()).content.sha; }
+    if(r.ok){ vollSha=(await r.json()).content.sha; zeichnen(); }
     else if(r.status===409){ vollSha=null; setTimeout(hochladenVoll,900); }
   }catch(e){}
 }

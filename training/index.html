@@ -442,7 +442,7 @@ const DISZ=[
    sub:["Training","Match","Medenspiel","Turnier","Paddel"], std:120},
   {id:"kraft",    n:"Kraft",        nova:"kraft",    art:"satz",  farbe:"var(--kraft)", kf:"var(--k-kraft)", ico:"hantel",
    sub:["Oberkörper","Unterkörper","Rumpf","Ganzkörper"], std:60},
-  {id:"athletik", n:"Athletik",     nova:"kraft",    art:"satz",  farbe:"var(--athletik)", kf:"var(--k-athletik)", ico:"blitz",
+  {id:"athletik", n:"Athletik",     nova:"kraft",    art:"dauer", farbe:"var(--athletik)", kf:"var(--k-athletik)", ico:"blitz",
    sub:["Sprünge","Würfe","Antritte","Koordination","Kondition"], std:45},
   {id:"zone2",    n:"Zone 2",       nova:"zone2",    art:"dauer", farbe:"var(--zone2)", kf:"var(--k-zone2)", ico:"herz",
    sub:["Laufen","Rad","Ergometer","Schwimmen"], std:45},
@@ -1260,6 +1260,9 @@ function starten(id){
    und hinterher weiß man ohnehin nur ungefähr, wie lang es war.
    Deshalb: Datum, Dauer, Art — drei Tipper, fertig. */
 let NT={disz:null,datum:null,dauer:0,unter:null,rpe:null,bearbeitet:null};
+const NT_BEISPIEL={tennis:"Gegner, Ergebnis, wie es lief",zone2:"Strecke, Wetter, wie es lief",
+  mobility:"Was gedehnt, wie beweglich",athletik:"Übungen, Bedingungen, wie es lief"};
+const ntPlatzhalter=id=>NT_BEISPIEL[id]||"Wie es lief";
 function nachtragen(id,vorhandene){
   const d=dz(id);
   NT = vorhandene
@@ -1310,7 +1313,7 @@ function ntBlatt(){
     </div>
 
     <div class="feldblock"><label>Notiz</label>
-      <textarea id="ntNotiz" rows="2" placeholder="Gegner, Strecke, wie es lief">${esc(NT.notiz||"")}</textarea>
+      <textarea id="ntNotiz" rows="2" placeholder="${esc(ntPlatzhalter(NT.disz))}">${esc(NT.notiz||"")}</textarea>
     </div>
 
     <div class="blatt-akt">

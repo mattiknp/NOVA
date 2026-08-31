@@ -1247,6 +1247,7 @@ R.einstellungen=function(){
       <p style="font-size:12px;color:var(--faint);margin-top:10px">
         Status: ${an?'<span style="color:var(--good)">verbunden</span>':"aus"}${
         S.zuletztSync?` · zuletzt ${new Date(S.zuletztSync).toLocaleString("de-DE")}`:""}</p>
+      ${an?`<button class="b" style="width:100%;margin-top:9px" onclick="jetztAbgleichen()">Jetzt mit dem anderen Gerät abgleichen</button>`:""}
     </div>
 
     <div class="feldblock">
@@ -1684,6 +1685,18 @@ async function hochladenVoll(){
    ergänzend: Einheiten und Übungen werden über ihre Kennung
    abgeglichen, nie ersetzt — ein lokal noch nicht hochgeladener
    Eintrag geht dabei nie verloren. */
+/* Von Hand angestoßen: erst herunterladen, was das andere Gerät hat,
+   dann den eigenen — jetzt vollständigen — Stand zurückschreiben.
+   Für den Moment gedacht, in dem man nicht auf die nächste ohnehin
+   anstehende Speicherung warten will. */
+async function jetztAbgleichen(){
+  toast("Gleiche ab …");
+  const n=await herunterladenVoll();
+  await hochladenVoll();
+  zeichnen();
+  toast(n?`${n} Einheit${n===1?"":"en"} vom anderen Gerät übernommen`:"Abgeglichen");
+}
+
 async function herunterladenVoll(){
   if(!syncAn()) return 0;
   try{

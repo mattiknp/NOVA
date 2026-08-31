@@ -43,6 +43,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   --r:12px; --r-s:9px; --r-pill:999px;
   --ez:cubic-bezier(.22,.61,.36,1); --d1:.16s; --d2:.28s;
   --pad-b:env(safe-area-inset-bottom,0px);
+  --bar-h:76px;   /* Höhe der unteren Leiste — nav und .fuss teilen sie sich */
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -79,7 +80,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 }
 .ib:hover{border-color:var(--line-2);color:var(--text)}
 .ib svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-main{flex:1;padding:0 18px calc(24px + var(--pad-b))}
+main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
 .b{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
   padding:13px 18px;border-radius:var(--r-s);border:1px solid var(--line);
@@ -383,14 +384,15 @@ main{flex:1;padding:0 18px calc(24px + var(--pad-b))}
 
 /* ── Fußleiste ─────────────────────────────────────── */
 .fuss{
-  position:sticky;bottom:0;display:flex;gap:9px;
+  position:fixed;left:0;right:0;bottom:0;display:flex;gap:9px;
   padding:12px 18px calc(12px + var(--pad-b));
   background:linear-gradient(to top,var(--bg) 62%,transparent);
+  z-index:20;
 }
 .fuss .b{flex:1}
 
 nav{
-  position:sticky;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);
+  position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);
   border-top:1px solid var(--line);background:rgba(8,11,18,.94);
   backdrop-filter:blur(12px);padding-bottom:var(--pad-b);z-index:20;
 }
@@ -426,6 +428,9 @@ nav button.on{color:var(--c1)}
 const KEY="novatraining_v1", KEY_ALT="satz_v1";
 const GH_USER="mattiknp", GH_REPO="routine-tracker", GH_FILE="training.json";
 const GH_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
+const VOLL_FILE="training-voll.json";
+const VOLL_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${VOLL_FILE}`;
+let vollSha=null;
 const TOK_KEY="novatraining_gh_token", SYNC_KEY="novatraining_sync_on";
 const TOK_ALT="satz_gh_token", SYNC_ALT="satz_sync_on";
 
@@ -1573,9 +1578,67 @@ async function hochladen(){
     else if(r.status===409){ syncSha=null; setTimeout(hochladen,900); }
     else toast("Abgleich fehlgeschlagen ("+r.status+")");
   }catch(e){ toast("Keine Verbindung"); }
+  hochladenVoll();
+}
+
+/* Die eigentliche Sicherung: alle Einheiten mit Sätzen, Gewichten,
+   Programm-Zugehörigkeit, plus selbst angelegte Übungen. Damit
+   gleichen sich zwei Geräte über dieselbe private Ablage ab. */
+async function hochladenVoll(){
+  if(!syncAn()) return;
+  try{
+    const kopf={Authorization:"Bearer "+token(),Accept:"application/vnd.github+json"};
+    if(!vollSha){
+      const g=await fetch(VOLL_API,{headers:kopf});
+      if(g.ok) vollSha=(await g.json()).sha;
+    }
+    const inhalt=btoa(unescape(encodeURIComponent(JSON.stringify(
+      {einheiten:S.einheiten,uebungen:S.uebungen}))));
+    const r=await fetch(VOLL_API,{method:"PUT",headers:{...kopf,"Content-Type":"application/json"},
+      body:JSON.stringify({message:"Training "+new Date().toISOString(),content:inhalt,sha:vollSha||undefined})});
+    if(r.ok){ vollSha=(await r.json()).content.sha; }
+    else if(r.status===409){ vollSha=null; setTimeout(hochladenVoll,900); }
+  }catch(e){}
+}
+
+/* Was das andere Gerät inzwischen erfasst hat, nachtragen. Rein
+   ergänzend: Einheiten und Übungen werden über ihre Kennung
+   abgeglichen, nie ersetzt — ein lokal noch nicht hochgeladener
+   Eintrag geht dabei nie verloren. */
+async function herunterladenVoll(){
+  if(!syncAn()) return 0;
+  try{
+    const kopf={Authorization:"Bearer "+token(),Accept:"application/vnd.github+json"};
+    const r=await fetch(VOLL_API+"?v="+Date.now(),{headers:kopf});
+    if(!r.ok) return 0;
+    const j=await r.json();
+    vollSha=j.sha;
+    const fern=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))));
+    let n=0;
+    const vorhanden=new Set(S.einheiten.map(e=>e.id));
+    (fern.einheiten||[]).forEach(e=>{
+      if(!e||!e.id||vorhanden.has(e.id)) return;
+      S.einheiten.push(e); n++;
+    });
+    const ubVorhanden=new Set(S.uebungen.map(u=>u.name));
+    (fern.uebungen||[]).forEach(u=>{
+      if(u&&u.name&&!ubVorhanden.has(u.name)) S.uebungen.push(u);
+    });
+    if(n){
+      S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
+      try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+    }
+    return n;
+  }catch(e){ return 0; }
 }
 
 /* ── Start ─────────────────────────────────────────── */
 laden();
 zeichnen();
+if(syncAn()) herunterladenVoll().then(n=>{ if(n){ zeichnen(); toast(`${n} Einheit${n===1?"":"en"} vom anderen Gerät`); } });
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden) return;                 /* das Verstecken behandelt beimVerstecken() bereits */
+  if(!syncAn()) return;
+  herunterladenVoll().then(n=>{ if(n){ zeichnen(); toast(`${n} Einheit${n===1?"":"en"} vom anderen Gerät`); } });
+});
 </script>

@@ -46,7 +46,13 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
   --bar-h:76px;   /* Höhe der unteren Leiste — nav und .fuss teilen sie sich */
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+/* Ohne das wartet iOS Safari bis zu 300 ms nach jedem Tipp, ob ein
+   zweiter folgt (für Doppeltipp-Zoom). Rendert die Seite in dieser
+   Zeit neu — was unser Häkchen-System bei jedem Antippen tut —, kann
+   der verspätete „Geister-Klick" ein anderes Element treffen als das
+   ursprünglich angetippte. touch-action:manipulation schaltet dieses
+   Warten aus: der Klick feuert sofort, ohne Verzögerung. */
+html,body{height:100%;touch-action:manipulation}
 body{
   background:var(--bg); color:var(--text); font-family:var(--f-disp);
   font-size:16px; line-height:1.5; overscroll-behavior-y:none;
@@ -105,7 +111,7 @@ main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
 .frage{font-size:13px;color:var(--faint);margin:6px 0 14px;letter-spacing:.02em}
 .disz{display:flex;flex-direction:column;gap:8px;margin-bottom:26px}
 .dz{
-  position:relative;display:flex;align-items:center;gap:15px;
+  position:relative;display:flex;align-items:center;gap:15px;touch-action:manipulation;
   padding:19px 18px;border-radius:var(--r);overflow:hidden;
   border:1px solid color-mix(in srgb,var(--dc) 24%,transparent);
   background:color-mix(in srgb,var(--dc) 7%,transparent);
@@ -303,7 +309,7 @@ main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
 .wp-z{font-size:12px;color:var(--faint)}
 .wp-row{
   display:flex;align-items:center;gap:13px;width:100%;text-align:left;
-  padding:14px 15px;border-radius:var(--r);margin-bottom:6px;
+  padding:14px 15px;border-radius:var(--r);margin-bottom:10px;touch-action:manipulation;
   border:1px solid color-mix(in srgb,var(--dc) 22%,transparent);
   background:color-mix(in srgb,var(--dc) 6%,transparent);
   transition:transform var(--d1) var(--ez),opacity var(--d2) var(--ez);
@@ -447,11 +453,16 @@ main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
 
 nav{
   position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);
-  border-top:1px solid var(--line);background:rgba(8,11,18,.94);
-  backdrop-filter:blur(12px);padding-bottom:var(--pad-b);z-index:20;
+  border-top:1px solid var(--line);
+  /* Kein backdrop-filter mehr — zusammen mit position:fixed auf iOS
+     Safari eine weitere bekannt unzuverlässige Kombination bei
+     Berührungen. Bei 94 % Deckkraft sieht man ohnehin kaum, was
+     durchscheint, der Verlust ist rein rechnerisch. */
+  background:#0a0e15;padding-bottom:var(--pad-b);z-index:20;
 }
 nav button{
-  display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 0 9px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  min-height:52px;padding:11px 0 9px;touch-action:manipulation;
   font-size:10.5px;color:var(--faint);transition:color var(--d1) var(--ez);
 }
 nav button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}

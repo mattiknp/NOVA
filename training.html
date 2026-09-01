@@ -1,0 +1,1858 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080b12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Training">
+<title>NOVA Training</title>
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="512x512" href="training-512.png">
+<link rel="manifest" href="manifest.json">
+<!--
+THESIS: Ein Trainingsbuch, das weiß, dass Tennis und Kniebeugen nicht dasselbe
+sind. Es verweigert das eine Formular für alles: Disziplinen mit Sätzen bekommen
+ein Satzprotokoll, Disziplinen mit Dauer bekommen eine Uhr. Kein Dashboard voran.
+OWN-WORLD: Teil der NOVA-Familie — Grund #080b12, Flächen aus Weiß bei 3 %,
+Avenir Next als Anzeigeschrift, Ziffern in Mono. Je Disziplin eine eigene Farbe,
+die die ganze laufende Einheit einfärbt. Keine Karten als Seitengerüst.
+STORY: Er kommt in die Halle, tippt eine Disziplin, trainiert, tippt fertig.
+Die Einheit landet ohne Zutun in NOVA.
+FIRST VIEWPORT: Sechs Disziplinen als volle Reihen über den Schirm, jede in
+ihrer Farbe, Daumen erreicht alle. Darunter der heutige Tag in einer Zeile.
+Läuft eine Einheit, ersetzt sie alles und der aktuelle Satz füllt den Schirm.
+FORM: Satzprotokoll als Vollbild-Schrittwerk. Dauer-Disziplinen werden
+nachgetragen statt mitgestoppt — beim Tennis steht man nicht am Handy.
+FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+-->
+<style>
+:root{
+  --bg:#080b12; --surf:rgba(255,255,255,.035); --surf-2:rgba(255,255,255,.06);
+  --line:rgba(120,160,190,.13); --line-2:rgba(120,160,190,.26);
+  --text:#e8eef4; --dim:#9fb2c4; --faint:#6a7d91;
+  --c1:#4fe3d2;
+  --tennis:#4fe3d2; --kraft:#ff7a5c;
+  --athletik:#ffd166; --zone2:#5a9ded; --mobility:#ff6b9d;
+  /* Diagrammfarben — nicht dieselben wie oben. Flächen auf dunklem
+     Grund brauchen andere Werte als Symbole. Gegen Rotgrün- und
+     Blaugelbschwäche geprüft, schlechtestes Paar ΔE 11,2. */
+  --k-tennis:#00ab9a; --k-athletik:#af9100; --k-kraft:#bb4717;
+  --k-mobility:#ac3c8a; --k-zone2:#2d74ca;
+  --good:#52c98a; --warn:#d9a441; --bad:#e0697c;
+  --f-disp:"Avenir Next","Futura","Segoe UI",system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --r:12px; --r-s:9px; --r-pill:999px;
+  --ez:cubic-bezier(.22,.61,.36,1); --d1:.16s; --d2:.28s;
+  --pad-b:env(safe-area-inset-bottom,0px);
+  --bar-h:76px;   /* Höhe der unteren Leiste — nav und .fuss teilen sie sich */
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+/* Ohne das wartet iOS Safari bis zu 300 ms nach jedem Tipp, ob ein
+   zweiter folgt (für Doppeltipp-Zoom). Rendert die Seite in dieser
+   Zeit neu — was unser Häkchen-System bei jedem Antippen tut —, kann
+   der verspätete „Geister-Klick" ein anderes Element treffen als das
+   ursprünglich angetippte. touch-action:manipulation schaltet dieses
+   Warten aus: der Klick feuert sofort, ohne Verzögerung. */
+html,body{height:100%;touch-action:manipulation}
+body{
+  background:var(--bg); color:var(--text); font-family:var(--f-disp);
+  font-size:16px; line-height:1.5; overscroll-behavior-y:none;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit;background:none;border:0}
+button{cursor:pointer}
+input,select,textarea{
+  width:100%; background:var(--surf); border:1px solid var(--line);
+  border-radius:var(--r-s); padding:12px 13px;
+}
+input:focus,select,textarea:focus{outline:none;border-color:var(--line-2)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--faint) 50%),linear-gradient(135deg,var(--faint) 50%,transparent 50%);background-position:calc(100% - 18px) 19px,calc(100% - 13px) 19px;background-size:5px 5px;background-repeat:no-repeat}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* ── Gerüst ────────────────────────────────────────── */
+#app{min-height:100%;display:flex;flex-direction:column}
+.kopf{
+  display:flex;align-items:center;gap:12px;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 12px;
+}
+.marke{font-family:var(--f-disp);font-size:19px;font-weight:700;letter-spacing:.16em;
+  display:flex;align-items:baseline;gap:9px}
+.marke i{font-style:normal;font-size:13px;font-weight:500;letter-spacing:.06em;color:var(--faint)}
+.kopf-sub{margin-left:auto;font-size:12px;color:var(--faint)}
+.kopf-akt{display:flex;gap:6px}
+.ib{
+  width:38px;height:38px;border-radius:var(--r-s);display:grid;place-items:center;
+  border:1px solid var(--line);color:var(--dim);
+  transition:border-color var(--d1) var(--ez),color var(--d1) var(--ez);
+}
+.ib:hover{border-color:var(--line-2);color:var(--text)}
+.ib svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
+.b{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 18px;border-radius:var(--r-s);border:1px solid var(--line);
+  font-size:15px;font-weight:500;color:var(--dim);
+  transition:all var(--d1) var(--ez);
+}
+.b:hover{border-color:var(--line-2);color:var(--text);background:var(--surf)}
+.b:active{transform:scale(.98)}
+.b-1{background:var(--c1);border-color:var(--c1);color:#04231f;font-weight:700}
+/* In einer laufenden Einheit trägt die Hauptaktion die Farbe der
+   Disziplin — sonst hätte der Schirm zwei konkurrierende Signale. */
+.b-dz{background:var(--dc);border-color:var(--dc);color:#0b1016;font-weight:700}
+.b-dz:hover{filter:brightness(1.08)}
+.b-1:hover{background:#63ead9;border-color:#63ead9;color:#04231f}
+.b-w{width:100%}
+.b-gr{padding:17px 20px;font-size:17px}
+.b svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Startschirm: die sechs Disziplinen ─────────────
+   Volle Reihen statt Kachelraster. Der Daumen erreicht jede,
+   und der Name steht groß genug, um ihn im Halbdunkel zu lesen. */
+.frage{font-size:13px;color:var(--faint);margin:6px 0 14px;letter-spacing:.02em}
+.disz{display:flex;flex-direction:column;gap:8px;margin-bottom:26px}
+.dz{
+  position:relative;display:flex;align-items:center;gap:15px;touch-action:manipulation;
+  padding:19px 18px;border-radius:var(--r);overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--dc) 24%,transparent);
+  background:color-mix(in srgb,var(--dc) 7%,transparent);
+  transition:transform var(--d1) var(--ez),background-color var(--d2) var(--ez);
+}
+.dz:active{transform:scale(.985)}
+.dz:hover{background:color-mix(in srgb,var(--dc) 13%,transparent)}
+.dz-ico{
+  width:40px;height:40px;flex:0 0 auto;border-radius:11px;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--dc) 16%,transparent);color:var(--dc);
+}
+.dz-ico svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dz-n{font-size:18px;font-weight:600;letter-spacing:-.01em}
+.dz-s{font-size:12.5px;color:var(--faint);margin-top:2px}
+.dz-z{margin-left:auto;text-align:right;flex:0 0 auto}
+.dz-z b{font-family:var(--f-mono);font-size:15px;font-weight:600;color:var(--dc);display:block}
+.dz-z span{font-size:11px;color:var(--faint)}
+
+/* ── Tagesleiste ───────────────────────────────────── */
+.tag{border-top:1px solid var(--line);padding-top:16px}
+.tag-k{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:11px}
+.tag-t{font-size:14px;font-weight:600}
+.tag-w{font-size:12px;color:var(--faint)}
+.eintrag{
+  display:flex;align-items:center;gap:12px;padding:12px 2px;
+  border-bottom:1px solid var(--line);
+}
+.eintrag:last-child{border-bottom:0}
+.e-punkt{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--dc)}
+.e-n{flex:1;min-width:0;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.e-d{font-family:var(--f-mono);font-size:14px;color:var(--dim)}
+.e-x{color:var(--faint);width:28px;height:28px;display:grid;place-items:center;flex:0 0 auto}
+.e-x svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.leer{padding:22px 4px;color:var(--faint);font-size:14px;line-height:1.6}
+
+/* ── Laufende Einheit ──────────────────────────────── */
+.lauf-kopf{
+  display:flex;align-items:center;gap:13px;padding:16px 18px;
+  background:color-mix(in srgb,var(--dc) 11%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--dc) 22%,transparent);
+}
+.lauf-n{font-size:17px;font-weight:600}
+.lauf-uhr{margin-left:auto;font-family:var(--f-mono);font-size:22px;font-weight:600;color:var(--dc);font-variant-numeric:tabular-nums}
+
+/* Das Satzwerk: der aktuelle Satz füllt den Schirm.
+   Zwei Zahlen, vier Daumenflächen, ein Knopf. */
+.satzwerk{padding:8px 0 0}
+.sw-ueb{
+  display:flex;align-items:center;gap:10px;justify-content:space-between;
+  margin:14px 0 4px;
+}
+.sw-name{font-size:19px;font-weight:600;letter-spacing:-.01em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sw-satz{font-family:var(--f-mono);font-size:12.5px;color:var(--faint);flex:0 0 auto}
+.sw-gitter{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.sw-feld{
+  border:1px solid var(--line);border-radius:var(--r);padding:13px 12px 15px;
+  background:var(--surf);text-align:center;
+}
+.sw-lab{font-size:11.5px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase}
+.sw-wert{
+  font-family:var(--f-mono);font-size:2.9rem;font-weight:600;line-height:1.05;
+  color:var(--dc);margin:7px 0 11px;font-variant-numeric:tabular-nums;
+}
+.sw-steu{display:flex;gap:8px}
+.sw-steu button{
+  flex:1;height:46px;border-radius:var(--r-s);border:1px solid var(--line);
+  font-size:21px;font-weight:400;color:var(--dim);
+  transition:all var(--d1) var(--ez);
+}
+.sw-steu button:hover{border-color:var(--dc);color:var(--dc)}
+.sw-steu button:active{transform:scale(.95);background:color-mix(in srgb,var(--dc) 14%,transparent)}
+
+/* Gemachte Sätze: als Liste, nicht als Tabelle — auf dem Handy
+   liest man Zeilen, keine Spalten. */
+.sw-liste{display:flex;flex-direction:column;gap:5px;margin:16px 0}
+.sw-z{
+  display:flex;align-items:center;gap:12px;padding:10px 13px;
+  border-radius:var(--r-s);background:var(--surf);font-family:var(--f-mono);font-size:14px;
+}
+.sw-z-i{color:var(--faint);width:20px;flex:0 0 auto}
+.sw-z-w{flex:1}
+.sw-z-v{color:var(--faint);font-size:12px}
+.sw-z.rekord{background:color-mix(in srgb,var(--dc) 13%,transparent);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--dc) 30%,transparent)}
+.sw-z.rekord .sw-z-v{color:var(--dc)}
+
+/* Pausenuhr: läuft als Ring hinter der Zahl, nicht als Balken daneben */
+.pause{
+  display:grid;place-items:center;padding:22px 0 10px;position:relative;
+}
+.pause svg{position:absolute;width:132px;height:132px;transform:rotate(-90deg)}
+.pause circle{fill:none;stroke-width:3}
+.pause .spur{stroke:var(--line)}
+.pause .voll{stroke:var(--dc);transition:stroke-dashoffset .95s linear}
+.pause-z{font-family:var(--f-mono);font-size:2.1rem;font-weight:600;color:var(--dc);position:relative}
+.pause-l{font-size:12px;color:var(--faint);margin-top:4px;position:relative}
+
+/* ── Dauer-Erfassung (Tennis, Zone 2, Mobility) ────── */
+.dauer{display:grid;place-items:center;padding:30px 0 22px}
+.dauer-z{
+  font-family:var(--f-mono);font-size:4.2rem;font-weight:600;line-height:1;
+  color:var(--dc);font-variant-numeric:tabular-nums;letter-spacing:-.03em;
+}
+.dauer-l{font-size:13px;color:var(--faint);margin-top:8px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{
+  padding:9px 14px;border-radius:var(--r-pill);border:1px solid var(--line);
+  font-size:14px;color:var(--dim);transition:all var(--d1) var(--ez);
+}
+.chip:hover{border-color:var(--line-2);color:var(--text)}
+.chip.on{
+  border-color:var(--dc);color:var(--dc);
+  background:color-mix(in srgb,var(--dc) 13%,transparent);
+}
+.feldblock{margin:20px 0}
+.feldblock label{display:block;font-size:12.5px;color:var(--faint);margin-bottom:8px}
+
+/* Dauer beim Nachtragen: großes Schrittwerk, damit man sie
+   mit dem Daumen trifft, ohne die Tastatur zu öffnen. */
+.nt-dauer{display:flex;align-items:center;gap:10px}
+.nt-dauer button{
+  width:52px;height:52px;flex:0 0 auto;border-radius:var(--r-s);
+  border:1px solid var(--line);font-size:23px;color:var(--dim);
+  transition:all var(--d1) var(--ez);
+}
+.nt-dauer button:hover{border-color:var(--dc);color:var(--dc)}
+.nt-dauer button:active{transform:scale(.94);background:color-mix(in srgb,var(--dc) 14%,transparent)}
+.nt-z{
+  flex:1;text-align:center;font-size:2rem;font-weight:600;color:var(--dc);
+  font-variant-numeric:tabular-nums;
+}
+
+/* Vorschlag und RIR ─────────────────────────────────── */
+.sw-koerper{flex:0 0 auto;display:grid;place-items:center;opacity:.9}
+.sw-vor{
+  display:grid;grid-template-columns:auto 1fr;gap:2px 12px;width:100%;text-align:left;
+  padding:12px 14px;border-radius:var(--r);margin:12px 0 2px;
+  border:1px dashed color-mix(in srgb,var(--dc) 46%,transparent);
+  background:color-mix(in srgb,var(--dc) 9%,transparent);
+  transition:background-color var(--d1) var(--ez);
+}
+.sw-vor:hover{background:color-mix(in srgb,var(--dc) 16%,transparent)}
+.sw-vor-l{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);align-self:center}
+.sw-vor-w{font-size:17px;font-weight:600;color:var(--dc)}
+.sw-vor-g{grid-column:1/-1;font-size:12px;color:var(--faint);line-height:1.45}
+.rir{margin:14px 0}
+.rir-l{display:block;font-size:12.5px;color:var(--faint);margin-bottom:8px}
+
+/* ── Verlauf ───────────────────────────────────────── */
+/* ── Auswertung ──────────────────────────────────────
+   Marken dünn, Gitter zurückhaltend, Zahlen in Textfarbe —
+   nie in der Serienfarbe. */
+.kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:4px 0 26px}
+.kpi-t{background:var(--surf);border-radius:var(--r);padding:13px 12px}
+.kpi-v{font-size:1.45rem;font-weight:600;line-height:1.1;letter-spacing:-.02em}
+.kpi-l{font-size:12.5px;color:var(--dim);margin-top:5px}
+.kpi-s{font-size:11px;color:var(--faint);margin-top:2px}
+.kpi-s .auf{color:var(--good)}
+.kpi-s .ab{color:var(--warn)}
+
+.dia{margin-bottom:32px}
+.dia-t{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.dia-u{font-size:12.5px;color:var(--faint);margin:3px 0 14px;line-height:1.45}
+
+.stap{display:flex;align-items:flex-end;gap:5px}
+.stap-s{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.stap-b{width:100%;display:flex;flex-direction:column-reverse;justify-content:flex-start;gap:2px}
+.stap-b i{display:block;width:100%;min-height:2px;border-radius:1px}
+.stap-l{font-size:9.5px;color:var(--faint)}
+.legende{display:flex;flex-wrap:wrap;gap:7px 15px;margin-top:14px}
+.lg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim)}
+.lg i{width:9px;height:9px;border-radius:3px;display:block;flex:0 0 auto}
+
+/* Muskelverteilung: ein Farbton, mehr ist mehr — es geht um Menge,
+   nicht um Zugehörigkeit. Deshalb kein Farbkreis. */
+.mus{display:flex;flex-direction:column;gap:7px}
+.mus-z{display:grid;grid-template-columns:74px 1fr 28px;align-items:center;gap:10px}
+.mus-n{font-size:13px;color:var(--dim)}
+.mus-b{height:14px;background:var(--surf);border-radius:4px;overflow:hidden}
+.mus-b i{display:block;height:100%;background:var(--k-kraft);border-radius:0 4px 4px 0}
+.mus-v{font-size:12px;color:var(--faint);text-align:right}
+
+.lin{width:100%;height:auto;display:block;overflow:visible}
+.lin-gitter{stroke:var(--line);stroke-width:1}
+.lin-ax{fill:var(--faint);font-family:var(--f-mono);font-size:9.5px}
+.lin-p{fill:none;stroke:var(--k-kraft);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.lin-pt{fill:var(--k-kraft);stroke:var(--bg);stroke-width:2;cursor:help}
+
+/* ── Wochenplan ──────────────────────────────────────
+   1:1 nach dem Muster der Habit-Kästchen aus NOVA: jeder Tag ist ein
+   eigener Knopf mit eigenem data-Attribut, erst NACH dem Zeichnen per
+   querySelectorAll verdrahtet — kein onclick-String pro Zeile, der sich
+   beim Neuzeichnen mit einer anderen Zeile verwechseln könnte. */
+.wp{margin-bottom:24px}
+.wp-kopf{
+  display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:0 8px 10px;
+  border-bottom:1px solid var(--line);margin-bottom:6px;
+}
+.wp-kopf-n{flex:1 1 auto;font-size:14px;font-weight:600}
+.wp-kopf-s{flex:0 0 auto;font-size:12px;color:var(--faint)}
+.wp-kopf .wp-tage{order:3;flex:1 1 100%;justify-content:space-between;gap:6px}
+.wp-liste{display:flex;flex-direction:column;gap:2px}
+.wp-row{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;width:100%;
+  padding:11px 8px;border-radius:var(--r);border:1px solid transparent;
+  transition:background-color var(--d1) var(--ez),border-color var(--d1) var(--ez),opacity var(--d2) var(--ez);
+}
+.wp-row:hover{background:color-mix(in srgb,var(--dc) 6%,transparent);border-color:color-mix(in srgb,var(--dc) 20%,transparent)}
+.wp-row.fertig{opacity:.6}
+.wp-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:var(--dc)}
+.wp-n{flex:1 1 auto;min-width:0;font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wp-n small{display:block;font-size:11.5px;font-weight:400;color:var(--faint);margin-top:1px}
+.wp-b{
+  font-family:var(--f-mono);font-size:11px;flex:0 0 auto;
+  padding:2px 8px;border-radius:var(--r-pill);color:var(--faint);
+  border:1px solid var(--line);
+}
+.wp-b.voll{color:var(--dc);border-color:color-mix(in srgb,var(--dc) 45%,transparent);background:color-mix(in srgb,var(--dc) 14%,transparent)}
+
+/* Sieben einzeln antippbare Kästchen, eins pro Tag der laufenden Woche —
+   jedes ein eigener <button> mit eigenem data-tag="programmId|datum",
+   immer auf einer eigenen vollen Zeile, damit die Zielflächen groß und
+   klar voneinander getrennt bleiben, egal wie schmal der Bildschirm. */
+.wp-tage{display:flex;gap:6px;flex:0 0 auto;order:3;width:100%;justify-content:space-between}
+.wp-tl{flex:1;max-width:34px;text-align:center;font-family:var(--f-mono);font-size:9.5px;color:var(--faint)}
+.wp-box{
+  flex:1;max-width:34px;height:30px;border-radius:8px;
+  border:1.5px solid var(--line-2);background:transparent;color:transparent;
+  display:grid;place-items:center;touch-action:manipulation;
+  transition:background-color var(--d1) var(--ez),border-color var(--d1) var(--ez),transform var(--d1) var(--ez);
+}
+.wp-box svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.wp-box:hover:not(:disabled){border-color:var(--dc);transform:scale(1.06)}
+.wp-box.an{background:var(--dc);border-color:var(--dc);color:#08131a}
+.wp-box.echt{cursor:default}
+.wp-box.echt:hover{transform:none}
+.wp-box:disabled{opacity:.28}
+
+/* Übungsvorschau in der Auswahlliste unten: kleine Kacheln mit der
+   Muskelkarte statt Fotos, die es dafür nicht gibt. */
+.wp-bilder{display:flex;gap:5px;flex:0 0 auto}
+.wp-bild{
+  width:30px;height:30px;border-radius:8px;flex:0 0 auto;
+  background:color-mix(in srgb,var(--dc) 13%,transparent);
+  display:grid;place-items:center;overflow:hidden;
+}
+.wp-mehr{
+  font-family:var(--f-mono);font-size:11px;font-weight:600;color:var(--dc);
+  background:color-mix(in srgb,var(--dc) 20%,transparent);
+}
+
+/* Auswahlliste unten: feste Workouts einer Disziplin, wie bei
+   Alpha Progression — Name links, Übungsvorschau rechts. */
+.prog-wahl{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.prog-wahl-z{
+  display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  padding:13px 14px;border-radius:var(--r);background:var(--surf);
+  transition:background-color var(--d1) var(--ez);
+}
+.prog-wahl-z:hover{background:var(--surf-2)}
+.prog-wahl-n{flex:1;min-width:0}
+.prog-wahl-t{display:block;font-size:16px;font-weight:600}
+.prog-wahl-s{display:block;font-size:12px;color:var(--faint);margin-top:2px}
+
+/* Wochenstreifen: sieben Tage, heute hervorgehoben, Punkt an Tagen
+   mit erfasster Einheit. */
+.wtag-streifen{display:flex;justify-content:space-between;margin-bottom:18px;padding:0 2px}
+.wtag{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+.wtag-t{font-size:11px;color:var(--faint)}
+.wtag-z{
+  width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--f-mono);font-size:13px;color:var(--dim);font-weight:600;
+}
+.wtag.heute .wtag-z{background:var(--c1);color:#04231f}
+.wtag-p{width:4px;height:4px;border-radius:50%;background:transparent;display:block}
+.wtag-p.an{background:var(--faint)}
+.wtag.heute .wtag-p.an{background:var(--c1)}
+
+/* Übungsliste innerhalb eines laufenden Programms */
+.prog-liste{display:flex;flex-direction:column;gap:3px;margin:14px 0 4px}
+.prog-z{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:10px 12px;border-radius:var(--r-s);font-size:14px;color:var(--dim);
+  transition:background-color var(--d1) var(--ez);
+}
+.prog-z:hover{background:var(--surf)}
+.prog-z.jetzt{background:color-mix(in srgb,var(--dc) 13%,transparent);color:var(--text)}
+.prog-z.fertig .prog-n{color:var(--faint)}
+.prog-i{
+  width:22px;height:22px;flex:0 0 auto;border-radius:7px;display:grid;place-items:center;
+  font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);color:var(--faint);
+}
+.prog-z.jetzt .prog-i{border-color:var(--dc);color:var(--dc)}
+.prog-z.fertig .prog-i{background:color-mix(in srgb,var(--dc) 20%,transparent);border-color:transparent;color:var(--dc)}
+.prog-i svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.prog-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prog-s{flex:0 0 auto;font-size:12px;color:var(--faint)}
+
+.vtag{border-bottom:1px solid var(--line);padding:14px 0}
+.vtag-k{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.vtag-d{font-size:14px;font-weight:600}
+.vtag-s{font-family:var(--f-mono);font-size:12px;color:var(--faint);margin-left:auto}
+
+/* ── Übungen ───────────────────────────────────────── */
+.ub-gr{margin-bottom:22px}
+.ub-t{font-size:12px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;margin-bottom:9px}
+.ub{
+  display:flex;align-items:center;gap:12px;padding:13px 14px;
+  border-radius:var(--r-s);background:var(--surf);margin-bottom:5px;
+  transition:background-color var(--d1) var(--ez);
+}
+.ub:hover{background:var(--surf-2)}
+.ub-k{flex:0 0 auto;display:grid;place-items:center;width:26px}
+.ub-n{flex:1;min-width:0;font-size:15px}
+.ub-pr{font-family:var(--f-mono);font-size:13px;color:var(--dim)}
+.ub-pr b{color:var(--kraft);font-weight:600}
+
+/* ── Blatt (Dialog) ────────────────────────────────── */
+.ov{
+  position:fixed;inset:0;background:rgba(4,7,12,.72);backdrop-filter:blur(7px);
+  display:none;align-items:flex-end;justify-content:center;z-index:60;
+}
+.ov.on{display:flex}
+.blatt{
+  width:100%;max-width:560px;max-height:88vh;overflow-y:auto;
+  background:#0d131c;border:1px solid var(--line);
+  border-radius:20px 20px 0 0;padding:22px 20px calc(22px + var(--pad-b));
+  animation:hoch .3s var(--ez);
+}
+@keyframes hoch{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+@media(min-width:600px){
+  .ov{align-items:center}
+  .blatt{border-radius:18px;padding-bottom:22px}
+}
+.blatt h3{font-size:19px;font-weight:600;margin-bottom:16px}
+.blatt-akt{display:flex;gap:9px;margin-top:20px}
+.blatt-akt .b{flex:1}
+
+/* ── Fußleiste ─────────────────────────────────────── */
+.fuss{
+  position:fixed;left:0;right:0;bottom:0;display:flex;gap:9px;
+  padding:12px 18px calc(12px + var(--pad-b));
+  background:linear-gradient(to top,var(--bg) 62%,transparent);
+  z-index:20;
+}
+.fuss .b{flex:1}
+
+nav{
+  position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--line);
+  /* Kein backdrop-filter mehr — zusammen mit position:fixed auf iOS
+     Safari eine weitere bekannt unzuverlässige Kombination bei
+     Berührungen. Bei 94 % Deckkraft sieht man ohnehin kaum, was
+     durchscheint, der Verlust ist rein rechnerisch. */
+  background:#0a0e15;padding-bottom:var(--pad-b);z-index:20;
+}
+nav button{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  min-height:52px;padding:11px 0 9px;touch-action:manipulation;
+  font-size:10.5px;color:var(--faint);transition:color var(--d1) var(--ez);
+}
+nav button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--c1)}
+
+.toast{
+  position:fixed;left:50%;bottom:calc(84px + var(--pad-b));transform:translateX(-50%) translateY(90px);
+  background:#131b26;border:1px solid var(--line-2);border-radius:var(--r-pill);
+  padding:11px 19px;font-size:14px;z-index:80;opacity:0;
+  transition:transform var(--d2) var(--ez),opacity var(--d2) var(--ez);
+  box-shadow:0 12px 34px rgba(0,0,0,.5);
+}
+.toast.on{transform:translateX(-50%);opacity:1}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+<div id="app"></div>
+<div class="ov" id="ov"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   NOVA Training — das Trainingsbuch
+   Zwei Erfassungsarten, weil Tennis und Kniebeugen nicht dasselbe
+   sind: „satz" führt ein Satzprotokoll, „dauer" eine Uhr.
+   Alles landet am Ende im selben Format, das NOVA lesen kann.
+   ============================================================ */
+const KEY="novatraining_v1", KEY_ALT="satz_v1";
+const GH_USER="mattiknp", GH_REPO="routine-tracker", GH_FILE="training.json";
+const GH_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
+const VOLL_FILE="training-voll.json";
+const VOLL_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${VOLL_FILE}`;
+let vollSha=null;
+const TOK_KEY="novatraining_gh_token", SYNC_KEY="novatraining_sync_on";
+const TOK_ALT="satz_gh_token", SYNC_ALT="satz_sync_on";
+
+/* ── Disziplinen ────────────────────────────────────
+   `nova` ist die Art, unter der die Einheit in NOVA landet —
+   deshalb genau die Kürzel, die dort schon existieren. */
+/* `art` entscheidet den ganzen Ablauf:
+   „satz"  — Einheit läuft mit, Sätze werden während des Trainings erfasst.
+             Nur hier ist eine Uhr nützlich, weil zwischen den Sätzen Pause ist.
+   „dauer" — nichts läuft. Man trägt hinterher ein, wie lange es ging.
+             Beim Tennis steht man nicht am Handy, um eine Uhr zu starten. */
+const DISZ=[
+  {id:"tennis",   n:"Tennis",       nova:"tennis",   art:"dauer", farbe:"var(--tennis)", kf:"var(--k-tennis)", ico:"tennis",
+   sub:["Training","Match","Medenspiel","Turnier","Paddel"], std:120},
+  {id:"kraft",    n:"Kraft",        nova:"kraft",    art:"satz",  farbe:"var(--kraft)", kf:"var(--k-kraft)", ico:"hantel",
+   sub:["Oberkörper","Unterkörper","Rumpf","Ganzkörper"], std:60},
+  {id:"athletik", n:"Athletik",     nova:"kraft",    art:"satz",  farbe:"var(--athletik)", kf:"var(--k-athletik)", ico:"blitz",
+   sub:["Sprünge","Würfe","Antritte","Koordination","Kondition"], std:45},
+  {id:"zone2",    n:"Zone 2",       nova:"zone2",    art:"dauer", farbe:"var(--zone2)", kf:"var(--k-zone2)", ico:"herz",
+   sub:["Laufen","Rad","Ergometer","Schwimmen"], std:45},
+  {id:"mobility", n:"Mobility",     nova:"mobility", art:"dauer", farbe:"var(--mobility)", kf:"var(--k-mobility)", ico:"welle",
+   sub:["Hüfte","Schulter","Ganzkörper","Regeneration"], std:15}
+];
+const dz=id=>DISZ.find(d=>d.id===id)||DISZ[0];
+
+/* ── Übungen ────────────────────────────────────────
+   Auf einen Tennisspieler zugeschnitten, nicht auf einen
+   Bodybuilder: einbeinig, rotatorisch, Schulter hinten. */
+const UEB_STD=[
+  ["Oberkörper","Bankdrücken",1],["Oberkörper","Schrägbankdrücken",1],
+  ["Oberkörper","Klimmzüge",1],["Oberkörper","Langhantelrudern",1],
+  ["Oberkörper","Kabelrudern",1],["Oberkörper","Schulterdrücken",1],
+  ["Oberkörper","Face Pulls",1],["Oberkörper","Außenrotation Kabel",1],
+  ["Oberkörper","Dips",1],["Oberkörper","Bizepscurls",1],["Oberkörper","Trizepsdrücken",1],
+  ["Unterkörper","Kniebeuge",1],["Unterkörper","Frontkniebeuge",1],
+  ["Unterkörper","Kreuzheben",1],["Unterkörper","Rumänisches Kreuzheben",1],
+  ["Unterkörper","Bulgarian Split Squat",1],["Unterkörper","Ausfallschritte",1],
+  ["Unterkörper","Beinpresse",1],["Unterkörper","Wadenheben",1],
+  ["Unterkörper","Nordic Curls",0],["Unterkörper","Hip Thrust",1],
+  ["Rumpf","Plank",0],["Rumpf","Seitstütz",0],["Rumpf","Pallof Press",1],
+  ["Rumpf","Russian Twist",1],["Rumpf","Hanging Leg Raise",0],
+  ["Rumpf","Ab Wheel",0],["Rumpf","Bird Dog",0],["Rumpf","Käfer",0],
+  ["Athletik","Antritt 10 m",0],["Athletik","Antritt 20 m",0],["Athletik","Steigerung 60 m",0],
+  ["Athletik","Shuttle 5-10-5",0],["Athletik","Spider Drill",0],["Athletik","Koordinationsleiter",0],
+  ["Athletik","Box Jump",0],["Athletik","Weitsprung Stand",0],
+  ["Athletik","Medizinball Wurf seitlich",1],["Athletik","Medizinball Slam",1],
+  ["Athletik","Sprungkniebeuge",1],["Athletik","Burpee",0],["Athletik","Farmers Walk",1]
+];
+
+/* ── Helfer ─────────────────────────────────────────
+   Stehen vor dem Zustand, weil `leer()` sie sofort braucht. */
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36);
+const p2=n=>String(n).padStart(2,"0");
+const dk=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+const heute=()=>dk(new Date());
+const pdk=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const addT=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const mow=d=>{const x=new Date(d);const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);x.setHours(0,0,0,0);return x};
+const WD=["Mo","Di","Mi","Do","Fr","Sa","So"];
+const MS=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+const kurz=d=>`${d.getDate()}. ${MS[d.getMonth()]}`;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const mmss=s=>`${Math.floor(s/60)}:${p2(Math.floor(s%60))}`;
+const hmm=m=>{
+  if(m<60) return `${Math.round(m)} min`;
+  const h=Math.floor(m/60), r=Math.round(m%60);
+  return r? `${h}:${p2(r)} h` : `${h} h`;   /* „18 h", nicht „18:00 h" */
+};
+/* Halbe Kilo mit Komma — 27,5 statt 27.5. */
+const zahl=n=>String(n).replace(".",",");
+
+/* ── Muskelkarte ────────────────────────────────────────
+   Alpha Progression zeigt zu jeder Übung ein Bild. Lizenzierte
+   Videos habe ich nicht — aber was so ein Bild auf einen Blick
+   leistet, leistet auch eine Körperkarte: welche Muskeln arbeiten.
+   Eine Silhouette, Felder je Muskel, pro Übung eingefärbt. */
+const MUSKEL={
+  brust:"M35,44 h13 a3,3 0 0 1 3,3 v9 a3,3 0 0 1 -3,3 h-13 a3,3 0 0 1 -3,-3 v-9 a3,3 0 0 1 3,-3 z",
+  ruecken:"M35,44 h13 a3,3 0 0 1 3,3 v13 a3,3 0 0 1 -3,3 h-13 a3,3 0 0 1 -3,-3 v-13 a3,3 0 0 1 3,-3 z",
+  schulter:"M25,42 a6,6 0 0 1 7,3 l-1,7 a6,6 0 0 1 -7,-3 z|M58,42 a6,6 0 0 0 -7,3 l1,7 a6,6 0 0 0 7,-3 z",
+  arme:"M22,54 l5,1 -2,15 -5,-1 z|M61,54 l-5,1 2,15 5,-1 z",
+  bauch:"M37,62 h9 v16 h-9 z",
+  beine:"M34,80 h6 l-1,26 h-6 z|M43,80 h6 l1,26 h-6 z",
+  po:"M33,76 h7 v9 h-7 z|M43,76 h7 v9 h-7 z",
+  waden:"M34,108 h5 l-1,12 h-4 z|M44,108 h5 l1,12 h-4 z",
+  ganz:""
+};
+const UEB_MUSKEL={
+  "Bankdrücken":["brust","schulter","arme"], "Schrägbankdrücken":["brust","schulter"],
+  "Klimmzüge":["ruecken","arme"], "Langhantelrudern":["ruecken","arme"],
+  "Kabelrudern":["ruecken","arme"], "Schulterdrücken":["schulter","arme"],
+  "Face Pulls":["schulter","ruecken"], "Außenrotation Kabel":["schulter"],
+  "Dips":["brust","arme"], "Bizepscurls":["arme"], "Trizepsdrücken":["arme"],
+  "Kniebeuge":["beine","po"], "Frontkniebeuge":["beine","po","bauch"],
+  "Kreuzheben":["ruecken","po","beine"], "Rumänisches Kreuzheben":["po","beine"],
+  "Bulgarian Split Squat":["beine","po"], "Ausfallschritte":["beine","po"],
+  "Beinpresse":["beine","po"], "Wadenheben":["waden"],
+  "Nordic Curls":["beine"], "Hip Thrust":["po"],
+  "Plank":["bauch"], "Seitstütz":["bauch"], "Pallof Press":["bauch"],
+  "Russian Twist":["bauch"], "Hanging Leg Raise":["bauch"],
+  "Ab Wheel":["bauch"], "Bird Dog":["bauch","ruecken"], "Käfer":["bauch"],
+  "Antritt 10 m":["beine","po"], "Antritt 20 m":["beine","po"],
+  "Steigerung 60 m":["beine","waden"], "Shuttle 5-10-5":["beine","po"],
+  "Spider Drill":["beine"], "Koordinationsleiter":["waden","beine"],
+  "Box Jump":["beine","po","waden"], "Weitsprung Stand":["beine","po"],
+  "Medizinball Wurf seitlich":["bauch","schulter"], "Medizinball Slam":["bauch","schulter","ruecken"],
+  "Sprungkniebeuge":["beine","po"], "Burpee":["ganz"], "Farmers Walk":["arme","bauch","ruecken"]
+};
+function koerper(name,farbe,groesse){
+  const aktiv=UEB_MUSKEL[name]||[];
+  const g=groesse||64;
+  const feld=aktiv.includes("ganz")?Object.keys(MUSKEL).filter(k=>k!=="ganz"):aktiv;
+  const pfade=feld.flatMap(k=>(MUSKEL[k]||"").split("|").filter(Boolean))
+    .map(d=>`<path d="${d}" fill="${farbe}" opacity=".85"/>`).join("");
+  return `<svg viewBox="0 0 83 128" width="${g}" height="${g*128/83}" aria-hidden="true">
+    <g fill="none" stroke="rgba(150,180,205,.28)" stroke-width="1.6" stroke-linejoin="round">
+      <circle cx="41.5" cy="30" r="10"/>
+      <path d="M41.5,40 h0 M26,45 q2,-6 9,-5 h13 q7,-1 9,5 l3,26 -6,2 -2,-14 v18 h-24 v-18 l-2,14 -6,-2 z"/>
+      <path d="M33,73 l-2,50 h8 l2,-33 2,33 h8 l-2,-50 z"/>
+    </g>${pfade}</svg>`;
+}
+
+/* ── Programme ──────────────────────────────────────────
+   Was du machst, steht fest. Wann, nicht.
+
+   Jedes Programm hat eine feste Übungsliste und eine feste Anzahl
+   pro Woche. Der Wochentag ist ein Vorschlag, keine Vorschrift —
+   die Woche gilt als erfüllt, sobald die Anzahl steht, egal an
+   welchen Tagen. Dieselbe Logik wie bei den Wochenzielen in NOVA,
+   und sie passt zu einem Trainingsalltag, der sich verschiebt.
+   ──────────────────────────────────────────────────────── */
+const PROG_STD=[
+  {id:"p_ok", name:"Oberkörper", disz:"kraft", proWoche:1, tag:"Mo",
+   uebungen:[["Bankdrücken",4,8],["Klimmzüge",4,6],["Schulterdrücken",3,10],
+             ["Langhantelrudern",3,10],["Face Pulls",3,15],["Außenrotation Kabel",3,15]]},
+  {id:"p_uk", name:"Unterkörper", disz:"kraft", proWoche:1, tag:"Do",
+   uebungen:[["Kniebeuge",4,6],["Rumänisches Kreuzheben",3,8],
+             ["Bulgarian Split Squat",3,10],["Nordic Curls",3,6],["Wadenheben",3,15]]},
+  {id:"p_a1", name:"Athletik 1", disz:"athletik", proWoche:1, tag:"Di",
+   uebungen:[["Antritt 10 m",6,1],["Shuttle 5-10-5",4,1],
+             ["Box Jump",4,4],["Medizinball Wurf seitlich",3,6]]},
+  {id:"p_a2", name:"Athletik 2", disz:"athletik", proWoche:1, tag:"Fr",
+   uebungen:[["Steigerung 60 m",5,1],["Sprungkniebeuge",4,6],
+             ["Medizinball Slam",4,8],["Koordinationsleiter",4,1]]},
+  {id:"p_ru", name:"Rumpf", disz:"kraft", proWoche:2, tag:null,
+   uebungen:[["Pallof Press",3,12],["Hanging Leg Raise",3,10],
+             ["Seitstütz",3,45],["Bird Dog",3,10]]},
+  /* Kein Satzprotokoll — Mobility bleibt eine Dauer-Disziplin, taucht
+     hier nur mit ihrem Wochenziel auf. Deshalb keine Übungen: Start
+     läuft weiterhin über „nachtragen", nie über progStarten(). */
+  {id:"p_mob", name:"Mobility", disz:"mobility", proWoche:5, tag:null, uebungen:[]}
+];
+const progAlle=()=>S.programme&&S.programme.length?S.programme:PROG_STD;
+const progById=id=>progAlle().find(p=>p.id===id)||null;
+/* Tage dieser Woche, an denen das Programm als erledigt zählt —
+   entweder durch eine echte Einheit (unten erfasst) oder durch ein
+   Häkchen (oben angetippt). Eine Menge statt zwei Zahlen, damit
+   derselbe Tag nie doppelt zählt, egal woher er kommt. */
+function progTage(id){
+  const mo=dk(mow(new Date())), bis=dk(addT(mow(new Date()),6));
+  const tage=new Set();
+  S.einheiten.forEach(e=>{ if(e.programm===id&&e.datum>=mo&&e.datum<=bis) tage.add(e.datum); });
+  (S.haken?.[id]||[]).forEach(k=>{ if(k>=mo&&k<=bis) tage.add(k); });
+  return tage;
+}
+function progDieseWoche(id){ return progTage(id).size; }
+
+/* Häkchen setzen oder zurücknehmen — reines Merkmal, unabhängig von
+   echten Einheiten. Ungefährlich beim Zurücknehmen: zählt der Tag
+   noch über eine echte Einheit, bleibt er trotzdem erfasst.
+   tag ist ein fester "YYYY-MM-DD"-Tag aus data-tag, nicht mehr immer
+   „heute" — jedes Kästchen der Woche ist einzeln antippbar. */
+function tickToggle(id,tag){
+  const p=progById(id); if(!p) return;
+  S.haken=S.haken||{};
+  const liste=S.haken[id]=S.haken[id]||[];
+  const i=liste.indexOf(tag);
+  if(i>=0){ liste.splice(i,1); toast(`${p.name}: Häkchen entfernt`); }
+  else { liste.push(tag); toast(`${p.name} abgehakt`); }
+  sichernSofort(); zeichnen();
+}
+/* Sieben Tage der laufenden Woche, heute hervorgehoben, mit einem
+   kleinen Punkt an Tagen, die schon eine Einheit haben. */
+function wochenstreifen(){
+  const mo=mow(new Date());
+  return `<div class="wtag-streifen">
+    ${[...Array(7)].map((_,i)=>{
+      const d=addT(mo,i), k=dk(d), istHeute=k===heute();
+      const hat=S.einheiten.some(e=>e.datum===k);
+      return `<div class="wtag${istHeute?" heute":""}">
+        <span class="wtag-t">${WD[i]}</span>
+        <span class="wtag-z">${d.getDate()}</span>
+        <i class="wtag-p${hat?" an":""}"></i>
+      </div>`;}).join("")}
+  </div>`;
+}
+
+function wochenPlan(){
+  return progAlle().map(p=>{
+    const ist=progDieseWoche(p.id);
+    return {...p, ist, offen:Math.max(0,p.proWoche-ist), fertig:ist>=p.proWoche};
+  });
+}
+
+/* ── Zustand ───────────────────────────────────────── */
+const leer=()=>({einheiten:[],uebungen:UEB_STD.map(([g,n,kg])=>({id:uid(),gruppe:g,name:n,kg:!!kg})),
+  programme:PROG_STD.map(p=>({...p,uebungen:p.uebungen.map(u=>[...u])})), haken:{}, laufend:null});
+
+/* Neue voreingestellte Programme (wie Mobility) bei bestehenden Nutzern
+   nachtragen, ohne etwas Vorhandenes anzurühren — nur was an Kennung
+   fehlt, kommt dazu. */
+function migriereProgramme(){
+  if(!S.programme) S.programme=PROG_STD.map(p=>({...p,uebungen:p.uebungen.map(u=>[...u])}));
+  /* Absicherung: käme S.programme aus einem älteren, längst überholten
+     Stand doppelt vor derselben Kennung, würden zwei Zeilen dasselbe
+     Häkchen teilen — antippt man die eine, „hakt sich" optisch auch
+     die andere ab. Nur der erste Eintrag je Kennung bleibt. */
+  const gesehen=new Set();
+  S.programme=S.programme.filter(p=>{
+    if(gesehen.has(p.id)) return false;
+    gesehen.add(p.id); return true;
+  });
+  const vorhanden=new Set(S.programme.map(p=>p.id));
+  PROG_STD.forEach(p=>{ if(!vorhanden.has(p.id)) S.programme.push({...p,uebungen:p.uebungen.map(u=>[...u])}); });
+  if(!S.haken) S.haken={};
+}
+let S=leer(), VIEW="start", TICK=null;
+
+function laden(){
+  /* Wer die Vorfassung unter dem alten Namen schon benutzt hat,
+     verliert dabei nichts — der Stand wandert einmalig mit. */
+  try{
+    if(!localStorage.getItem(KEY)&&localStorage.getItem(KEY_ALT)){
+      localStorage.setItem(KEY,localStorage.getItem(KEY_ALT));
+      if(localStorage.getItem(TOK_ALT)) localStorage.setItem(TOK_KEY,localStorage.getItem(TOK_ALT));
+      if(localStorage.getItem(SYNC_ALT)) localStorage.setItem(SYNC_KEY,localStorage.getItem(SYNC_ALT));
+    }
+  }catch(e){}
+  try{const r=localStorage.getItem(KEY); if(r) S=Object.assign(leer(),JSON.parse(r));}catch(e){}
+  if(!S.uebungen||!S.uebungen.length) S.uebungen=leer().uebungen;
+}
+function sichern(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  if(syncAn()) syncPlanen();
+}
+/* Für die Stellen, an denen wirklich etwas Bedeutsames entsteht:
+   eine fertige Einheit, ein Nachtrag, eine Löschung. Kein Warten —
+   auf dem Handy ist die App oft schon weggewischt, bevor der
+   Zeitgeber unten losläuft. */
+function sichernSofort(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  if(syncAn()){ clearTimeout(syncTimer); hochladen(); }
+}
+/* Sicherheitsnetz: Wechselt die Seite in den Hintergrund — Handy
+   gesperrt, App gewechselt — während noch eine verzögerte Sicherung
+   aussteht, wird sofort hochgeladen statt zu warten. iOS pausiert
+   Zeitgeber im Hintergrund fast augenblicklich. */
+function beimVerstecken(){ if(syncTimer){ clearTimeout(syncTimer); hochladen(); } }
+document.addEventListener("visibilitychange",()=>{ if(document.hidden) beimVerstecken(); });
+window.addEventListener("pagehide",beimVerstecken);
+
+/* ── Symbole ────────────────────────────────────────
+   Gezeichnet, nicht Emoji — eine Strichstärke durchgehend. */
+const I={
+  tennis:'<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6A9 9 0 0 1 12 3a9 9 0 0 1 0 18 9 9 0 0 1-6.4-2.6"/><path d="M3.4 9.6A9 9 0 0 0 12 3M3.4 14.4A9 9 0 0 1 12 21"/>',
+  hantel:'<path d="M6.5 8v8M4 10v4M17.5 8v8M20 10v4M6.5 12h11"/>',
+  blitz:'<path d="M13 2 5 13h6l-1 9 8-11h-6z"/>',
+  sprung:'<circle cx="13" cy="4.5" r="2"/><path d="M11 21l1.5-5.5L9 13l1.5-4.5 3-1 3.5 3 2.5.8M10.5 8.5 6 10.5 4.5 15M12.5 15.5 16 21"/>',
+  herz:'<path d="M20.4 5.6a5.2 5.2 0 0 0-7.4 0L12 6.6l-1-1a5.2 5.2 0 1 0-7.4 7.4l1 1 7.4 7.4 7.4-7.4 1-1a5.2 5.2 0 0 0 0-7.4z"/>',
+  welle:'<path d="M2 9c3-4 5 4 8 0s5 4 8 0M2 16c3-4 5 4 8 0s5 4 8 0"/>',
+  haus:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  liste:'<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+  zahn:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  check:'<path d="M4 12.5 9.5 18 20 6.5"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  wolke:'<path d="M17.5 19a4.5 4.5 0 0 0 .5-9 6 6 0 0 0-11.6-1.5A4 4 0 0 0 6.5 19z"/>',
+  zurueck:'<path d="M15 5 8 12l7 7"/>'
+};
+const ico=n=>I[n]?`<svg viewBox="0 0 24 24">${I[n]}</svg>`:"";
+
+function toast(t){
+  const e=document.getElementById("toast");
+  e.textContent=t; e.classList.add("on");
+  clearTimeout(e._t); e._t=setTimeout(()=>e.classList.remove("on"),2300);
+}
+function blatt(html){
+  const o=document.getElementById("ov");
+  o.innerHTML=`<div class="blatt">${html}</div>`;
+  o.classList.add("on");
+  o.onclick=e=>{ if(e.target===o) zu(); };
+}
+const zu=()=>document.getElementById("ov").classList.remove("on");
+
+/* ── Auswertung ────────────────────────────────────── */
+const minuten=e=>e.dauer||0;
+const tagesMin=k=>S.einheiten.filter(e=>e.datum===k).reduce((a,e)=>a+minuten(e),0);
+function wochenMin(mo){
+  const bis=dk(addT(mo,6)), von=dk(mo);
+  const o={};
+  S.einheiten.filter(e=>e.datum>=von&&e.datum<=bis).forEach(e=>{ o[e.disz]=(o[e.disz]||0)+minuten(e); });
+  return o;
+}
+/* Bestleistung je Übung: höchstes Gewicht, und dazu die
+   Wiederholungen, die dabei geschafft wurden. */
+function rekord(name){
+  let best=null;
+  S.einheiten.forEach(e=>(e.uebungen||[]).forEach(u=>{
+    if(u.name!==name) return;
+    (u.saetze||[]).forEach(s=>{
+      if(!s.kg) return;
+      if(!best||s.kg>best.kg||(s.kg===best.kg&&s.wdh>best.wdh)) best={kg:s.kg,wdh:s.wdh,datum:e.datum};
+    });
+  }));
+  return best;
+}
+/* Was war vor diesem Satz das Beste? Zählt die abgeschlossenen
+   Einheiten UND die Sätze der laufenden — sonst wäre in einer Einheit
+   jeder Satz ein Bestwert, weil die Historie ihn noch nicht kennt. */
+function bisherBest(name,laufend){
+  let best=rekord(name);
+  (laufend||[]).forEach(x=>{
+    if(!x.kg) return;
+    if(!best||x.kg>best.kg||(x.kg===best.kg&&x.wdh>best.wdh)) best={kg:x.kg,wdh:x.wdh};
+  });
+  return best;
+}
+
+/* Was schlägt die App für den nächsten Satz vor?
+   Die Regel ist bewusst schlicht und nachvollziehbar: Hast du beim
+   letzten Mal alle Sätze mit RIR 2 oder mehr geschafft, kannst du
+   drauflegen. War es knapp, bleibt das Gewicht. Kein Algorithmus,
+   den man nicht nachrechnen kann. */
+function vorschlag(name){
+  const l=letzteSaetze(name);
+  if(!l||!l.saetze.length) return null;
+  const mitKg=l.saetze.some(x=>x.kg);
+  const best=l.saetze.reduce((a,x)=>!a||x.kg>a.kg?x:a,null);
+  if(!mitKg) return {wdh:Math.max(...l.saetze.map(x=>x.wdh))+1, grund:"eine Wiederholung mehr als zuletzt"};
+  const rirs=l.saetze.map(x=>x.rir).filter(x=>x!=null);
+  const locker = rirs.length && rirs.every(r=>r>=2);
+  const schritt = best.kg>=60?5:2.5;
+  return locker
+    ? {kg:best.kg+schritt, wdh:best.wdh, grund:`zuletzt alle Sätze mit RIR ${Math.min(...rirs)} — leg drauf`}
+    : {kg:best.kg, wdh:best.wdh, grund:"zuletzt am Limit — Gewicht halten"};
+}
+
+const letzteSaetze=name=>{
+  for(let i=S.einheiten.length-1;i>=0;i--){
+    const u=(S.einheiten[i].uebungen||[]).find(x=>x.name===name);
+    if(u&&u.saetze&&u.saetze.length) return {saetze:u.saetze,datum:S.einheiten[i].datum};
+  }
+  return null;
+};
+
+/* ── Ansichten ─────────────────────────────────────── */
+const R={};
+
+R.start=function(){
+  const k=heute(), tage=S.einheiten.filter(e=>e.datum===k);
+  const mo=mow(new Date()), wm=wochenMin(mo);
+  const wGes=Object.values(wm).reduce((a,b)=>a+b,0);
+  const st=new Date().getHours();
+  const gruss=st<5?"Noch wach":st<11?"Guten Morgen":st<18?"Was steht an":"Guten Abend";
+  const plan=wochenPlan();
+
+  return `
+  <div class="kopf">
+    <span class="marke">NOVA<i>Training</i></span>
+    <span class="kopf-sub mono">${wGes?hmm(wGes)+" diese Woche":"Woche offen"}</span>
+    <div class="kopf-akt"><button class="ib" onclick="R2('einstellungen')" aria-label="Einstellungen">${ico("zahn")}</button></div>
+  </div>
+  <main>
+    ${plan.length?`
+    <div class="wp">
+      ${wochenstreifen()}
+      <div class="wp-kopf">
+        <span class="wp-kopf-n">Diese Woche</span>
+        <span class="wp-kopf-s mono">${plan.filter(p=>p.fertig).length}/${plan.length} erledigt</span>
+        <span class="wp-tage">${[...Array(7)].map((_,i)=>`<span class="wp-tl">${WD[i][0]}</span>`).join("")}</span>
+      </div>
+      <div class="wp-liste">
+        ${plan.map(p=>{
+          const d=dz(p.disz), mo2=mow(new Date());
+          /* Sieben eigenständige Knöpfe statt eines einzigen Zeilen-Tapps —
+             jeder trägt sein eigenes data-tag, erst nach dem Zeichnen
+             verdrahtet (siehe zeichnen()). Genau das Muster, mit dem die
+             Habits in NOVA zuverlässig laufen. */
+          const tageHtml=[...Array(7)].map((_,i)=>{
+            const t2=addT(mo2,i), tg=dk(t2);
+            const echt=S.einheiten.some(e=>e.programm===p.id&&e.datum===tg);
+            const hak=(S.haken?.[p.id]||[]).includes(tg);
+            const an=echt||hak, heuteTag=tg===heute(), kuenftig=tg>heute();
+            const sperr=echt||kuenftig;
+            return `<button class="wp-box${an?" an":""}${echt?" echt":""}${heuteTag?" heute":""}"
+              ${sperr?"disabled":`data-tag="${p.id}|${tg}"`}
+              aria-pressed="${an}" aria-label="${esc(p.name)}, ${WD[i]}"
+              title="${echt?"bereits als Einheit erfasst":kuenftig?"liegt in der Zukunft":an?"antippen, um Häkchen zu entfernen":"antippen zum Abhaken"}"
+              >${an?ico("check"):""}</button>`;
+          }).join("");
+          return `<div class="wp-row${p.fertig?" fertig":""}" style="--dc:${d.farbe}">
+            <span class="wp-dot"></span>
+            <span class="wp-n">${esc(p.name)}<small>${p.uebungen.length?`${p.uebungen.length} Übungen`:"Wochenziel"}${p.tag?` · meist ${p.tag}`:""}</small></span>
+            <span class="wp-b${p.fertig?" voll":""}">${p.ist}/${p.proWoche}</span>
+            <span class="wp-tage">${tageHtml}</span>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`:""}
+
+    <p class="frage">${plan.length?"Oder etwas anderes":gruss+" — womit fängst du an?"}</p>
+    <div class="disz">
+      ${DISZ.map(d=>{
+        const m=wm[d.id]||0;
+        return `<button class="dz" style="--dc:${d.farbe}" onclick="starten('${d.id}')">
+          <span class="dz-ico">${ico(d.ico)}</span>
+          <span style="min-width:0">
+            <span class="dz-n" style="display:block">${d.n}</span>
+            <span class="dz-s">${d.art==="satz"?"Sätze erfassen":"Dauer erfassen"}</span>
+          </span>
+          <span class="dz-z">${m?`<b>${hmm(m)}</b><span>diese Woche</span>`:`<span>noch nicht</span>`}</span>
+        </button>`;}).join("")}
+    </div>
+
+    <div class="tag">
+      <div class="tag-k">
+        <span class="tag-t">Heute</span>
+        <span class="tag-w mono">${tage.length?hmm(tagesMin(k)):""}</span>
+      </div>
+      ${tage.length?tage.map(e=>{
+        const d=dz(e.disz);
+        return `<div class="eintrag" style="--dc:${d.farbe}">
+          <span class="e-punkt"></span>
+          <span class="e-n">${esc(d.n)}${e.unter?` · ${esc(e.unter)}`:""}${
+            e.uebungen&&e.uebungen.length?` · ${e.uebungen.length} Übungen`:""}</span>
+          <span class="e-d">${hmm(minuten(e))}</span>
+          <button class="e-x" onclick="loeschen('${e.id}')" aria-label="Einheit löschen">${ico("x")}</button>
+        </div>`;}).join("")
+      :`<div class="leer">Heute noch nichts. Tennis, Zone 2 und Mobility trägst du<br>hinterher ein — Kraft und Athletik laufen mit.</div>`}
+    </div>
+  </main>
+  ${navi()}`;
+};
+
+R.laufend=function(){
+  const L=S.laufend;
+  return satzAnsicht(L,dz(L.disz));   /* nur Satz-Disziplinen laufen mit */
+};
+
+/* ── Satz-Erfassung ────────────────────────────────── */
+function satzAnsicht(L,d){
+  const s=Math.floor((Date.now()-L.start)/1000);
+  const u=L.uebungen[L.aktiv];
+  if(!u) return uebungWaehlen(L,d);
+  const kat=S.uebungen.find(x=>x.name===u.name);
+  const mitKg=kat?kat.kg:true;
+  const letzt=letzteSaetze(u.name);
+  const rk=rekord(u.name);
+  const vor=vorschlag(u.name);
+
+  return `
+  <div class="lauf-kopf" style="--dc:${d.farbe}">
+    <button class="ib" onclick="zurueckZurWahl()" style="border:0;width:30px;height:30px" aria-label="Übung wechseln">${ico("zurueck")}</button>
+    <span class="lauf-n">${d.n}</span>
+    <span class="lauf-uhr" id="uhr">${mmss(s)}</span>
+  </div>
+  <main style="--dc:${d.farbe}">
+    <div class="satzwerk">
+      <div class="sw-ueb">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0">
+          <span class="sw-koerper">${koerper(u.name,d.farbe,40)}</span>
+          <div style="min-width:0">
+            <div class="sw-name">${esc(u.name)}</div>
+            ${letzt?`<div class="sw-satz" style="margin-top:2px">zuletzt ${kurz(pdk(letzt.datum))}: ${
+              letzt.saetze.map(x=>x.kg?`${zahl(x.kg)}×${x.wdh}`:`${x.wdh}`).join("  ")}</div>`:""}
+          </div>
+        </div>
+        <span class="sw-satz">Satz ${u.saetze.length+1}${
+          L.soll&&L.soll[u.name]?` von ${L.soll[u.name].saetze}`:""}</span>
+      </div>
+      ${vor&&!u.saetze.length?`<button class="sw-vor" onclick="vorNehmen()">
+        <span class="sw-vor-l">Vorschlag</span>
+        <span class="sw-vor-w mono">${vor.kg?`${zahl(vor.kg)} kg × ${vor.wdh}`:`${vor.wdh} Wdh.`}</span>
+        <span class="sw-vor-g">${esc(vor.grund)}</span>
+      </button>`:""}
+
+      ${L.pause?pausenUhr(L,d):`
+      <div class="sw-gitter">
+        ${mitKg?`<div class="sw-feld">
+          <div class="sw-lab">Gewicht</div>
+          <div class="sw-wert" id="wKg">${zahl(L.kg)}</div>
+          <div class="sw-steu">
+            <button onclick="stell('kg',-2.5)" aria-label="2,5 Kilo weniger">−</button>
+            <button onclick="stell('kg',2.5)" aria-label="2,5 Kilo mehr">+</button>
+          </div>
+        </div>`:""}
+        <div class="sw-feld"${mitKg?"":' style="grid-column:1/-1"'}>
+          <div class="sw-lab">${mitKg?"Wiederholungen":"Wiederholungen oder Sekunden"}</div>
+          <div class="sw-wert" id="wWdh">${L.wdh}</div>
+          <div class="sw-steu">
+            <button onclick="stell('wdh',-1)" aria-label="Eine weniger">−</button>
+            <button onclick="stell('wdh',1)" aria-label="Eine mehr">+</button>
+          </div>
+        </div>
+      </div>
+      ${mitKg?`<div class="rir">
+        <span class="rir-l">Wie viele hättest du noch geschafft?</span>
+        <div class="chips">
+          ${[0,1,2,3,4].map(n=>`<button class="chip${L.rir===n?" on":""}" onclick="setRir(${n})">${n===0?"keine":n===4?"4+":n}</button>`).join("")}
+        </div>
+      </div>`:""}
+      <button class="b b-dz b-w b-gr" onclick="satzFertig()">Satz eintragen</button>`}
+
+      ${u.saetze.length?`<div class="sw-liste">
+        ${u.saetze.map((x,i)=>{
+          const neuerRekord = x.kg && rk && x.kg>=rk.kg && x.datum!==undefined;
+          return `<div class="sw-z${x.rekord?" rekord":""}">
+            <span class="sw-z-i">${i+1}</span>
+            <span class="sw-z-w">${x.kg?`${zahl(x.kg)} kg × ${x.wdh}`:`${x.wdh}`}</span>
+            <span class="sw-z-v">${x.rekord?"Bestwert":x.rir!=null?`RIR ${x.rir}`:x.kg?`${Math.round(x.kg*x.wdh)} kg gesamt`:""}</span>
+            <button class="e-x" onclick="satzWeg(${i})" aria-label="Satz löschen">${ico("x")}</button>
+          </div>`;}).join("")}
+      </div>`:""}
+
+      <div style="display:flex;gap:9px;margin:18px 0 6px">
+        ${L.programm&&L.aktiv<L.uebungen.length-1
+          ? `<button class="b b-w" onclick="naechsteUebung()">Weiter: ${esc(L.uebungen[L.aktiv+1].name)}</button>`
+          : `<button class="b" style="flex:1" onclick="uebungWechseln()">${ico("plus")}Andere Übung</button>`}
+      </div>
+      ${L.programm?`<div class="prog-liste">
+        ${L.uebungen.map((x,i)=>`<button class="prog-z${i===L.aktiv?" jetzt":""}${x.saetze.length?" fertig":""}"
+          onclick="zuUebung(${i})">
+          <span class="prog-i">${x.saetze.length?ico("check"):i+1}</span>
+          <span class="prog-n">${esc(x.name)}</span>
+          <span class="prog-s mono">${x.saetze.length}${L.soll&&L.soll[x.name]?"/"+L.soll[x.name].saetze:""}</span>
+        </button>`).join("")}
+      </div>`:""}
+    </div>
+  </main>
+  <div class="fuss">
+    <button class="b" onclick="abbrechen()">Verwerfen</button>
+    <button class="b b-1" onclick="beenden()">${ico("check")}Einheit fertig</button>
+  </div>`;
+}
+
+function pausenUhr(L,d){
+  const rest=Math.max(0,Math.ceil((L.pause-Date.now())/1000));
+  const ges=L.pauseGes||90, anteil=rest/ges;
+  const U=2*Math.PI*62;
+  return `<div class="pause">
+    <svg viewBox="0 0 132 132">
+      <circle class="spur" cx="66" cy="66" r="62"/>
+      <circle class="voll" cx="66" cy="66" r="62"
+        stroke-dasharray="${U.toFixed(1)}" stroke-dashoffset="${(U*(1-anteil)).toFixed(1)}" stroke-linecap="round"/>
+    </svg>
+    <div class="pause-z" id="pauseZ">${mmss(rest)}</div>
+    <div class="pause-l">Pause — tippen zum Überspringen</div>
+  </div>
+  <button class="b b-w" onclick="pauseAus()">Weiter</button>`;
+}
+
+function uebungWaehlen(L,d){
+  const gruppen=[...new Set(S.uebungen.map(u=>u.gruppe))];
+  return `
+  <div class="lauf-kopf" style="--dc:${d.farbe}">
+    <span class="dz-ico" style="--dc:${d.farbe};width:34px;height:34px;border-radius:9px">${ico(d.ico)}</span>
+    <span class="lauf-n">${d.n}</span>
+    <span class="lauf-uhr" id="uhr">${mmss(Math.floor((Date.now()-L.start)/1000))}</span>
+  </div>
+  <main style="--dc:${d.farbe}">
+    <p class="frage">Welche Übung?</p>
+    <input id="ubSuche" placeholder="Suchen oder neue anlegen" oninput="ubFilter(this.value)" style="margin-bottom:16px">
+    <div id="ubListe">${ubListeHtml("")}</div>
+  </main>
+  <div class="fuss">
+    <button class="b" onclick="abbrechen()">Verwerfen</button>
+    ${L.uebungen.length?`<button class="b b-1" onclick="beenden()">${ico("check")}Einheit fertig</button>`:""}
+  </div>`;
+}
+function ubListeHtml(q){
+  const s=q.trim().toLowerCase();
+  const treffer=S.uebungen.filter(u=>!s||u.name.toLowerCase().includes(s));
+  const gruppen=[...new Set(treffer.map(u=>u.gruppe))];
+  let h=gruppen.map(g=>`<div class="ub-gr">
+    <div class="ub-t">${esc(g)}</div>
+    ${treffer.filter(u=>u.gruppe===g).map(u=>{
+      const r=rekord(u.name);
+      return `<button class="ub" style="width:100%;text-align:left" onclick="ubStart('${esc(u.name)}')">
+        <span class="ub-k">${koerper(u.name,"var(--dc,#4fe3d2)",26)}</span>
+        <span class="ub-n">${esc(u.name)}</span>
+        ${r?`<span class="ub-pr"><b>${zahl(r.kg)}</b> kg × ${r.wdh}</span>`:""}
+      </button>`;}).join("")}
+  </div>`).join("");
+  if(s&&!treffer.length) h=`<div class="leer">Keine Übung gefunden.</div>`;
+  if(s) h+=`<button class="b b-w" onclick="ubNeu('${esc(q.trim())}')">${ico("plus")}„${esc(q.trim())}" anlegen</button>`;
+  return h;
+}
+
+/* ── Verlauf ───────────────────────────────────────── */
+/* ── Auswertung ─────────────────────────────────────────
+   Vier Fragen, vier Formen. Die Form kommt aus der Frage:
+     Wie viel pro Woche, woraus?  → gestapelte Balken
+     Wie oft?                     → Kennzahl, kein Diagramm
+     Welche Muskeln kommen dran?  → liegende Balken, sortiert
+     Werde ich stärker?           → Linie je Übung
+   ──────────────────────────────────────────────────────── */
+const tonnage=e=>(e.uebungen||[]).reduce((a,u)=>
+  a+u.saetze.reduce((x,s)=>x+((s.kg||0)*(s.wdh||0)),0),0);
+
+const MUSKEL_NAME={brust:"Brust",ruecken:"Rücken",schulter:"Schulter",arme:"Arme",
+  bauch:"Rumpf",beine:"Beine",po:"Gesäß",waden:"Waden"};
+
+function muskelVerteilung(wochen){
+  const ab=dk(addT(mow(new Date()),-7*(wochen-1)));
+  const o={};
+  S.einheiten.filter(e=>e.datum>=ab).forEach(e=>(e.uebungen||[]).forEach(u=>{
+    const m=UEB_MUSKEL[u.name]||[];
+    const ziele=m.includes("ganz")?Object.keys(MUSKEL).filter(k=>k!=="ganz"):m;
+    ziele.forEach(k=>{ o[k]=(o[k]||0)+u.saetze.length; });
+  }));
+  return Object.entries(o).sort((a,b)=>b[1]-a[1]);
+}
+
+function uebungenMitVerlauf(){
+  const z={};
+  S.einheiten.forEach(e=>(e.uebungen||[]).forEach(u=>{
+    if(u.saetze.some(x=>x.kg)) z[u.name]=(z[u.name]||0)+1;
+  }));
+  return Object.entries(z).filter(([,n])=>n>=3).sort((a,b)=>b[1]-a[1]).map(([n])=>n);
+}
+function uebungVerlauf(name){
+  const p=[];
+  S.einheiten.forEach(e=>{
+    const u=(e.uebungen||[]).find(x=>x.name===name);
+    if(!u) return;
+    const t=u.saetze.reduce((a,s)=>a+((s.kg||0)*(s.wdh||0)),0);
+    const best=u.saetze.reduce((a,s)=>Math.max(a,s.kg||0),0);
+    if(t>0) p.push({datum:e.datum,tonnage:t,best});
+  });
+  return p;
+}
+
+let statUeb=null;
+const STAT_WOCHEN=10;
+function statUebSetz(n){ statUeb=n; zeichnen(); }
+
+/* Gestapelte Balken. 2 px Luft zwischen den Abschnitten, damit
+   angrenzende Farben sich nie berühren — das trägt neben der Legende
+   als zweites Unterscheidungsmerkmal. */
+function stapelBalken(daten,max){
+  const H=110;
+  return `<div class="stap">
+    ${daten.map(w=>{
+      const ges=Object.values(w.m).reduce((a,b)=>a+b,0);
+      const teile=DISZ.filter(d=>w.m[d.id]);
+      return `<div class="stap-s" title="${kurz(w.mo)} — ${hmm(ges)}">
+        <div class="stap-b" style="height:${H}px">
+          ${teile.map((d,i)=>`<i style="background:${d.kf};height:${(w.m[d.id]/max*H).toFixed(1)}px;${
+            i===teile.length-1?"border-radius:4px 4px 0 0;":""}"></i>`).join("")}
+        </div>
+        <span class="stap-l mono">${w.mo.getDate()}.${w.mo.getMonth()+1}</span>
+      </div>`;}).join("")}
+  </div>`;
+}
+
+/* Eine Linie, eine Serie — keine Legende nötig, die Überschrift nennt
+   sie. Punkte 8 px im Durchmesser, damit man sie trifft. */
+function linie(p){
+  if(p.length<2) return `<div class="leer">Noch zu wenige Einheiten für einen Verlauf.</div>`;
+  const W=320,H=124,L=36,R=10,T=12,B=24;
+  const werte=p.map(x=>x.best);
+  const min=Math.min(...werte), max=Math.max(...werte);
+  const spanne=Math.max(1,max-min);
+  const x=i=>L+(W-L-R)*(p.length===1?0.5:i/(p.length-1));
+  const y=v=>T+(H-T-B)*(1-(v-min)/spanne);
+  const d=p.map((q,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(q.best).toFixed(1)}`).join(" ");
+  return `<svg class="lin" viewBox="0 0 ${W} ${H}" role="img"
+      aria-label="Bestes Gewicht je Einheit, ${p.length} Einheiten von ${zahl(min)} bis ${zahl(max)} Kilo">
+    ${[0,0.5,1].map(t=>{const v=min+spanne*t;return `
+      <line x1="${L}" y1="${y(v).toFixed(1)}" x2="${W-R}" y2="${y(v).toFixed(1)}" class="lin-gitter"/>
+      <text x="${L-6}" y="${(y(v)+3.5).toFixed(1)}" class="lin-ax" text-anchor="end">${zahl(Math.round(v*10)/10)}</text>`;}).join("")}
+    <path d="${d}" class="lin-p"/>
+    ${p.map((q,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(q.best).toFixed(1)}" r="4" class="lin-pt">
+      <title>${kurz(pdk(q.datum))}: ${zahl(q.best)} kg · ${Math.round(q.tonnage)} kg gesamt</title></circle>`).join("")}
+    <text x="${L}" y="${H-6}" class="lin-ax" text-anchor="start">${kurz(pdk(p[0].datum))}</text>
+    <text x="${W-R}" y="${H-6}" class="lin-ax" text-anchor="end">${kurz(pdk(p[p.length-1].datum))}</text>
+  </svg>`;
+}
+
+R.verlauf=function(){
+  const wochen=[...Array(STAT_WOCHEN)].map((_,i)=>mow(addT(new Date(),-7*(STAT_WOCHEN-1-i))));
+  const daten=wochen.map(mo=>({mo,m:wochenMin(mo)}));
+  const summen=daten.map(w=>Object.values(w.m).reduce((a,b)=>a+b,0));
+  const max=Math.max(60,...summen);
+
+  const mo=mow(new Date()), voche=addT(mo,-7);
+  const inWoche=st=>S.einheiten.filter(e=>e.datum>=dk(st)&&e.datum<=dk(addT(st,6)));
+  const nJetzt=inWoche(mo).length, nVor=inWoche(voche).length;
+  const tJetzt=inWoche(mo).reduce((a,e)=>a+tonnage(e),0);
+  const aktiv=summen.filter(x=>x>0).length;
+  const schnitt=aktiv?Math.round(summen.reduce((a,b)=>a+b,0)/aktiv):0;
+
+  const mus=muskelVerteilung(4);
+  const maxMus=Math.max(1,...mus.map(m=>m[1]));
+  const ueList=uebungenMitVerlauf();
+  if(statUeb&&!ueList.includes(statUeb)) statUeb=null;
+  const uebung=statUeb||ueList[0]||null;
+  const verlauf=uebung?uebungVerlauf(uebung):[];
+  const tage=[...new Set(S.einheiten.map(e=>e.datum))].sort().reverse().slice(0,20);
+
+  return `
+  <div class="kopf">
+    <span class="marke">Auswertung</span>
+    <span class="kopf-sub mono">${S.einheiten.length} ${S.einheiten.length===1?"Einheit":"Einheiten"}</span>
+  </div>
+  <main>
+    <div class="kpi">
+      ${[[nJetzt,"Einheiten","diese Woche",nJetzt-nVor],
+         [hmm(schnitt),"Schnitt","je aktive Woche",null],
+         [tJetzt?Math.round(tJetzt/100)/10+" t":"–","Tonnage","diese Woche",null]]
+        .map(([v,l,s2,dd])=>`<div class="kpi-t">
+          <div class="kpi-v mono">${v}</div>
+          <div class="kpi-l">${l}</div>
+          <div class="kpi-s">${s2}${dd!==null&&dd!==0?` · <span class="${dd>0?"auf":"ab"}">${dd>0?"+":""}${dd}</span>`:""}</div>
+        </div>`).join("")}
+    </div>
+
+    <section class="dia">
+      <h2 class="dia-t">Minuten je Woche</h2>
+      <p class="dia-u">Woraus sich dein Umfang zusammensetzt</p>
+      ${stapelBalken(daten,max)}
+      <div class="legende">
+        ${DISZ.map(d=>`<span class="lg"><i style="background:${d.kf}"></i>${d.n}</span>`).join("")}
+      </div>
+    </section>
+
+    <section class="dia">
+      <h2 class="dia-t">Welche Muskeln kommen dran</h2>
+      <p class="dia-u">Sätze der letzten vier Wochen</p>
+      ${mus.length?`<div class="mus">
+        ${mus.map(([k,n])=>`<div class="mus-z">
+          <span class="mus-n">${MUSKEL_NAME[k]||k}</span>
+          <span class="mus-b"><i style="width:${(n/maxMus*100).toFixed(1)}%"></i></span>
+          <span class="mus-v mono">${n}</span>
+        </div>`).join("")}
+      </div>`:`<div class="leer">Noch keine Sätze erfasst.</div>`}
+    </section>
+
+    ${uebung?`<section class="dia" style="--dc:var(--k-kraft)">
+      <h2 class="dia-t">Werde ich stärker?</h2>
+      <p class="dia-u">Bestes Gewicht je Einheit — ${esc(uebung)}</p>
+      ${ueList.length>1?`<div class="chips" style="margin-bottom:12px">
+        ${ueList.slice(0,6).map(n=>`<button class="chip${n===uebung?" on":""}" onclick="statUebSetz('${esc(n)}')">${esc(n)}</button>`).join("")}
+      </div>`:""}
+      ${linie(verlauf)}
+    </section>`:""}
+
+    <section class="dia">
+      <h2 class="dia-t">Einzelne Tage</h2>
+      ${tage.length?tage.map(k=>{
+        const el=S.einheiten.filter(e=>e.datum===k);
+        return `<div class="vtag">
+          <div class="vtag-k">
+            <span class="vtag-d">${WD[(pdk(k).getDay()+6)%7]}, ${kurz(pdk(k))}</span>
+            <span class="vtag-s">${hmm(tagesMin(k))}</span>
+          </div>
+          ${el.map(e=>{
+            const d=dz(e.disz);
+            return `<div class="eintrag" style="--dc:${d.farbe}">
+              <span class="e-punkt"></span>
+              <button class="e-n" style="text-align:left" onclick="einheitOeffnen('${e.id}')">${esc(d.n)}${e.unter?` · ${esc(e.unter)}`:""}${
+                (e.uebungen||[]).length?` · ${e.uebungen.map(u=>esc(u.name)).join(", ")}`:""}</button>
+              <span class="e-d">${hmm(minuten(e))}</span>
+            </div>`;}).join("")}
+        </div>`;}).join("")
+      :`<div class="leer">Noch keine Einheit erfasst.</div>`}
+    </section>
+  </main>
+  ${navi()}`;
+};
+
+R.uebungen=function(){
+  const gruppen=[...new Set(S.uebungen.map(u=>u.gruppe))];
+  return `
+  <div class="kopf">
+    <span class="marke">Übungen</span>
+    <span class="kopf-sub mono">${S.uebungen.length}</span>
+    <div class="kopf-akt"><button class="ib" onclick="ubNeuDialog()" aria-label="Übung anlegen">${ico("plus")}</button></div>
+  </div>
+  <main>
+    ${gruppen.map(g=>`<div class="ub-gr">
+      <div class="ub-t">${esc(g)}</div>
+      ${S.uebungen.filter(u=>u.gruppe===g).map(u=>{
+        const r=rekord(u.name);
+        return `<div class="ub">
+          <span class="ub-k">${koerper(u.name,"var(--c1)",26)}</span>
+          <span class="ub-n">${esc(u.name)}</span>
+          ${r?`<span class="ub-pr"><b>${zahl(r.kg)}</b> kg × ${r.wdh}</span>`
+             :`<span class="ub-pr" style="color:var(--faint)">–</span>`}
+          <button class="e-x" onclick="ubWeg('${u.id}')" aria-label="Übung entfernen">${ico("x")}</button>
+        </div>`;}).join("")}
+    </div>`).join("")}
+  </main>
+  ${navi()}`;
+};
+
+/* ── Einstellungen ─────────────────────────────────── */
+R.einstellungen=function(){
+  const an=syncAn(), tok=token();
+  return `
+  <div class="kopf">
+    <span class="marke">Einstellungen</span>
+  </div>
+  <main>
+    <div class="feldblock">
+      <label>Verbindung zu NOVA</label>
+      <p style="font-size:13.5px;color:var(--dim);line-height:1.6;margin-bottom:14px">
+        Diese App legt deine Einheiten als <span class="mono">training.json</span> in derselben
+        privaten Ablage ab, aus der NOVA liest. NOVA trägt sie dann von selbst
+        unter Training ein — du erfasst nur noch hier.</p>
+      <input id="tok" type="password" placeholder="ghp_…" value="${esc(tok)}" style="margin-bottom:9px" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div style="display:flex;gap:9px">
+        <button class="b" style="flex:1" onclick="tokSpeichern()">Schlüssel sichern</button>
+        <button class="b ${an?"":"b-1"}" style="flex:1" onclick="syncSchalten()">${an?"Abschalten":"Einschalten"}</button>
+      </div>
+      <p style="font-size:12px;color:var(--faint);margin-top:10px">
+        Status: ${an?'<span style="color:var(--good)">verbunden</span>':"aus"}${
+        S.zuletztSync?` · zuletzt ${new Date(S.zuletztSync).toLocaleString("de-DE")}`:""}</p>
+      ${an?`<button class="b" style="width:100%;margin-top:9px" onclick="jetztAbgleichen()">Jetzt mit dem anderen Gerät abgleichen</button>`:""}
+    </div>
+
+    <div class="feldblock">
+      <label>Pausenlänge</label>
+      <div class="chips">
+        ${[60,90,120,180].map(n=>`<button class="chip${(S.pauseStd||90)===n?" on":""}" onclick="pauseStd(${n})">${n} s</button>`).join("")}
+      </div>
+    </div>
+
+    <div class="feldblock">
+      <label>Daten</label>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="b" style="flex:1" onclick="sichernDatei()">Sichern</button>
+        <button class="b" style="flex:1" onclick="ladenDatei()">Laden</button>
+      </div>
+      <p style="font-size:11.5px;color:var(--faint);margin-top:9px;line-height:1.5" class="mono">
+        ${S.programme.length} Wochenziele: ${S.programme.map(p=>p.id).join(", ")}</p>
+    </div>
+  </main>
+  ${navi()}`;
+};
+
+/* ── Navigation ────────────────────────────────────── */
+const NAV=[["start","Start","haus"],["verlauf","Verlauf","chart"],
+           ["uebungen","Übungen","liste"],["einstellungen","Mehr","zahn"]];
+const navi=()=>`<nav>${NAV.map(([id,t,i])=>
+  `<button class="${VIEW===id?"on":""}" onclick="R2('${id}')">${ico(i)}<span>${t}</span></button>`).join("")}</nav>`;
+
+function R2(v){ VIEW=v; zeichnen(); }
+function zeichnen(){
+  const v = S.laufend ? "laufend" : VIEW;
+  document.getElementById("app").innerHTML=(R[v]||R.start)();
+  /* Wie bei NOVAs Habit-Kästchen: erst NACH dem Einsetzen ins DOM
+     verdrahten, jeder Knopf über sein eigenes data-tag statt über
+     einen inline-onclick-String pro Zeile. */
+  document.querySelectorAll("[data-tag]").forEach(b=>{
+    b.onclick=()=>{ const[id,tag]=b.dataset.tag.split("|"); tickToggle(id,tag); };
+  });
+  uhrLauf();
+  window.scrollTo(0,0);
+}
+
+/* Die Uhr läuft über setInterval, nicht über ein Neuzeichnen —
+   sonst verlöre das Eingabefeld bei jedem Tick den Fokus. */
+function uhrLauf(){
+  clearInterval(TICK);
+  if(!S.laufend) return;
+  TICK=setInterval(()=>{
+    const L=S.laufend; if(!L) return clearInterval(TICK);
+    const s=Math.floor((Date.now()-L.start)/1000);
+    const u=document.getElementById("uhr"); if(u) u.textContent=mmss(s);
+    const g=document.getElementById("grossUhr"); if(g) g.textContent=mmss(s);
+    if(L.pause){
+      const rest=Math.max(0,Math.ceil((L.pause-Date.now())/1000));
+      const z=document.getElementById("pauseZ"); if(z) z.textContent=mmss(rest);
+      const r=document.querySelector(".pause .voll");
+      if(r){ const U=2*Math.PI*62, a=rest/(L.pauseGes||90);
+        r.setAttribute("stroke-dashoffset",(U*(1-a)).toFixed(1)); }
+      if(rest<=0){ L.pause=null; zeichnen(); toast("Pause vorbei"); }
+    }
+  },1000);
+}
+
+/* ── Ablauf ────────────────────────────────────────── */
+/* Aus einem Programm heraus starten: die Übungen liegen in der
+   richtigen Reihenfolge bereit, die erste ist offen. */
+function progStarten(pid){
+  const p=progById(pid); if(!p) return;
+  if(S.laufend&&!confirm("Es läuft schon eine Einheit. Verwerfen?")) return;
+  S.laufend={id:uid(),disz:p.disz,programm:p.id,start:Date.now(),unter:p.name,
+    rpe:null,notiz:"",kg:20,wdh:10,rir:null,pause:null,
+    uebungen:p.uebungen.map(([n])=>({name:n,saetze:[]})),
+    soll:Object.fromEntries(p.uebungen.map(([n,st,w])=>[n,{saetze:st,wdh:w}])),
+    aktiv:0};
+  sichern(); zuUebung(0);
+}
+function naechsteUebung(){ zuUebung(S.laufend.aktiv+1); }
+function zuUebung(i){
+  const L=S.laufend; if(!L||i<0||i>=L.uebungen.length) return;
+  L.aktiv=i; L.rir=null;
+  const n=L.uebungen[i].name, v=vorschlag(n), letzt=letzteSaetze(n);
+  if(v){ L.kg=v.kg??0; L.wdh=v.wdh; }
+  else if(letzt&&letzt.saetze.length){ const x=letzt.saetze[0]; L.kg=x.kg??0; L.wdh=x.wdh; }
+  else {
+    /* Ohne Vorgeschichte bei null anfangen. Das Gewicht der vorigen
+       Übung stehen zu lassen wäre falsch — 25 kg vom Bankdrücken
+       ergeben bei Klimmzügen keinen Sinn. */
+    L.kg=0;
+    if(L.soll&&L.soll[n]) L.wdh=L.soll[n].wdh;
+  }
+  sichern(); zeichnen();
+}
+
+function starten(id){
+  const d=dz(id);
+  if(d.art==="dauer") return nachtragen(id);    /* nichts läuft mit */
+  const passend=progAlle().filter(p=>p.disz===id&&p.uebungen.length);
+  if(passend.length) return programWaehlen(id,passend);
+  freiesTraining(id);      /* keine festen Workouts hinterlegt — frei starten */
+}
+function freiesTraining(id){
+  S.laufend={id:uid(),disz:id,start:Date.now(),unter:null,rpe:null,notiz:"",
+             uebungen:[],aktiv:-1,kg:20,wdh:10,rir:null,pause:null};
+  sichern(); zeichnen();
+}
+/* Wie bei Alpha Progression: erst das feste Workout wählen, statt
+   direkt in eine leere Übungsliste zu springen. */
+function programWaehlen(diszId,programme){
+  const d=dz(diszId);
+  blatt(`<div style="--dc:${d.farbe}">
+    <h3>${esc(d.n)}</h3>
+    <div class="prog-wahl">
+      ${programme.map(p=>{
+        const bilder=p.uebungen.slice(0,3), rest=p.uebungen.length-bilder.length;
+        return `<button class="prog-wahl-z" onclick="zu();progStarten('${p.id}')">
+          <span class="prog-wahl-n">
+            <span class="prog-wahl-t">${esc(p.name)}</span>
+            <span class="prog-wahl-s">${p.uebungen.length} Übungen${p.tag?` · meist ${p.tag}`:""}</span>
+          </span>
+          <span class="wp-bilder">
+            ${bilder.map(([n])=>`<span class="wp-bild">${koerper(n,d.farbe,26)}</span>`).join("")}
+            ${rest>0?`<span class="wp-bild wp-mehr">+${rest}</span>`:""}
+          </span>
+        </button>`;}).join("")}
+    </div>
+    <button class="b b-w" style="margin-top:6px" onclick="zu();freiesTraining('${diszId}')">Freies Training — Übung frei wählen</button>
+  </div>`);
+}
+
+/* ── Nachtragen ─────────────────────────────────────────
+   Beim Tennis steht man nicht am Handy, um eine Uhr zu starten,
+   und hinterher weiß man ohnehin nur ungefähr, wie lang es war.
+   Deshalb: Datum, Dauer, Art — drei Tipper, fertig. */
+let NT={disz:null,datum:null,dauer:0,unter:null,rpe:null,bearbeitet:null};
+const NT_BEISPIEL={tennis:"Gegner, Ergebnis, wie es lief",zone2:"Strecke, Wetter, wie es lief",
+  mobility:"Was gedehnt, wie beweglich",athletik:"Übungen, Bedingungen, wie es lief"};
+const ntPlatzhalter=id=>NT_BEISPIEL[id]||"Wie es lief";
+function nachtragen(id,vorhandene){
+  const d=dz(id);
+  NT = vorhandene
+    ? {disz:id,datum:vorhandene.datum,dauer:vorhandene.dauer,unter:vorhandene.unter,
+       rpe:vorhandene.rpe,bearbeitet:vorhandene.id}
+    : {disz:id,datum:heute(),dauer:d.std,unter:null,rpe:null,bearbeitet:null};
+  ntBlatt();
+}
+function ntBlatt(){
+  const d=dz(NT.disz);
+  const tage=[0,-1,-2,-3].map(t=>{const x=addT(new Date(),t);return {k:dk(x),
+    l:t===0?"Heute":t===-1?"Gestern":WD[(x.getDay()+6)%7]};});
+  const stufen=[15,30,45,60,90,120,150,180,240];
+  return blatt(`<div style="--dc:${d.farbe}">
+    <h3 style="display:flex;align-items:center;gap:11px">
+      <span class="dz-ico" style="width:32px;height:32px;border-radius:9px">${ico(d.ico)}</span>
+      ${NT.bearbeitet?"Einheit ändern":d.n+" eintragen"}</h3>
+
+    <div class="feldblock"><label>Wann?</label>
+      <div class="chips">
+        ${tage.map(t=>`<button class="chip${NT.datum===t.k?" on":""}" onclick="ntSetz('datum','${t.k}')">${t.l}</button>`).join("")}
+        <button class="chip" onclick="ntDatumFrei()">anderer Tag</button>
+      </div>
+      ${!tage.some(t=>t.k===NT.datum)?`<div class="mono" style="font-size:13px;color:var(--dc);margin-top:8px">${kurz(pdk(NT.datum))}</div>`:""}
+    </div>
+
+    <div class="feldblock"><label>Wie lange?</label>
+      <div class="nt-dauer">
+        <button onclick="ntDauer(-15)" aria-label="15 Minuten weniger">−</button>
+        <span class="nt-z mono" id="ntZ">${hmm(NT.dauer)}</span>
+        <button onclick="ntDauer(15)" aria-label="15 Minuten mehr">+</button>
+      </div>
+      <div class="chips" style="margin-top:9px">
+        ${stufen.map(m=>`<button class="chip${NT.dauer===m?" on":""}" onclick="ntSetz('dauer',${m})">${m<60?m+" min":hmm(m)}</button>`).join("")}
+      </div>
+    </div>
+
+    <div class="feldblock"><label>Was genau?</label>
+      <div class="chips">
+        ${d.sub.map(x=>`<button class="chip${NT.unter===x?" on":""}" onclick="ntSetz('unter','${esc(x)}')">${esc(x)}</button>`).join("")}
+      </div>
+    </div>
+
+    <div class="feldblock"><label>Wie hart?${NT.rpe?` <span class="mono" style="color:${d.farbe}">RPE ${NT.rpe}</span>`:""}</label>
+      <div class="chips">
+        ${[3,4,5,6,7,8,9,10].map(n=>`<button class="chip${NT.rpe===n?" on":""}" onclick="ntSetz('rpe',${n})">${n}</button>`).join("")}
+      </div>
+    </div>
+
+    <div class="feldblock"><label>Notiz</label>
+      <textarea id="ntNotiz" rows="2" placeholder="${esc(ntPlatzhalter(NT.disz))}">${esc(NT.notiz||"")}</textarea>
+    </div>
+
+    <div class="blatt-akt">
+      <button class="b" onclick="zu()">Abbrechen</button>
+      <button class="b b-dz" onclick="ntSichern()">${NT.bearbeitet?"Ändern":"Eintragen"}</button>
+    </div>
+  </div>`);
+}
+function ntSetz(f,v){
+  NT.notiz=document.getElementById("ntNotiz")?.value ?? NT.notiz;
+  NT[f]=NT[f]===v?(f==="dauer"?v:null):v;
+  ntBlatt();
+}
+function ntDauer(d){
+  NT.dauer=clamp(NT.dauer+d,5,600);
+  const e=document.getElementById("ntZ"); if(e) e.textContent=hmm(NT.dauer);
+  document.querySelectorAll('[onclick^="ntSetz(\'dauer"]').forEach(b=>b.classList.remove("on"));
+}
+function ntDatumFrei(){
+  NT.notiz=document.getElementById("ntNotiz")?.value ?? NT.notiz;
+  const v=prompt("Datum (JJJJ-MM-TT)",NT.datum);
+  if(v&&/^\d{4}-\d{2}-\d{2}$/.test(v)) NT.datum=v;
+  ntBlatt();
+}
+function ntSichern(){
+  const notiz=document.getElementById("ntNotiz")?.value.trim()||null;
+  /* Passt genau ein Wochenziel zu dieser Disziplin — bei Mobility der
+     Fall —, zählt der Eintrag automatisch dafür, ohne dass zusätzlich
+     oben angehakt werden müsste. */
+  const passendesProgramm=progAlle().find(p=>p.disz===NT.disz);
+  if(NT.bearbeitet){
+    const e=S.einheiten.find(x=>x.id===NT.bearbeitet);
+    if(e) Object.assign(e,{datum:NT.datum,dauer:NT.dauer,unter:NT.unter,rpe:NT.rpe,notiz,
+      programm:passendesProgramm?passendesProgramm.id:e.programm||null});
+  } else {
+    S.einheiten.push({id:uid(),datum:NT.datum,disz:NT.disz,unter:NT.unter,
+      dauer:NT.dauer,rpe:NT.rpe,notiz,programm:passendesProgramm?passendesProgramm.id:null,
+      uebungen:[],beendet:Date.now()});
+  }
+  S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
+  sichernSofort(); zu(); zeichnen();
+  toast(`${dz(NT.disz).n} ${NT.bearbeitet?"geändert":"eingetragen"} — ${hmm(NT.dauer)}`);
+}
+function setUnter(x){ S.laufend.unter=S.laufend.unter===x?null:x; sichern(); zeichnen(); }
+function setRpe(n){ S.laufend.rpe=S.laufend.rpe===n?null:n; sichern(); zeichnen(); }
+function stell(feld,d){
+  const L=S.laufend;
+  if(feld==="kg") L.kg=Math.max(0,Math.round((L.kg+d)*2)/2);
+  else L.wdh=clamp(L.wdh+d,1,300);
+  const e=document.getElementById(feld==="kg"?"wKg":"wWdh");
+  if(e) e.textContent=feld==="kg"?zahl(L.kg):L.wdh;
+  sichern();
+}
+function setRir(n){ S.laufend.rir=S.laufend.rir===n?null:n; sichern(); zeichnen(); }
+function vorNehmen(){
+  const L=S.laufend, v=vorschlag(L.uebungen[L.aktiv].name);
+  if(!v) return;
+  if(v.kg) L.kg=v.kg;
+  L.wdh=v.wdh; sichern(); zeichnen();
+  toast("Vorschlag übernommen");
+}
+function uebungWechseln(){ S.laufend.aktiv=-1; sichern(); zeichnen(); }
+function zurueckZurWahl(){ S.laufend.aktiv=-1; zeichnen(); }
+function ubFilter(q){ const e=document.getElementById("ubListe"); if(e) e.innerHTML=ubListeHtml(q); }
+function ubStart(name){
+  const L=S.laufend;
+  let i=L.uebungen.findIndex(u=>u.name===name);
+  if(i<0){ L.uebungen.push({name,saetze:[]}); i=L.uebungen.length-1; }
+  L.aktiv=i;
+  const letzt=letzteSaetze(name);
+  if(letzt&&letzt.saetze.length){ const s=letzt.saetze[0]; if(s.kg) L.kg=s.kg; L.wdh=s.wdh; }
+  sichern(); zeichnen();
+}
+function ubNeu(name){
+  if(!name) return;
+  S.uebungen.push({id:uid(),gruppe:"Eigene",name,kg:true});
+  sichern(); ubStart(name);
+}
+function satzFertig(){
+  const L=S.laufend, u=L.uebungen[L.aktiv];
+  const kat=S.uebungen.find(x=>x.name===u.name);
+  const mitKg=kat?kat.kg:true;
+  /* Ohne Vorgeschichte gibt es nichts zu schlagen — der allererste
+     Satz einer Übung ist kein Bestwert, sondern der Anfang. */
+  const vorher=bisherBest(u.name,u.saetze);
+  const satz={kg:mitKg?L.kg:null,wdh:L.wdh,rir:L.rir??null};
+  satz.rekord = !!(satz.kg && vorher &&
+    (satz.kg>vorher.kg || (satz.kg===vorher.kg && satz.wdh>vorher.wdh)));
+  u.saetze.push(satz);
+  if(satz.rekord) toast(`Bestwert: ${zahl(satz.kg)} kg × ${satz.wdh}`);
+  L.pauseGes=S.pauseStd||90;
+  L.pause=Date.now()+L.pauseGes*1000;
+  sichern(); zeichnen();
+}
+function satzWeg(i){ S.laufend.uebungen[S.laufend.aktiv].saetze.splice(i,1); sichern(); zeichnen(); }
+function pauseAus(){ S.laufend.pause=null; zeichnen(); }
+function pauseStd(n){ S.pauseStd=n; sichern(); zeichnen(); }
+
+function beenden(){
+  const L=S.laufend, d=dz(L.disz);
+  const min=Math.max(1,Math.round((Date.now()-L.start)/60000));
+  const notiz=document.getElementById("notiz")?.value ?? L.notiz;
+  const e={id:L.id,datum:dk(new Date(L.start)),disz:L.disz,unter:L.unter,programm:L.programm||null,
+           dauer:min,rpe:L.rpe,notiz:notiz||null,
+           uebungen:(L.uebungen||[]).filter(u=>u.saetze.length),
+           beendet:Date.now()};
+  if(d.art==="satz"&&!e.uebungen.length&&min<2){
+    if(!confirm("Keine Sätze erfasst. Einheit trotzdem sichern?")) return;
+  }
+  S.einheiten.push(e);
+  S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||a.beendet-b.beendet);
+  S.laufend=null; sichernSofort(); VIEW="start"; zeichnen();
+  toast(`${d.n} gesichert — ${hmm(min)}`);
+}
+function abbrechen(){
+  if(!confirm("Laufende Einheit verwerfen?")) return;
+  S.laufend=null; sichern(); VIEW="start"; zeichnen();
+}
+/* Angetippte Einheit ändern. Satz-Einheiten zeigen ihr Protokoll,
+   Dauer-Einheiten öffnen dasselbe Blatt wie beim Eintragen. */
+function einheitOeffnen(id){
+  const e=S.einheiten.find(x=>x.id===id); if(!e) return;
+  const d=dz(e.disz);
+  if(d.art==="dauer"){ NT.notiz=e.notiz||""; return nachtragen(e.disz,e); }
+  blatt(`<div style="--dc:${d.farbe}">
+    <h3 style="display:flex;align-items:center;gap:11px">
+      <span class="dz-ico" style="width:32px;height:32px;border-radius:9px">${ico(d.ico)}</span>
+      ${esc(d.n)}${e.unter?" · "+esc(e.unter):""}</h3>
+    <p class="mono" style="font-size:13px;color:var(--faint);margin-bottom:14px">
+      ${kurz(pdk(e.datum))} · ${hmm(e.dauer)}${e.rpe?` · RPE ${e.rpe}`:""}</p>
+    ${(e.uebungen||[]).length?e.uebungen.map(u=>`
+      <div class="ub-gr">
+        <div class="ub-t">${esc(u.name)}</div>
+        ${u.saetze.map((x,i)=>`<div class="sw-z">
+          <span class="sw-z-i">${i+1}</span>
+          <span class="sw-z-w">${x.kg?`${zahl(x.kg)} kg × ${x.wdh}`:`${x.wdh}`}</span>
+          <span class="sw-z-v">${x.rir!=null?`RIR ${x.rir}`:""}</span>
+        </div>`).join("")}
+      </div>`).join(""):`<div class="leer">Keine Sätze erfasst.</div>`}
+    ${e.notiz?`<p style="font-size:14px;color:var(--dim);margin-top:12px">${esc(e.notiz)}</p>`:""}
+    <div class="blatt-akt"><button class="b b-w" onclick="zu()">Schließen</button></div>
+  </div>`);
+}
+
+function loeschen(id){
+  if(!confirm("Einheit löschen?")) return;
+  S.einheiten=S.einheiten.filter(e=>e.id!==id); sichernSofort(); zeichnen();
+}
+function ubWeg(id){
+  const u=S.uebungen.find(x=>x.id===id); if(!u) return;
+  if(!confirm(`„${u.name}" entfernen? Erfasste Sätze bleiben erhalten.`)) return;
+  S.uebungen=S.uebungen.filter(x=>x.id!==id); sichern(); zeichnen();
+}
+function ubNeuDialog(){
+  const gruppen=[...new Set(S.uebungen.map(u=>u.gruppe)),"Eigene"];
+  blatt(`<h3>Neue Übung</h3>
+    <div class="feldblock"><label>Name</label><input id="nName" placeholder="z. B. Landmine Press"></div>
+    <div class="feldblock"><label>Gruppe</label>
+      <select id="nGr">${[...new Set(gruppen)].map(g=>`<option>${esc(g)}</option>`).join("")}</select></div>
+    <div class="feldblock"><label>Womit wird gemessen?</label>
+      <div class="chips" id="nKg">
+        <button class="chip on" data-kg="1">Gewicht × Wiederholungen</button>
+        <button class="chip" data-kg="0">nur Wiederholungen oder Sekunden</button>
+      </div></div>
+    <div class="blatt-akt">
+      <button class="b" onclick="zu()">Abbrechen</button>
+      <button class="b b-1" onclick="ubAnlegen()">Anlegen</button>
+    </div>`);
+  document.querySelectorAll("#nKg .chip").forEach(b=>b.onclick=()=>{
+    document.querySelectorAll("#nKg .chip").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+  });
+  setTimeout(()=>document.getElementById("nName")?.focus(),60);
+}
+function ubAnlegen(){
+  const n=document.getElementById("nName").value.trim();
+  if(!n) return toast("Bitte einen Namen angeben");
+  const g=document.getElementById("nGr").value;
+  const kg=document.querySelector("#nKg .chip.on").dataset.kg==="1";
+  S.uebungen.push({id:uid(),gruppe:g,name:n,kg});
+  sichern(); zu(); zeichnen(); toast("Angelegt");
+}
+
+/* ── Sicherung als Datei ───────────────────────────── */
+function sichernDatei(){
+  const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(b); a.download=`nova-training-${heute()}.json`; a.click();
+  toast("Gesichert");
+}
+function ladenDatei(){
+  const i=document.createElement("input"); i.type="file"; i.accept=".json";
+  i.onchange=()=>{ const f=i.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{ S=Object.assign(leer(),JSON.parse(r.result)); sichern(); zeichnen(); toast("Geladen"); }
+                   catch(e){ toast("Datei nicht lesbar"); } };
+    r.readAsText(f); };
+  i.click();
+}
+
+/* ── Abgleich mit NOVA ──────────────────────────────
+   Diese App schreibt eine eigene Datei. NOVA liest sie und trägt
+   nach, was dort noch fehlt — so kann keiner den anderen
+   überschreiben, auch wenn beide gleichzeitig offen sind. */
+const token=()=>localStorage.getItem(TOK_KEY)||"";
+const syncAn=()=>localStorage.getItem(SYNC_KEY)==="1"&&!!token();
+let syncTimer=null, syncSha=null;
+function syncPlanen(){ clearTimeout(syncTimer); syncTimer=setTimeout(hochladen,1800); }
+function tokSpeichern(){
+  const v=document.getElementById("tok").value.trim();
+  if(v) localStorage.setItem(TOK_KEY,v); else localStorage.removeItem(TOK_KEY);
+  toast(v?"Schlüssel gesichert":"Schlüssel entfernt"); zeichnen();
+}
+function syncSchalten(){
+  if(!token()) return toast("Erst einen Schlüssel eintragen");
+  localStorage.setItem(SYNC_KEY,syncAn()?"0":"1");
+  zeichnen();
+  if(syncAn()) hochladen();
+}
+/* Was NOVA lesen soll: genau das Format seiner Sport-Einträge. */
+function fuerNova(){
+  const o={};
+  S.einheiten.forEach(e=>{
+    const d=dz(e.disz);
+    (o[e.datum]=o[e.datum]||[]).push({
+      id:"satz_"+e.id, type:d.nova, duration:e.dauer,
+      hr:null, rpe:e.rpe||null,
+      notes:[d.n,e.unter,e.notiz,(e.uebungen||[]).map(u=>u.name).join(", ")]
+             .filter(Boolean).join(" · ")||null,
+      kraftSubtype:e.disz==="kraft"&&e.unter?e.unter.toLowerCase():null
+    });
+  });
+  return {quelle:"NOVA Training", stand:new Date().toISOString(), sport:o};
+}
+async function hochladen(){
+  if(!syncAn()) return;
+  try{
+    const kopf={Authorization:"Bearer "+token(),Accept:"application/vnd.github+json"};
+    if(!syncSha){
+      const g=await fetch(GH_API,{headers:kopf});
+      if(g.ok) syncSha=(await g.json()).sha;
+    }
+    const inhalt=btoa(unescape(encodeURIComponent(JSON.stringify(fuerNova()))));
+    const r=await fetch(GH_API,{method:"PUT",headers:{...kopf,"Content-Type":"application/json"},
+      body:JSON.stringify({message:"NOVA Training "+new Date().toISOString(),content:inhalt,sha:syncSha||undefined})});
+    if(r.ok){ syncSha=(await r.json()).content.sha; S.zuletztSync=Date.now();
+      try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
+    else if(r.status===409){ syncSha=null; setTimeout(hochladen,900); }
+    else toast("Abgleich fehlgeschlagen ("+r.status+")");
+  }catch(e){ toast("Keine Verbindung"); }
+  hochladenVoll();
+}
+
+/* Die eigentliche Sicherung: alle Einheiten mit Sätzen, Gewichten,
+   Programm-Zugehörigkeit, plus selbst angelegte Übungen. Damit
+   gleichen sich zwei Geräte über dieselbe private Ablage ab. */
+function mischeFerneDaten(fern){
+  let n=0;
+  const vorhanden=new Set(S.einheiten.map(e=>e.id));
+  (fern.einheiten||[]).forEach(e=>{ if(e&&e.id&&!vorhanden.has(e.id)){ S.einheiten.push(e); vorhanden.add(e.id); n++; } });
+  const ubVorhanden=new Set(S.uebungen.map(u=>u.name));
+  (fern.uebungen||[]).forEach(u=>{ if(u&&u.name&&!ubVorhanden.has(u.name)) S.uebungen.push(u); });
+  S.haken=S.haken||{};
+  Object.entries(fern.haken||{}).forEach(([pid,tage])=>{
+    const eig=S.haken[pid]=S.haken[pid]||[];
+    (tage||[]).forEach(k=>{ if(!eig.includes(k)) eig.push(k); });
+  });
+  if(n) S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  return n;
+}
+
+async function hochladenVoll(){
+  if(!syncAn()) return;
+  try{
+    const kopf={Authorization:"Bearer "+token(),Accept:"application/vnd.github+json"};
+    const g=await fetch(VOLL_API+"?v="+Date.now(),{headers:kopf});
+    if(g.ok){
+      const j=await g.json(); vollSha=j.sha;
+      try{
+        const fern=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))));
+        mischeFerneDaten(fern);
+      }catch(e){}
+    }
+    const inhalt=btoa(unescape(encodeURIComponent(JSON.stringify(
+      {einheiten:S.einheiten,uebungen:S.uebungen,haken:S.haken||{}}))));
+    const r=await fetch(VOLL_API,{method:"PUT",headers:{...kopf,"Content-Type":"application/json"},
+      body:JSON.stringify({message:"Training "+new Date().toISOString(),content:inhalt,sha:vollSha||undefined})});
+    if(r.ok){ vollSha=(await r.json()).content.sha; zeichnen(); }
+    else if(r.status===409){ vollSha=null; setTimeout(hochladenVoll,900); }
+  }catch(e){}
+}
+
+/* Was das andere Gerät inzwischen erfasst hat, nachtragen. Rein
+   ergänzend: Einheiten und Übungen werden über ihre Kennung
+   abgeglichen, nie ersetzt — ein lokal noch nicht hochgeladener
+   Eintrag geht dabei nie verloren. */
+/* Von Hand angestoßen: erst herunterladen, was das andere Gerät hat,
+   dann den eigenen — jetzt vollständigen — Stand zurückschreiben.
+   Für den Moment gedacht, in dem man nicht auf die nächste ohnehin
+   anstehende Speicherung warten will. */
+async function jetztAbgleichen(){
+  toast("Gleiche ab …");
+  const n=await herunterladenVoll();
+  await hochladenVoll();
+  zeichnen();
+  toast(n?`${n} Einheit${n===1?"":"en"} vom anderen Gerät übernommen`:"Abgeglichen");
+}
+
+async function herunterladenVoll(){
+  if(!syncAn()) return 0;
+  try{
+    const kopf={Authorization:"Bearer "+token(),Accept:"application/vnd.github+json"};
+    const r=await fetch(VOLL_API+"?v="+Date.now(),{headers:kopf});
+    if(!r.ok) return 0;
+    const j=await r.json();
+    vollSha=j.sha;
+    const fern=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))));
+    return mischeFerneDaten(fern);
+  }catch(e){ return 0; }
+}
+
+/* ── Start ─────────────────────────────────────────── */
+laden();
+migriereProgramme();
+zeichnen();
+if(syncAn()) herunterladenVoll().then(n=>{ if(n){ zeichnen(); toast(`${n} Einheit${n===1?"":"en"} vom anderen Gerät`); } });
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden) return;                 /* das Verstecken behandelt beimVerstecken() bereits */
+  if(!syncAn()) return;
+  herunterladenVoll().then(n=>{ if(n){ zeichnen(); toast(`${n} Einheit${n===1?"":"en"} vom anderen Gerät`); } });
+});
+</script>

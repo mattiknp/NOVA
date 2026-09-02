@@ -4,6 +4,12 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Training">
+<!-- Ohne das liefert Safari auf dem Mac tagelang die alte Fassung aus,
+     während das Handy längst die neue hat. Die Seite ist eine einzige
+     Datei ohne Build — sie MUSS bei jedem Start frisch geholt werden. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>NOVA Training</title>
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="512x512" href="training-512.png">
@@ -477,6 +483,11 @@ nav button.on{color:var(--c1)}
   padding:11px 19px;font-size:14px;z-index:80;opacity:0;
   transition:transform var(--d2) var(--ez),opacity var(--d2) var(--ez);
   box-shadow:0 12px 34px rgba(0,0,0,.5);
+  /* Entscheidend: opacity:0 macht ein Element unsichtbar, aber NICHT
+     klickdurchlässig. Ohne diese Zeile lag der ausgeblendete Toast mit
+     z-index 80 dauerhaft über der unteren Leiste und hat deren Knöpfe
+     verschluckt. Eine Meldung darf nie ein Ziel abfangen — nie. */
+  pointer-events:none;
 }
 .toast.on{transform:translateX(-50%);opacity:1}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -557,6 +568,9 @@ const heute=()=>dk(new Date());
 const pdk=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
 const addT=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const mow=d=>{const x=new Date(d);const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);x.setHours(0,0,0,0);return x};
+/* Steht unter „Mehr" ganz unten. Auf beiden Geräten dieselbe Zahl =
+   beide haben dieselbe Fassung. Bei jeder Auslieferung hochzählen. */
+const FASSUNG="2026-09-02.1";
 const WD=["Mo","Di","Mi","Do","Fr","Sa","So"];
 const MS=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 const kurz=d=>`${d.getDate()}. ${MS[d.getMonth()]}`;
@@ -666,11 +680,45 @@ function progTage(id){
 }
 function progDieseWoche(id){ return progTage(id).size; }
 
+/* Eine einzelne Zeile des Wochenplans als HTML.
+   Eigene Funktion, damit nach dem Abhaken GENAU DIESE Zeile ersetzt
+   werden kann statt der ganzen Seite — siehe zeileAuffrischen(). */
+function wpZeile(p){
+  const d=dz(p.disz), k=heute();
+  const echtHeute=S.einheiten.some(e=>e.programm===p.id&&e.datum===k);
+  const hakHeute=(S.haken?.[p.id]||[]).includes(k);
+  const status = p.proWoche>1
+    ? `<span class="wp-punkte">${[...Array(p.proWoche)].map((_,i)=>
+        `<i class="${i<p.ist?"voll":""}"></i>`).join("")}</span>`
+    : p.fertig ? `<span class="wp-haken">${ico("check")}</span>`
+    : `<span class="wp-ring"></span>`;
+  return `<button class="wp-row${p.fertig?" fertig":""}" style="--dc:${d.farbe}"
+    data-prog="${p.id}" ${echtHeute?"disabled":`data-tag="${p.id}|${k}"`}
+    aria-pressed="${hakHeute}"
+    title="${echtHeute?"heute schon als Einheit erfasst":hakHeute?"antippen, um Häkchen zu entfernen":"antippen, um heute abzuhaken"}">
+    ${status}
+    <span class="wp-n">${esc(p.name)}<small>${p.uebungen.length?`${p.uebungen.length} Übungen`:"Wochenziel"}${p.tag?` · meist ${p.tag}`:""} · ${p.ist}/${p.proWoche}× diese Woche</small></span>
+  </button>`;
+}
+
+/* Nur die betroffene Zeile neu setzen, sonst nichts. Kein Neuaufbau
+   der Seite heißt: kein Scrollsprung, keine verschobenen Ziele, kein
+   erneutes Verdrahten. Genau daran ist die alte Fassung gescheitert —
+   sie hat bei jedem Antippen alles neu gebaut und nach oben gescrollt,
+   sodass der nächste Tipp zwangsläufig eine andere Zeile traf. */
+function zeileAuffrischen(id){
+  const alt=document.querySelector(`.wp-row[data-prog="${id}"]`);
+  if(!alt) return zeichnen();               /* Zeile nicht sichtbar: normal zeichnen */
+  const plan=wochenPlan(), p=plan.find(x=>x.id===id);
+  if(!p) return zeichnen();
+  alt.outerHTML=wpZeile(p);                 /* gefahrlos: Klicks laufen über Delegation */
+  const z=document.querySelector(".wp-kopf-s");
+  if(z) z.textContent=`${plan.filter(x=>x.fertig).length}/${plan.length} erledigt`;
+}
+
 /* Häkchen setzen oder zurücknehmen — reines Merkmal, unabhängig von
    echten Einheiten. Ungefährlich beim Zurücknehmen: zählt der Tag
-   noch über eine echte Einheit, bleibt er trotzdem erfasst.
-   tag ist ein fester "YYYY-MM-DD"-Tag aus data-tag, nicht mehr immer
-   „heute" — jedes Kästchen der Woche ist einzeln antippbar. */
+   noch über eine echte Einheit, bleibt er trotzdem erfasst. */
 function tickToggle(id,tag){
   const p=progById(id); if(!p) return;
   S.haken=S.haken||{};
@@ -678,7 +726,7 @@ function tickToggle(id,tag){
   const i=liste.indexOf(tag);
   if(i>=0){ liste.splice(i,1); toast(`${p.name}: Häkchen entfernt`); }
   else { liste.push(tag); toast(`${p.name} abgehakt`); }
-  sichernSofort(); zeichnen();
+  sichernSofort(); zeileAuffrischen(id);
 }
 /* Sieben Tage der laufenden Woche, heute hervorgehoben, mit einem
    kleinen Punkt an Tagen, die schon eine Einheit haben. */
@@ -895,30 +943,7 @@ R.start=function(){
         <span class="wp-kopf-n">Diese Woche</span>
         <span class="wp-kopf-s mono">${plan.filter(p=>p.fertig).length}/${plan.length} erledigt</span>
       </div>
-      <div class="wp-liste">
-        ${plan.map(p=>{
-          const d=dz(p.disz), k=heute();
-          /* Wochenziel, kein Tages-Raster: pro Woche zählt nur, WIE OFT,
-             nicht AN WELCHEM Tag. Jede Zeile ist ein einziger Knopf mit
-             eigenem data-tag — nach dem Zeichnen einzeln verdrahtet
-             (siehe zeichnen()), genau das Muster der Habits in NOVA,
-             nur eben ein Knopf pro Woche statt sieben pro Woche. */
-          const echtHeute=S.einheiten.some(e=>e.programm===p.id&&e.datum===k);
-          const hakHeute=(S.haken?.[p.id]||[]).includes(k);
-          const status = p.proWoche>1
-            ? `<span class="wp-punkte">${[...Array(p.proWoche)].map((_,i)=>
-                `<i class="${i<p.ist?"voll":""}"></i>`).join("")}</span>`
-            : p.fertig ? `<span class="wp-haken">${ico("check")}</span>`
-            : `<span class="wp-ring"></span>`;
-          return `<button class="wp-row${p.fertig?" fertig":""}" style="--dc:${d.farbe}"
-            ${echtHeute?"disabled":`data-tag="${p.id}|${k}"`}
-            aria-pressed="${hakHeute}"
-            title="${echtHeute?"heute schon als Einheit erfasst":hakHeute?"antippen, um Häkchen zu entfernen":"antippen, um heute abzuhaken"}">
-            ${status}
-            <span class="wp-n">${esc(p.name)}<small>${p.uebungen.length?`${p.uebungen.length} Übungen`:"Wochenziel"}${p.tag?` · meist ${p.tag}`:""} · ${p.ist}/${p.proWoche}× diese Woche</small></span>
-          </button>`;
-        }).join("")}
-      </div>
+      <div class="wp-liste">${plan.map(wpZeile).join("")}</div>
     </div>`:""}
 
     <p class="frage">${plan.length?"Oder etwas anderes":gruss+" — womit fängst du an?"}</p>
@@ -1356,7 +1381,7 @@ R.einstellungen=function(){
         <button class="b" style="flex:1" onclick="ladenDatei()">Laden</button>
       </div>
       <p style="font-size:11.5px;color:var(--faint);margin-top:9px;line-height:1.5" class="mono">
-        ${S.programme.length} Wochenziele: ${S.programme.map(p=>p.id).join(", ")}</p>
+        Fassung ${FASSUNG} · ${S.programme.length} Wochenziele: ${S.programme.map(p=>p.id).join(", ")}</p>
     </div>
   </main>
   ${navi()}`;
@@ -1366,20 +1391,37 @@ R.einstellungen=function(){
 const NAV=[["start","Start","haus"],["verlauf","Verlauf","chart"],
            ["uebungen","Übungen","liste"],["einstellungen","Mehr","zahn"]];
 const navi=()=>`<nav>${NAV.map(([id,t,i])=>
-  `<button class="${VIEW===id?"on":""}" onclick="R2('${id}')">${ico(i)}<span>${t}</span></button>`).join("")}</nav>`;
+  `<button class="${VIEW===id?"on":""}" data-nav="${id}">${ico(i)}<span>${t}</span></button>`).join("")}</nav>`;
 
 function R2(v){ VIEW=v; zeichnen(); }
+
+/* EIN einziger Zuhörer am Dokument, einmal beim Start gesetzt und nie
+   wieder angefasst. Er liest die Kennung aus dem Element, das der
+   Finger TATSÄCHLICH getroffen hat (closest) — deshalb kann er
+   grundsätzlich nicht die falsche Zeile erwischen, egal was auf der
+   Seite neu gebaut wurde. Ersetzt das frühere Verdrahten nach jedem
+   Zeichnen, bei dem Knöpfe und Zuordnung auseinanderlaufen konnten. */
+document.addEventListener("click",ev=>{
+  const nav=ev.target.closest("[data-nav]");
+  if(nav) return R2(nav.dataset.nav);
+  const t=ev.target.closest("[data-tag]");
+  if(t&&!t.disabled){ const[id,tag]=t.dataset.tag.split("|"); tickToggle(id,tag); }
+});
+
+/* Nach oben springen NUR beim echten Ansichtswechsel. Bleibt man in
+   derselben Ansicht (Daten haben sich geändert), bleibt auch die
+   Blickposition stehen — sonst verschiebt sich alles unter dem Finger
+   und der nächste Tipp trifft eine andere Zeile. Der Wechsel wird hier
+   selbst erkannt, damit keine Aufrufstelle ihn vergessen kann. */
+let LETZTE_ANSICHT=null;
 function zeichnen(){
+  const y=window.scrollY;
   const v = S.laufend ? "laufend" : VIEW;
   document.getElementById("app").innerHTML=(R[v]||R.start)();
-  /* Wie bei NOVAs Habit-Kästchen: erst NACH dem Einsetzen ins DOM
-     verdrahten, jeder Knopf über sein eigenes data-tag statt über
-     einen inline-onclick-String pro Zeile. */
-  document.querySelectorAll("[data-tag]").forEach(b=>{
-    b.onclick=()=>{ const[id,tag]=b.dataset.tag.split("|"); tickToggle(id,tag); };
-  });
   uhrLauf();
-  window.scrollTo(0,0);
+  const wechsel = v!==LETZTE_ANSICHT;
+  LETZTE_ANSICHT=v;
+  window.scrollTo(0, wechsel?0:y);
 }
 
 /* Die Uhr läuft über setInterval, nicht über ein Neuzeichnen —

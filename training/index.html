@@ -301,54 +301,49 @@ main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
 .lin-pt{fill:var(--k-kraft);stroke:var(--bg);stroke-width:2;cursor:help}
 
 /* ── Wochenplan ──────────────────────────────────────
-   1:1 nach dem Muster der Habit-Kästchen aus NOVA: jeder Tag ist ein
-   eigener Knopf mit eigenem data-Attribut, erst NACH dem Zeichnen per
-   querySelectorAll verdrahtet — kein onclick-String pro Zeile, der sich
-   beim Neuzeichnen mit einer anderen Zeile verwechseln könnte. */
+   Wochenziel statt Tagesraster: pro Programm zählt nur, wie oft diese
+   Woche, nicht an welchem Tag. Jede Zeile ist ein einziger <button>
+   mit eigenem data-tag="programmId|heute" — erst NACH dem Zeichnen
+   per querySelectorAll verdrahtet (siehe zeichnen()), kein
+   onclick-String pro Zeile. Dasselbe Muster wie bei den Habits in
+   NOVA, nur ein Knopf pro Woche statt einer pro Tag. */
 .wp{margin-bottom:24px}
-.wp-kopf{
-  display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:0 8px 10px;
-  border-bottom:1px solid var(--line);margin-bottom:6px;
-}
-.wp-kopf-n{flex:1 1 auto;font-size:14px;font-weight:600}
-.wp-kopf-s{flex:0 0 auto;font-size:12px;color:var(--faint)}
-.wp-kopf .wp-tage{order:3;flex:1 1 100%;justify-content:space-between;gap:6px}
-.wp-liste{display:flex;flex-direction:column;gap:2px}
+.wp-kopf{display:flex;align-items:baseline;justify-content:space-between;padding:0 2px 8px;margin-bottom:3px}
+.wp-kopf-n{font-size:14px;font-weight:600}
+.wp-kopf-s{font-size:12px;color:var(--faint)}
+.wp-liste{display:flex;flex-direction:column;gap:8px}
 .wp-row{
-  display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;width:100%;
-  padding:11px 8px;border-radius:var(--r);border:1px solid transparent;
-  transition:background-color var(--d1) var(--ez),border-color var(--d1) var(--ez),opacity var(--d2) var(--ez);
+  display:flex;align-items:center;gap:13px;width:100%;text-align:left;
+  padding:14px 15px;border-radius:var(--r);touch-action:manipulation;
+  border:1px solid color-mix(in srgb,var(--dc) 22%,transparent);
+  background:color-mix(in srgb,var(--dc) 6%,transparent);
+  transition:transform var(--d1) var(--ez),opacity var(--d2) var(--ez);
 }
-.wp-row:hover{background:color-mix(in srgb,var(--dc) 6%,transparent);border-color:color-mix(in srgb,var(--dc) 20%,transparent)}
-.wp-row.fertig{opacity:.6}
-.wp-dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;background:var(--dc)}
-.wp-n{flex:1 1 auto;min-width:0;font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.wp-n small{display:block;font-size:11.5px;font-weight:400;color:var(--faint);margin-top:1px}
-.wp-b{
-  font-family:var(--f-mono);font-size:11px;flex:0 0 auto;
-  padding:2px 8px;border-radius:var(--r-pill);color:var(--faint);
-  border:1px solid var(--line);
-}
-.wp-b.voll{color:var(--dc);border-color:color-mix(in srgb,var(--dc) 45%,transparent);background:color-mix(in srgb,var(--dc) 14%,transparent)}
+.wp-row:active{transform:scale(.985)}
+.wp-row.fertig{opacity:.5;border-style:dashed}
+.wp-row.fertig:hover{opacity:1}
+.wp-row:disabled{opacity:.4;cursor:default}
+.wp-row:disabled:active{transform:none}
+.wp-n{flex:1;min-width:0;font-size:16px;font-weight:600}
+.wp-n small{display:block;font-size:12px;font-weight:400;color:var(--faint);margin-top:2px}
 
-/* Sieben einzeln antippbare Kästchen, eins pro Tag der laufenden Woche —
-   jedes ein eigener <button> mit eigenem data-tag="programmId|datum",
-   immer auf einer eigenen vollen Zeile, damit die Zielflächen groß und
-   klar voneinander getrennt bleiben, egal wie schmal der Bildschirm. */
-.wp-tage{display:flex;gap:6px;flex:0 0 auto;order:3;width:100%;justify-content:space-between}
-.wp-tl{flex:1;max-width:34px;text-align:center;font-family:var(--f-mono);font-size:9.5px;color:var(--faint)}
-.wp-box{
-  flex:1;max-width:34px;height:30px;border-radius:8px;
-  border:1.5px solid var(--line-2);background:transparent;color:transparent;
-  display:grid;place-items:center;touch-action:manipulation;
-  transition:background-color var(--d1) var(--ez),border-color var(--d1) var(--ez),transform var(--d1) var(--ez);
+/* Status links: ein Ring, der sich bei einmal pro Woche zum Haken
+   füllt; bei mehrmals pro Woche Punkte, die einzeln volllaufen. */
+.wp-ring{
+  width:23px;height:23px;flex:0 0 auto;border-radius:50%;
+  border:2px solid color-mix(in srgb,var(--dc) 45%,transparent);
 }
-.wp-box svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-.wp-box:hover:not(:disabled){border-color:var(--dc);transform:scale(1.06)}
-.wp-box.an{background:var(--dc);border-color:var(--dc);color:#08131a}
-.wp-box.echt{cursor:default}
-.wp-box.echt:hover{transform:none}
-.wp-box:disabled{opacity:.28}
+.wp-haken{
+  width:23px;height:23px;flex:0 0 auto;border-radius:50%;
+  background:var(--good);color:#08210f;display:grid;place-items:center;
+}
+.wp-haken svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.wp-punkte{display:flex;gap:4px;flex:0 0 auto}
+.wp-punkte i{
+  width:9px;height:9px;border-radius:50%;display:block;
+  border:1.5px solid color-mix(in srgb,var(--dc) 45%,transparent);
+}
+.wp-punkte i.voll{background:var(--dc);border-color:var(--dc)}
 
 /* Übungsvorschau in der Auswahlliste unten: kleine Kacheln mit der
    Muskelkarte statt Fotos, die es dafür nicht gibt. */
@@ -643,11 +638,10 @@ const PROG_STD=[
   {id:"p_uk", name:"Unterkörper", disz:"kraft", proWoche:1, tag:"Do",
    uebungen:[["Kniebeuge",4,6],["Rumänisches Kreuzheben",3,8],
              ["Bulgarian Split Squat",3,10],["Nordic Curls",3,6],["Wadenheben",3,15]]},
-  {id:"p_a1", name:"Athletik 1", disz:"athletik", proWoche:1, tag:"Di",
+  {id:"p_ath", name:"Athletik", disz:"athletik", proWoche:2, tag:null,
    uebungen:[["Antritt 10 m",6,1],["Shuttle 5-10-5",4,1],
-             ["Box Jump",4,4],["Medizinball Wurf seitlich",3,6]]},
-  {id:"p_a2", name:"Athletik 2", disz:"athletik", proWoche:1, tag:"Fr",
-   uebungen:[["Steigerung 60 m",5,1],["Sprungkniebeuge",4,6],
+             ["Box Jump",4,4],["Medizinball Wurf seitlich",3,6],
+             ["Steigerung 60 m",5,1],["Sprungkniebeuge",4,6],
              ["Medizinball Slam",4,8],["Koordinationsleiter",4,1]]},
   {id:"p_ru", name:"Rumpf", disz:"kraft", proWoche:2, tag:null,
    uebungen:[["Pallof Press",3,12],["Hanging Leg Raise",3,10],
@@ -727,6 +721,21 @@ function migriereProgramme(){
     if(gesehen.has(p.id)) return false;
     gesehen.add(p.id); return true;
   });
+  /* Athletik 1 + 2 sind zu einem gemeinsamen Programm verschmolzen
+     (2× pro Woche statt zwei getrennter 1×-Ziele). Alte Zeilen raus,
+     Häkchen und schon erfasste Einheiten wandern additiv ins neue
+     Programm — nichts geht verloren. */
+  const altAth=["p_a1","p_a2"];
+  if(S.programme.some(p=>altAth.includes(p.id))){
+    S.programme=S.programme.filter(p=>!altAth.includes(p.id));
+    S.haken=S.haken||{};
+    const ziel=S.haken.p_ath=S.haken.p_ath||[];
+    altAth.forEach(id=>{
+      (S.haken[id]||[]).forEach(k=>{ if(!ziel.includes(k)) ziel.push(k); });
+      delete S.haken[id];
+    });
+    S.einheiten.forEach(e=>{ if(altAth.includes(e.programm)) e.programm="p_ath"; });
+  }
   const vorhanden=new Set(S.programme.map(p=>p.id));
   PROG_STD.forEach(p=>{ if(!vorhanden.has(p.id)) S.programme.push({...p,uebungen:p.uebungen.map(u=>[...u])}); });
   if(!S.haken) S.haken={};
@@ -885,33 +894,29 @@ R.start=function(){
       <div class="wp-kopf">
         <span class="wp-kopf-n">Diese Woche</span>
         <span class="wp-kopf-s mono">${plan.filter(p=>p.fertig).length}/${plan.length} erledigt</span>
-        <span class="wp-tage">${[...Array(7)].map((_,i)=>`<span class="wp-tl">${WD[i][0]}</span>`).join("")}</span>
       </div>
       <div class="wp-liste">
         ${plan.map(p=>{
-          const d=dz(p.disz), mo2=mow(new Date());
-          /* Sieben eigenständige Knöpfe statt eines einzigen Zeilen-Tapps —
-             jeder trägt sein eigenes data-tag, erst nach dem Zeichnen
-             verdrahtet (siehe zeichnen()). Genau das Muster, mit dem die
-             Habits in NOVA zuverlässig laufen. */
-          const tageHtml=[...Array(7)].map((_,i)=>{
-            const t2=addT(mo2,i), tg=dk(t2);
-            const echt=S.einheiten.some(e=>e.programm===p.id&&e.datum===tg);
-            const hak=(S.haken?.[p.id]||[]).includes(tg);
-            const an=echt||hak, heuteTag=tg===heute(), kuenftig=tg>heute();
-            const sperr=echt||kuenftig;
-            return `<button class="wp-box${an?" an":""}${echt?" echt":""}${heuteTag?" heute":""}"
-              ${sperr?"disabled":`data-tag="${p.id}|${tg}"`}
-              aria-pressed="${an}" aria-label="${esc(p.name)}, ${WD[i]}"
-              title="${echt?"bereits als Einheit erfasst":kuenftig?"liegt in der Zukunft":an?"antippen, um Häkchen zu entfernen":"antippen zum Abhaken"}"
-              >${an?ico("check"):""}</button>`;
-          }).join("");
-          return `<div class="wp-row${p.fertig?" fertig":""}" style="--dc:${d.farbe}">
-            <span class="wp-dot"></span>
-            <span class="wp-n">${esc(p.name)}<small>${p.uebungen.length?`${p.uebungen.length} Übungen`:"Wochenziel"}${p.tag?` · meist ${p.tag}`:""}</small></span>
-            <span class="wp-b${p.fertig?" voll":""}">${p.ist}/${p.proWoche}</span>
-            <span class="wp-tage">${tageHtml}</span>
-          </div>`;
+          const d=dz(p.disz), k=heute();
+          /* Wochenziel, kein Tages-Raster: pro Woche zählt nur, WIE OFT,
+             nicht AN WELCHEM Tag. Jede Zeile ist ein einziger Knopf mit
+             eigenem data-tag — nach dem Zeichnen einzeln verdrahtet
+             (siehe zeichnen()), genau das Muster der Habits in NOVA,
+             nur eben ein Knopf pro Woche statt sieben pro Woche. */
+          const echtHeute=S.einheiten.some(e=>e.programm===p.id&&e.datum===k);
+          const hakHeute=(S.haken?.[p.id]||[]).includes(k);
+          const status = p.proWoche>1
+            ? `<span class="wp-punkte">${[...Array(p.proWoche)].map((_,i)=>
+                `<i class="${i<p.ist?"voll":""}"></i>`).join("")}</span>`
+            : p.fertig ? `<span class="wp-haken">${ico("check")}</span>`
+            : `<span class="wp-ring"></span>`;
+          return `<button class="wp-row${p.fertig?" fertig":""}" style="--dc:${d.farbe}"
+            ${echtHeute?"disabled":`data-tag="${p.id}|${k}"`}
+            aria-pressed="${hakHeute}"
+            title="${echtHeute?"heute schon als Einheit erfasst":hakHeute?"antippen, um Häkchen zu entfernen":"antippen, um heute abzuhaken"}">
+            ${status}
+            <span class="wp-n">${esc(p.name)}<small>${p.uebungen.length?`${p.uebungen.length} Übungen`:"Wochenziel"}${p.tag?` · meist ${p.tag}`:""} · ${p.ist}/${p.proWoche}× diese Woche</small></span>
+          </button>`;
         }).join("")}
       </div>
     </div>`:""}

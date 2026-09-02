@@ -570,7 +570,7 @@ const addT=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const mow=d=>{const x=new Date(d);const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);x.setHours(0,0,0,0);return x};
 /* Steht unter „Mehr" ganz unten. Auf beiden Geräten dieselbe Zahl =
    beide haben dieselbe Fassung. Bei jeder Auslieferung hochzählen. */
-const FASSUNG="2026-09-02.1";
+const FASSUNG="2026-09-02.2";
 const WD=["Mo","Di","Mi","Do","Fr","Sa","So"];
 const MS=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 const kurz=d=>`${d.getDate()}. ${MS[d.getMonth()]}`;
@@ -716,16 +716,40 @@ function zeileAuffrischen(id){
   if(z) z.textContent=`${plan.filter(x=>x.fertig).length}/${plan.length} erledigt`;
 }
 
-/* Häkchen setzen oder zurücknehmen — reines Merkmal, unabhängig von
-   echten Einheiten. Ungefährlich beim Zurücknehmen: zählt der Tag
-   noch über eine echte Einheit, bleibt er trotzdem erfasst. */
+/* ── Häkchen: gesetzt UND entfernt müssen beide reisen ──────────
+   Früher waren die Häkchen nur eine Liste gesetzter Tage. Der
+   Cloud-Abgleich mischt aber rein hinzufügend (damit nie etwas
+   verlorengeht) — und eine hinzufügende Mischung kann ein ENTFERNTES
+   Häkchen nicht ausdrücken. Folge: Häkchen wegnehmen, kurz darauf
+   holt der Abgleich es aus der Cloud zurück, samt aller alten
+   Häkchen auf anderen Zeilen. Genau das war „lässt sich nicht
+   auswählen / andere werden mitgedrückt".
+
+   Deshalb merkt sich S.hakenLog je Programm+Tag den ZUSTAND mit
+   Zeitstempel: {an:true|false, t:…}. Beim Mischen gewinnt der
+   jüngere Eintrag. So reist „abgehakt" genauso zuverlässig wie
+   „wieder abgewählt", ohne je etwas stumm zu überschreiben.
+   S.haken bleibt als abgeleitete Liste bestehen, damit die
+   Anzeige-Funktionen unverändert weiterlaufen. */
+const hkey=(id,tag)=>`${id}|${tag}`;
+function hakenNeuAufbauen(){
+  const h={};
+  Object.entries(S.hakenLog||{}).forEach(([k,v])=>{
+    if(!v||!v.an) return;
+    const i=k.indexOf("|"); if(i<0) return;
+    const pid=k.slice(0,i), tag=k.slice(i+1);
+    (h[pid]=h[pid]||[]).push(tag);
+  });
+  Object.values(h).forEach(l=>l.sort());
+  S.haken=h;
+}
 function tickToggle(id,tag){
   const p=progById(id); if(!p) return;
-  S.haken=S.haken||{};
-  const liste=S.haken[id]=S.haken[id]||[];
-  const i=liste.indexOf(tag);
-  if(i>=0){ liste.splice(i,1); toast(`${p.name}: Häkchen entfernt`); }
-  else { liste.push(tag); toast(`${p.name} abgehakt`); }
+  S.hakenLog=S.hakenLog||{};
+  const k=hkey(id,tag), an=!(S.hakenLog[k]&&S.hakenLog[k].an);
+  S.hakenLog[k]={an, t:Date.now()};
+  hakenNeuAufbauen();
+  toast(an?`${p.name} abgehakt`:`${p.name}: Häkchen entfernt`);
   sichernSofort(); zeileAuffrischen(id);
 }
 /* Sieben Tage der laufenden Woche, heute hervorgehoben, mit einem
@@ -753,7 +777,8 @@ function wochenPlan(){
 
 /* ── Zustand ───────────────────────────────────────── */
 const leer=()=>({einheiten:[],uebungen:UEB_STD.map(([g,n,kg])=>({id:uid(),gruppe:g,name:n,kg:!!kg})),
-  programme:PROG_STD.map(p=>({...p,uebungen:p.uebungen.map(u=>[...u])})), haken:{}, laufend:null});
+  programme:PROG_STD.map(p=>({...p,uebungen:p.uebungen.map(u=>[...u])})),
+  haken:{}, hakenLog:{}, weg:{}, laufend:null});
 
 /* Neue voreingestellte Programme (wie Mobility) bei bestehenden Nutzern
    nachtragen, ohne etwas Vorhandenes anzurühren — nur was an Kennung
@@ -776,17 +801,33 @@ function migriereProgramme(){
   const altAth=["p_a1","p_a2"];
   if(S.programme.some(p=>altAth.includes(p.id))){
     S.programme=S.programme.filter(p=>!altAth.includes(p.id));
-    S.haken=S.haken||{};
-    const ziel=S.haken.p_ath=S.haken.p_ath||[];
-    altAth.forEach(id=>{
-      (S.haken[id]||[]).forEach(k=>{ if(!ziel.includes(k)) ziel.push(k); });
-      delete S.haken[id];
-    });
     S.einheiten.forEach(e=>{ if(altAth.includes(e.programm)) e.programm="p_ath"; });
   }
   const vorhanden=new Set(S.programme.map(p=>p.id));
   PROG_STD.forEach(p=>{ if(!vorhanden.has(p.id)) S.programme.push({...p,uebungen:p.uebungen.map(u=>[...u])}); });
-  if(!S.haken) S.haken={};
+
+  /* Häkchen aus älteren Fassungen (reine Tagesliste, ohne Zustand und
+     Zeitstempel) ins neue Format heben — als ältester Stand, damit
+     jede spätere Handlung sie schlägt. */
+  S.hakenLog=S.hakenLog||{};
+  Object.entries(S.haken||{}).forEach(([pid,tage])=>{
+    const ziel=altAth.includes(pid)?"p_ath":pid;      /* Athletik 1+2 → Athletik */
+    (tage||[]).forEach(tag=>{
+      const k=hkey(ziel,tag);
+      if(!S.hakenLog[k]) S.hakenLog[k]={an:true, t:1};
+    });
+  });
+  /* Auch im neuen Format können noch Athletik-1/2-Schlüssel liegen. */
+  Object.keys(S.hakenLog).forEach(k=>{
+    const i=k.indexOf("|"); if(i<0) return;
+    const pid=k.slice(0,i);
+    if(!altAth.includes(pid)) return;
+    const neu=hkey("p_ath",k.slice(i+1)), alt=S.hakenLog[k];
+    if(!S.hakenLog[neu]||alt.t>S.hakenLog[neu].t) S.hakenLog[neu]={...alt};
+    delete S.hakenLog[k];
+  });
+  S.weg=S.weg||{};
+  hakenNeuAufbauen();
 }
 let S=leer(), VIEW="start", TICK=null;
 
@@ -1716,7 +1757,11 @@ function einheitOeffnen(id){
 
 function loeschen(id){
   if(!confirm("Einheit löschen?")) return;
-  S.einheiten=S.einheiten.filter(e=>e.id!==id); sichernSofort(); zeichnen();
+  S.einheiten=S.einheiten.filter(e=>e.id!==id);
+  /* Grabstein setzen, sonst holt der nächste Abgleich die Einheit
+     aus der Cloud zurück. */
+  S.weg=S.weg||{}; S.weg[id]=Date.now();
+  sichernSofort(); zeichnen();
 }
 function ubWeg(id){
   const u=S.uebungen.find(x=>x.id===id); if(!u) return;
@@ -1828,15 +1873,46 @@ async function hochladen(){
    gleichen sich zwei Geräte über dieselbe private Ablage ab. */
 function mischeFerneDaten(fern){
   let n=0;
+
+  /* Gelöschtes bleibt gelöscht: beide Seiten führen Grabsteine mit
+     Zeitstempel. Ohne sie holt die hinzufügende Mischung jede
+     gelöschte Einheit beim nächsten Abgleich wieder zurück. */
+  S.weg=S.weg||{};
+  Object.entries(fern.weg||{}).forEach(([id,t])=>{
+    if(!S.weg[id]||t>S.weg[id]) S.weg[id]=t;
+  });
+
   const vorhanden=new Set(S.einheiten.map(e=>e.id));
-  (fern.einheiten||[]).forEach(e=>{ if(e&&e.id&&!vorhanden.has(e.id)){ S.einheiten.push(e); vorhanden.add(e.id); n++; } });
+  (fern.einheiten||[]).forEach(e=>{
+    if(!e||!e.id||vorhanden.has(e.id)) return;
+    if(S.weg[e.id]) return;                      /* bewusst gelöscht */
+    S.einheiten.push(e); vorhanden.add(e.id); n++;
+  });
+  S.einheiten=S.einheiten.filter(e=>!S.weg[e.id]);
+
   const ubVorhanden=new Set(S.uebungen.map(u=>u.name));
   (fern.uebungen||[]).forEach(u=>{ if(u&&u.name&&!ubVorhanden.has(u.name)) S.uebungen.push(u); });
-  S.haken=S.haken||{};
-  Object.entries(fern.haken||{}).forEach(([pid,tage])=>{
-    const eig=S.haken[pid]=S.haken[pid]||[];
-    (tage||[]).forEach(k=>{ if(!eig.includes(k)) eig.push(k); });
+
+  /* Häkchen: je Programm+Tag gewinnt der jüngere Zustand — so setzt
+     sich sowohl ein neu gesetztes als auch ein neu entferntes
+     Häkchen durch, statt dass Entfernen immer verliert. */
+  S.hakenLog=S.hakenLog||{};
+  Object.entries(fern.hakenLog||{}).forEach(([k,v])=>{
+    if(!v||typeof v.t!=="number") return;
+    const eig=S.hakenLog[k];
+    if(!eig||v.t>eig.t) S.hakenLog[k]={an:!!v.an, t:v.t};
   });
+  /* Ältere Fassungen schickten nur eine Liste gesetzter Tage ohne
+     Zeitstempel. Die zählt als denkbar ältester Stand (t=1), damit
+     jede bewusste Handlung hier auf beiden Geräten sie schlägt. */
+  Object.entries(fern.haken||{}).forEach(([pid,tage])=>{
+    (tage||[]).forEach(tag=>{
+      const k=hkey(pid,tag);
+      if(!S.hakenLog[k]) S.hakenLog[k]={an:true, t:1};
+    });
+  });
+  hakenNeuAufbauen();
+
   if(n) S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
   try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
   return n;
@@ -1855,7 +1931,8 @@ async function hochladenVoll(){
       }catch(e){}
     }
     const inhalt=btoa(unescape(encodeURIComponent(JSON.stringify(
-      {einheiten:S.einheiten,uebungen:S.uebungen,haken:S.haken||{}}))));
+      {einheiten:S.einheiten,uebungen:S.uebungen,haken:S.haken||{},
+       hakenLog:S.hakenLog||{},weg:S.weg||{}}))));
     const r=await fetch(VOLL_API,{method:"PUT",headers:{...kopf,"Content-Type":"application/json"},
       body:JSON.stringify({message:"Training "+new Date().toISOString(),content:inhalt,sha:vollSha||undefined})});
     if(r.ok){ vollSha=(await r.json()).content.sha; zeichnen(); }

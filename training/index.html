@@ -570,7 +570,7 @@ const addT=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const mow=d=>{const x=new Date(d);const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);x.setHours(0,0,0,0);return x};
 /* Steht unter „Mehr" ganz unten. Auf beiden Geräten dieselbe Zahl =
    beide haben dieselbe Fassung. Bei jeder Auslieferung hochzählen. */
-const FASSUNG="2026-09-02.2";
+const FASSUNG="2026-09-02.3";
 const WD=["Mo","Di","Mi","Do","Fr","Sa","So"];
 const MS=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 const kurz=d=>`${d.getDate()}. ${MS[d.getMonth()]}`;
@@ -732,6 +732,12 @@ function zeileAuffrischen(id){
    S.haken bleibt als abgeleitete Liste bestehen, damit die
    Anzeige-Funktionen unverändert weiterlaufen. */
 const hkey=(id,tag)=>`${id}|${tag}`;
+/* Athletik 1 und 2 gibt es nicht mehr. Die Cloud-Datei des anderen
+   Geräts kann sie aber noch enthalten — deshalb bei JEDER Übernahme
+   auf das heutige Programm umschreiben, nicht nur einmalig beim
+   Start. Sonst kämen die alten Kennungen bei jedem Abgleich zurück. */
+const ALT_ATH=["p_a1","p_a2"];
+const normProg=pid=>ALT_ATH.includes(pid)?"p_ath":pid;
 function hakenNeuAufbauen(){
   const h={};
   Object.entries(S.hakenLog||{}).forEach(([k,v])=>{
@@ -798,7 +804,7 @@ function migriereProgramme(){
      (2× pro Woche statt zwei getrennter 1×-Ziele). Alte Zeilen raus,
      Häkchen und schon erfasste Einheiten wandern additiv ins neue
      Programm — nichts geht verloren. */
-  const altAth=["p_a1","p_a2"];
+  const altAth=ALT_ATH;
   if(S.programme.some(p=>altAth.includes(p.id))){
     S.programme=S.programme.filter(p=>!altAth.includes(p.id));
     S.einheiten.forEach(e=>{ if(altAth.includes(e.programm)) e.programm="p_ath"; });
@@ -1899,15 +1905,17 @@ function mischeFerneDaten(fern){
   S.hakenLog=S.hakenLog||{};
   Object.entries(fern.hakenLog||{}).forEach(([k,v])=>{
     if(!v||typeof v.t!=="number") return;
-    const eig=S.hakenLog[k];
-    if(!eig||v.t>eig.t) S.hakenLog[k]={an:!!v.an, t:v.t};
+    const i=k.indexOf("|"); if(i<0) return;
+    const k2=hkey(normProg(k.slice(0,i)), k.slice(i+1));
+    const eig=S.hakenLog[k2];
+    if(!eig||v.t>eig.t) S.hakenLog[k2]={an:!!v.an, t:v.t};
   });
   /* Ältere Fassungen schickten nur eine Liste gesetzter Tage ohne
      Zeitstempel. Die zählt als denkbar ältester Stand (t=1), damit
      jede bewusste Handlung hier auf beiden Geräten sie schlägt. */
   Object.entries(fern.haken||{}).forEach(([pid,tage])=>{
     (tage||[]).forEach(tag=>{
-      const k=hkey(pid,tag);
+      const k=hkey(normProg(pid),tag);
       if(!S.hakenLog[k]) S.hakenLog[k]={an:true, t:1};
     });
   });

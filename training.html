@@ -607,7 +607,7 @@ const addT=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const mow=d=>{const x=new Date(d);const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);x.setHours(0,0,0,0);return x};
 /* Steht unter „Mehr" ganz unten. Auf beiden Geräten dieselbe Zahl =
    beide haben dieselbe Fassung. Bei jeder Auslieferung hochzählen. */
-const FASSUNG="2026-09-02.4";
+const FASSUNG="2026-09-03.1";
 const WD=["Mo","Di","Mi","Do","Fr","Sa","So"];
 const MS=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 const kurz=d=>`${d.getDate()}. ${MS[d.getMonth()]}`;
@@ -700,8 +700,24 @@ const PROG_STD=[
   /* Kein Satzprotokoll — Mobility bleibt eine Dauer-Disziplin, taucht
      hier nur mit ihrem Wochenziel auf. Deshalb keine Übungen: Start
      läuft weiterhin über „nachtragen", nie über progStarten(). */
-  {id:"p_mob", name:"Mobility", disz:"mobility", proWoche:5, tag:null, uebungen:[]}
+  {id:"p_mob", name:"Mobility", disz:"mobility", proWoche:5, tag:null, uebungen:[]},
+  /* Tennis ebenso: Dauer-Disziplin, hier nur mit seinem Wochenziel.
+     Erfasste Tennis-Einheiten zählen automatisch mit (siehe
+     einzigesProgramm), abhaken oben geht zusätzlich. */
+  {id:"p_ten", name:"Tennis", disz:"tennis", proWoche:4, tag:null, uebungen:[]}
 ];
+
+/* Zu welchem Wochenziel gehört eine Disziplin zweifelsfrei?
+   Bei Tennis und Mobility gibt es genau eines — eine erfasste Einheit
+   kann also automatisch dafür zählen. Bei Kraft sind es drei
+   (Oberkörper, Unterkörper, Rumpf); dort wäre jede Wahl geraten, und
+   ein geratenes Häkchen ist schlimmer als gar keines. Vorher nahm die
+   Zuordnung schlicht das erste Treffer-Programm — eine Kraft-Einheit
+   landete damit immer auf Oberkörper, auch wenn es Rumpf war. */
+function einzigesProgramm(disz){
+  const treffer=progAlle().filter(p=>p.disz===disz);
+  return treffer.length===1?treffer[0].id:null;
+}
 const progAlle=()=>S.programme&&S.programme.length?S.programme:PROG_STD;
 const progById=id=>progAlle().find(p=>p.id===id)||null;
 /* Der Tag, auf den sich die Häkchen oben beziehen. Standard ist heute;
@@ -916,6 +932,18 @@ function migriereProgramme(){
     delete S.hakenLog[k];
   });
   S.weg=S.weg||{};
+
+  /* Schon erfasste Einheiten nachträglich ihrem Wochenziel zuordnen —
+     nur dort, wo die Disziplin eindeutig ist. Ohne das stünde ein neu
+     angelegtes Ziel wie Tennis auf 0, obwohl die Einheiten längst
+     erfasst sind. Es wird ausschließlich ein leeres Feld gefüllt,
+     nie eine bestehende Zuordnung überschrieben. */
+  S.einheiten.forEach(e=>{
+    if(e.programm) return;
+    const pid=einzigesProgramm(e.disz);
+    if(pid) e.programm=pid;
+  });
+
   hakenNeuAufbauen();
 }
 let S=leer(), VIEW="start", TICK=null;
@@ -1737,14 +1765,14 @@ function ntSichern(){
   /* Passt genau ein Wochenziel zu dieser Disziplin — bei Mobility der
      Fall —, zählt der Eintrag automatisch dafür, ohne dass zusätzlich
      oben angehakt werden müsste. */
-  const passendesProgramm=progAlle().find(p=>p.disz===NT.disz);
+  const passendesProgramm=einzigesProgramm(NT.disz);
   if(NT.bearbeitet){
     const e=S.einheiten.find(x=>x.id===NT.bearbeitet);
     if(e) Object.assign(e,{datum:NT.datum,dauer:NT.dauer,unter:NT.unter,rpe:NT.rpe,notiz,
-      programm:passendesProgramm?passendesProgramm.id:e.programm||null});
+      programm:passendesProgramm||e.programm||null});
   } else {
     S.einheiten.push({id:uid(),datum:NT.datum,disz:NT.disz,unter:NT.unter,
-      dauer:NT.dauer,rpe:NT.rpe,notiz,programm:passendesProgramm?passendesProgramm.id:null,
+      dauer:NT.dauer,rpe:NT.rpe,notiz,programm:passendesProgramm||null,
       uebungen:[],beendet:Date.now()});
   }
   S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));

@@ -377,10 +377,30 @@ main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
 .prog-wahl-t{display:block;font-size:16px;font-weight:600}
 .prog-wahl-s{display:block;font-size:12px;color:var(--faint);margin-top:2px}
 
-/* Wochenstreifen: sieben Tage, heute hervorgehoben, Punkt an Tagen
-   mit erfasster Einheit. */
-.wtag-streifen{display:flex;justify-content:space-between;margin-bottom:18px;padding:0 2px}
-.wtag{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1}
+/* Wochenstreifen: sieben antippbare Tage. Der gewählte Tag bestimmt,
+   worauf die Häkchen darunter gehen — heute ist nur der Startwert.
+   Punkt = an diesem Tag steht schon etwas (Einheit oder Häkchen). */
+.wtag-kopf{display:flex;align-items:center;gap:8px;margin-bottom:9px;padding:0 2px}
+.wtag-sp{flex:1;text-align:center;font-size:12px;color:var(--faint);font-weight:600}
+.wtag-pf{
+  width:28px;height:28px;flex:0 0 auto;border-radius:9px;display:grid;place-items:center;
+  border:1px solid var(--line);color:var(--dim);touch-action:manipulation;
+  transition:border-color var(--d1) var(--ez),color var(--d1) var(--ez);
+}
+.wtag-pf:hover:not(:disabled){border-color:var(--line-2);color:var(--text)}
+.wtag-pf:disabled{opacity:.3}
+.wtag-pf svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.wtag-pf[data-woche="1"] svg{transform:rotate(180deg)}
+
+.wtag-streifen{display:flex;justify-content:space-between;gap:3px;margin-bottom:18px;padding:0 2px}
+.wtag{
+  display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;
+  padding:5px 0 6px;border-radius:11px;border:1.5px solid transparent;
+  touch-action:manipulation;transition:border-color var(--d1) var(--ez),background-color var(--d1) var(--ez);
+}
+.wtag:hover:not(:disabled){background:rgba(255,255,255,.04)}
+.wtag:disabled{opacity:.32}
+.wtag.gewaehlt{border-color:var(--c1);background:color-mix(in srgb,var(--c1) 9%,transparent)}
 .wtag-t{font-size:11px;color:var(--faint)}
 .wtag-z{
   width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
@@ -390,6 +410,23 @@ main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
 .wtag-p{width:4px;height:4px;border-radius:50%;background:transparent;display:block}
 .wtag-p.an{background:var(--faint)}
 .wtag.heute .wtag-p.an{background:var(--c1)}
+
+/* Hinweis, sobald die Häkchen NICHT auf heute gehen — sonst trägt man
+   ahnungslos in einen fremden Tag ein. */
+.wp-tagzeile{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin:0 0 8px;padding:9px 11px;border-radius:var(--r-s);
+  background:color-mix(in srgb,var(--c1) 9%,transparent);
+  border:1px solid color-mix(in srgb,var(--c1) 26%,transparent);
+  font-size:12.5px;color:var(--dim);
+}
+.wp-tagzeile b{color:var(--text)}
+.wp-heute{
+  margin-left:auto;flex:0 0 auto;font-size:12px;color:var(--c1);
+  padding:4px 10px;border-radius:var(--r-pill);border:1px solid color-mix(in srgb,var(--c1) 40%,transparent);
+  touch-action:manipulation;
+}
+.wp-heute:hover{background:color-mix(in srgb,var(--c1) 14%,transparent)}
 
 /* Übungsliste innerhalb eines laufenden Programms */
 .prog-liste{display:flex;flex-direction:column;gap:3px;margin:14px 0 4px}
@@ -570,7 +607,7 @@ const addT=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const mow=d=>{const x=new Date(d);const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);x.setHours(0,0,0,0);return x};
 /* Steht unter „Mehr" ganz unten. Auf beiden Geräten dieselbe Zahl =
    beide haben dieselbe Fassung. Bei jeder Auslieferung hochzählen. */
-const FASSUNG="2026-09-02.3";
+const FASSUNG="2026-09-02.4";
 const WD=["Mo","Di","Mi","Do","Fr","Sa","So"];
 const MS=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 const kurz=d=>`${d.getDate()}. ${MS[d.getMonth()]}`;
@@ -667,12 +704,20 @@ const PROG_STD=[
 ];
 const progAlle=()=>S.programme&&S.programme.length?S.programme:PROG_STD;
 const progById=id=>progAlle().find(p=>p.id===id)||null;
-/* Tage dieser Woche, an denen das Programm als erledigt zählt —
+/* Der Tag, auf den sich die Häkchen oben beziehen. Standard ist heute;
+   über die Leiste oben lässt sich ein vergangener Tag wählen, um
+   nachzutragen. Bewusst nicht gespeichert — beim nächsten Start steht
+   wieder heute da, sonst hakt man ahnungslos in der Vorwoche ab. */
+let AKT_TAG=heute();
+const aktMo=()=>mow(pdk(AKT_TAG));                    /* Montag der gezeigten Woche */
+const istDieseWoche=()=>dk(aktMo())===dk(mow(new Date()));
+
+/* Tage der GEZEIGTEN Woche, an denen das Programm als erledigt zählt —
    entweder durch eine echte Einheit (unten erfasst) oder durch ein
    Häkchen (oben angetippt). Eine Menge statt zwei Zahlen, damit
    derselbe Tag nie doppelt zählt, egal woher er kommt. */
 function progTage(id){
-  const mo=dk(mow(new Date())), bis=dk(addT(mow(new Date()),6));
+  const mo=dk(aktMo()), bis=dk(addT(aktMo(),6));
   const tage=new Set();
   S.einheiten.forEach(e=>{ if(e.programm===id&&e.datum>=mo&&e.datum<=bis) tage.add(e.datum); });
   (S.haken?.[id]||[]).forEach(k=>{ if(k>=mo&&k<=bis) tage.add(k); });
@@ -680,24 +725,39 @@ function progTage(id){
 }
 function progDieseWoche(id){ return progTage(id).size; }
 
+/* Tagesauswahl: nie in die Zukunft, sonst hakt man Tage ab, die noch
+   nicht stattgefunden haben. */
+function tagWaehlen(tag){
+  if(tag>heute()) tag=heute();
+  AKT_TAG=tag; zeichnen();
+}
+function wocheSchieben(n){
+  const ziel=dk(addT(pdk(AKT_TAG),n*7));
+  tagWaehlen(ziel>heute()?heute():ziel);
+}
+
 /* Eine einzelne Zeile des Wochenplans als HTML.
    Eigene Funktion, damit nach dem Abhaken GENAU DIESE Zeile ersetzt
    werden kann statt der ganzen Seite — siehe zeileAuffrischen(). */
 function wpZeile(p){
-  const d=dz(p.disz), k=heute();
-  const echtHeute=S.einheiten.some(e=>e.programm===p.id&&e.datum===k);
-  const hakHeute=(S.haken?.[p.id]||[]).includes(k);
-  const status = p.proWoche>1
-    ? `<span class="wp-punkte">${[...Array(p.proWoche)].map((_,i)=>
-        `<i class="${i<p.ist?"voll":""}"></i>`).join("")}</span>`
-    : p.fertig ? `<span class="wp-haken">${ico("check")}</span>`
+  const d=dz(p.disz), k=AKT_TAG;                 /* gewählter Tag, nicht zwingend heute */
+  const echtAmTag=S.einheiten.some(e=>e.programm===p.id&&e.datum===k);
+  const hakAmTag=(S.haken?.[p.id]||[]).includes(k);
+  /* Der Haken links zeigt den GEWÄHLTEN TAG, die Punkte rechts den
+     Stand der Woche — sonst weiß man beim Nachtragen nicht, ob man
+     diesen Tag schon erwischt hat. */
+  const status = hakAmTag||echtAmTag
+    ? `<span class="wp-haken">${ico("check")}</span>`
     : `<span class="wp-ring"></span>`;
   return `<button class="wp-row${p.fertig?" fertig":""}" style="--dc:${d.farbe}"
-    data-prog="${p.id}" ${echtHeute?"disabled":`data-tag="${p.id}|${k}"`}
-    aria-pressed="${hakHeute}"
-    title="${echtHeute?"heute schon als Einheit erfasst":hakHeute?"antippen, um Häkchen zu entfernen":"antippen, um heute abzuhaken"}">
+    data-prog="${p.id}" ${echtAmTag?"disabled":`data-tag="${p.id}|${k}"`}
+    aria-pressed="${hakAmTag}"
+    title="${echtAmTag?"an diesem Tag schon als Einheit erfasst":hakAmTag?"antippen, um Häkchen zu entfernen":"antippen, um diesen Tag abzuhaken"}">
     ${status}
-    <span class="wp-n">${esc(p.name)}<small>${p.uebungen.length?`${p.uebungen.length} Übungen`:"Wochenziel"}${p.tag?` · meist ${p.tag}`:""} · ${p.ist}/${p.proWoche}× diese Woche</small></span>
+    <span class="wp-n">${esc(p.name)}<small>${p.uebungen.length?`${p.uebungen.length} Übungen`:"Wochenziel"}${p.tag?` · meist ${p.tag}`:""}</small></span>
+    <span class="wp-punkte" title="Stand der Woche">${[...Array(p.proWoche)].map((_,i)=>
+      `<i class="${i<p.ist?"voll":""}"></i>`).join("")}</span>
+    <span class="wp-b${p.fertig?" voll":""}">${p.ist}/${p.proWoche}</span>
   </button>`;
 }
 
@@ -714,6 +774,14 @@ function zeileAuffrischen(id){
   alt.outerHTML=wpZeile(p);                 /* gefahrlos: Klicks laufen über Delegation */
   const z=document.querySelector(".wp-kopf-s");
   if(z) z.textContent=`${plan.filter(x=>x.fertig).length}/${plan.length} erledigt`;
+  /* Der Punkt im Streifen zeigt „an diesem Tag steht etwas" — er muss
+     mitwandern, sonst widerspricht die Leiste oben den Zeilen darunter. */
+  const tw=document.querySelector(`[data-tagwahl="${AKT_TAG}"] .wtag-p`);
+  if(tw){
+    const hat=S.einheiten.some(e=>e.datum===AKT_TAG)
+      || Object.values(S.haken||{}).some(l=>l.includes(AKT_TAG));
+    tw.classList.toggle("an",hat);
+  }
 }
 
 /* ── Häkchen: gesetzt UND entfernt müssen beide reisen ──────────
@@ -758,19 +826,34 @@ function tickToggle(id,tag){
   toast(an?`${p.name} abgehakt`:`${p.name}: Häkchen entfernt`);
   sichernSofort(); zeileAuffrischen(id);
 }
-/* Sieben Tage der laufenden Woche, heute hervorgehoben, mit einem
-   kleinen Punkt an Tagen, die schon eine Einheit haben. */
+/* Sieben Tage der gezeigten Woche, jeder einzeln antippbar: der
+   gewählte Tag bestimmt, worauf sich die Häkchen darunter beziehen.
+   So lässt sich nachtragen, ohne dass irgendwo ein Datumsfeld nötig
+   wäre. Der Punkt unter einem Tag zeigt, dass an ihm etwas steht —
+   egal ob als erfasste Einheit oder als Häkchen. */
 function wochenstreifen(){
-  const mo=mow(new Date());
-  return `<div class="wtag-streifen">
+  const mo=aktMo(), k0=heute();
+  const bisSo=dk(addT(mo,6));
+  const kannVor=bisSo<k0;                       /* nie in die Zukunft */
+  return `<div class="wtag-kopf">
+    <button class="wtag-pf" data-woche="-1" aria-label="Woche zurück">${ico("zurueck")}</button>
+    <span class="wtag-sp">${istDieseWoche()?"Diese Woche":`${mo.getDate()}.${mo.getMonth()+1}. – ${addT(mo,6).getDate()}.${addT(mo,6).getMonth()+1}.`}</span>
+    <button class="wtag-pf" data-woche="1" aria-label="Woche vor" ${kannVor?"":"disabled"}>${ico("zurueck")}</button>
+  </div>
+  <div class="wtag-streifen">
     ${[...Array(7)].map((_,i)=>{
-      const d=addT(mo,i), k=dk(d), istHeute=k===heute();
-      const hat=S.einheiten.some(e=>e.datum===k);
-      return `<div class="wtag${istHeute?" heute":""}">
+      const d=addT(mo,i), k=dk(d);
+      const istHeute=k===k0, gewaehlt=k===AKT_TAG, kuenftig=k>k0;
+      const hat=S.einheiten.some(e=>e.datum===k)
+        || Object.values(S.haken||{}).some(l=>l.includes(k));
+      return `<button class="wtag${gewaehlt?" gewaehlt":""}${istHeute?" heute":""}"
+        ${kuenftig?"disabled":`data-tagwahl="${k}"`}
+        aria-pressed="${gewaehlt}"
+        aria-label="${WD[i]}, ${d.getDate()}.${d.getMonth()+1}.${kuenftig?" (liegt in der Zukunft)":""}">
         <span class="wtag-t">${WD[i]}</span>
         <span class="wtag-z">${d.getDate()}</span>
         <i class="wtag-p${hat?" an":""}"></i>
-      </div>`;}).join("")}
+      </button>`;}).join("")}
   </div>`;
 }
 
@@ -969,8 +1052,8 @@ const letzteSaetze=name=>{
 const R={};
 
 R.start=function(){
-  const k=heute(), tage=S.einheiten.filter(e=>e.datum===k);
-  const mo=mow(new Date()), wm=wochenMin(mo);
+  const k=AKT_TAG, tage=S.einheiten.filter(e=>e.datum===k);
+  const mo=aktMo(), wm=wochenMin(mo);
   const wGes=Object.values(wm).reduce((a,b)=>a+b,0);
   const st=new Date().getHours();
   const gruss=st<5?"Noch wach":st<11?"Guten Morgen":st<18?"Was steht an":"Guten Abend";
@@ -987,9 +1070,13 @@ R.start=function(){
     <div class="wp">
       ${wochenstreifen()}
       <div class="wp-kopf">
-        <span class="wp-kopf-n">Diese Woche</span>
+        <span class="wp-kopf-n">${istDieseWoche()?"Diese Woche":"Diese Woche (zurückgeblättert)"}</span>
         <span class="wp-kopf-s mono">${plan.filter(p=>p.fertig).length}/${plan.length} erledigt</span>
       </div>
+      ${AKT_TAG===heute()?"":`<div class="wp-tagzeile">
+        <span>Häkchen gehen auf <b>${WD[(pdk(AKT_TAG).getDay()+6)%7]}, ${pdk(AKT_TAG).getDate()}.${pdk(AKT_TAG).getMonth()+1}.</b></span>
+        <button class="wp-heute" data-tagwahl="${heute()}">zurück zu heute</button>
+      </div>`}
       <div class="wp-liste">${plan.map(wpZeile).join("")}</div>
     </div>`:""}
 
@@ -1009,7 +1096,7 @@ R.start=function(){
 
     <div class="tag">
       <div class="tag-k">
-        <span class="tag-t">Heute</span>
+        <span class="tag-t">${AKT_TAG===heute()?"Heute":`${WD[(pdk(AKT_TAG).getDay()+6)%7]}, ${pdk(AKT_TAG).getDate()}.${pdk(AKT_TAG).getMonth()+1}.`}</span>
         <span class="tag-w mono">${tage.length?hmm(tagesMin(k)):""}</span>
       </div>
       ${tage.length?tage.map(e=>{
@@ -1021,7 +1108,7 @@ R.start=function(){
           <span class="e-d">${hmm(minuten(e))}</span>
           <button class="e-x" onclick="loeschen('${e.id}')" aria-label="Einheit löschen">${ico("x")}</button>
         </div>`;}).join("")
-      :`<div class="leer">Heute noch nichts. Tennis, Zone 2 und Mobility trägst du<br>hinterher ein — Kraft und Athletik laufen mit.</div>`}
+      :`<div class="leer">${AKT_TAG===heute()?"Heute noch nichts. Tennis, Zone 2 und Mobility trägst du<br>hinterher ein — Kraft und Athletik laufen mit.":"An diesem Tag keine erfasste Einheit.<br>Oben abhaken geht trotzdem."}</div>`}
     </div>
   </main>
   ${navi()}`;
@@ -1451,6 +1538,10 @@ function R2(v){ VIEW=v; zeichnen(); }
 document.addEventListener("click",ev=>{
   const nav=ev.target.closest("[data-nav]");
   if(nav) return R2(nav.dataset.nav);
+  const w=ev.target.closest("[data-woche]");
+  if(w&&!w.disabled) return wocheSchieben(+w.dataset.woche);
+  const tw=ev.target.closest("[data-tagwahl]");
+  if(tw&&!tw.disabled) return tagWaehlen(tw.dataset.tagwahl);
   const t=ev.target.closest("[data-tag]");
   if(t&&!t.disabled){ const[id,tag]=t.dataset.tag.split("|"); tickToggle(id,tag); }
 });

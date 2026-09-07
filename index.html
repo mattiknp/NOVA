@@ -1564,8 +1564,10 @@ const SATZ_FILE="training.json";
 const SATZ_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${SATZ_FILE}`;
 
 function mergeSatz(daten){
-  if(!daten||!daten.sport) return 0;
+  if(!daten) return 0;
   let n=0;
+  n+=mergeSatzPlan(daten);
+  if(!daten.sport) return n;
   Object.entries(daten.sport).forEach(([k,liste])=>{
     if(!Array.isArray(liste)) return;
     const vorhanden=new Set((S.sport[k]||[]).map(e=>e.id));
@@ -1577,6 +1579,55 @@ function mergeSatz(daten){
         kraftSubtype:e.kraftSubtype??null});
       n++;
     });
+  });
+  return n;
+}
+
+/* Die Trainings-App plant ihre Einheiten als Zeitblöcke und schickt
+   sie mit. Sie landen im selben Planer wie alles andere, sind aber an
+   der Kennung „satz_" zweifelsfrei als von dort stammend erkennbar —
+   und NUR solche Blöcke werden hier je angefasst. Eigene Blöcke aus
+   NOVA bleiben unter allen Umständen unberührt.
+
+   Anders als beim Sport wird hier auch geändert und entfernt: ein
+   Training, das dort verschoben oder gestrichen wurde, muss auch hier
+   verschwinden, sonst steht der Plan bald voller Leichen. */
+function mergeSatzPlan(daten){
+  if(!daten.planer&&!daten.planerWeg) return 0;
+  if(!S.planer) S.planer={};          /* frischer Stand ohne Planer */
+  let n=0;
+  const weg=new Set(daten.planerWeg||[]);
+  const fremd=new Map();                        /* id -> {tag, block} */
+  Object.entries(daten.planer||{}).forEach(([k,liste])=>{
+    (Array.isArray(liste)?liste:[]).forEach(b=>{
+      if(b&&typeof b.id==="string"&&b.id.startsWith("satz_")) fremd.set(b.id,{k,b});
+    });
+  });
+
+  /* Erst aufräumen: gestrichene und verschobene Blöcke aus allen Tagen
+     entfernen — aber ausschließlich solche mit „satz_"-Kennung. */
+  Object.keys(S.planer||{}).forEach(k=>{
+    const vor=S.planer[k].length;
+    S.planer[k]=S.planer[k].filter(b=>{
+      if(!b||typeof b.id!=="string"||!b.id.startsWith("satz_")) return true;
+      if(weg.has(b.id)) return false;            /* dort gelöscht */
+      const f=fremd.get(b.id);
+      if(!f) return true;                        /* nicht in dieser Lieferung */
+      return f.k===k;                            /* verschoben? alter Tag raus */
+    });
+    n+=vor-S.planer[k].length;
+    if(!S.planer[k].length) delete S.planer[k];
+  });
+
+  /* Dann eintragen und auffrischen. */
+  fremd.forEach(({k,b},id)=>{
+    if(weg.has(id)) return;
+    if(!S.planer[k]) S.planer[k]=[];
+    const i=S.planer[k].findIndex(x=>x&&x.id===id);
+    const neu={id, type:b.type||"sport", start:b.start||"18:00",
+               end:b.end||"19:00", note:b.note||""};
+    if(i<0){ S.planer[k].push(neu); n++; }
+    else if(JSON.stringify(S.planer[k][i])!==JSON.stringify(neu)){ S.planer[k][i]=neu; n++; }
   });
   return n;
 }

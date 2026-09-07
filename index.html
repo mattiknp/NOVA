@@ -745,7 +745,17 @@ select option{ background:#141a26; }
    passen auf keinem Handy nebeneinander — deshalb waagerecht
    scrollbar, mit der Stundenspalte fest am linken Rand, damit man
    beim Schieben nie die Uhrzeit verliert. */
-.tp-scroll{ overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
+.tp-scroll{
+  overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch;
+  /* Ohne diese Zeile schluckt der waagerechte Scrollbereich auch das
+     senkrechte Wischen: er selbst kann nicht nach unten scrollen
+     (overflow-y:hidden), und die Geste wird trotzdem nicht an die
+     Seite weitergereicht — man bleibt am Stundenplan kleben.
+     pan-x sagt dem Browser: hier wird nur waagerecht geschoben,
+     alles Senkrechte gehört der Seite. */
+  touch-action:pan-x pinch-zoom;
+  overscroll-behavior-x:contain;
+}
 .tp-raster{ display:flex; min-width:max-content; }
 .tp-uhr{
   flex:0 0 auto; width:26px; position:sticky; left:0; z-index:2;

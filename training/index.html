@@ -351,6 +351,57 @@ main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
 }
 .wp-punkte i.voll{background:var(--dc);border-color:var(--dc)}
 
+/* ── Plan: die Woche als Zeitplan ───────────────────── */
+.pl-tag{margin-bottom:16px}
+.pl-tag.heute .pl-wd{color:var(--c1)}
+.pl-kopf{display:flex;align-items:center;gap:9px;padding:0 2px 7px;border-bottom:1px solid var(--line);margin-bottom:7px}
+.pl-wd{font-size:14px;font-weight:600}
+.pl-dat{flex:1;font-size:12px;color:var(--faint)}
+.pl-plus{
+  width:26px;height:26px;flex:0 0 auto;border-radius:8px;display:grid;place-items:center;
+  border:1px solid var(--line);color:var(--dim);touch-action:manipulation;
+  transition:border-color var(--d1) var(--ez),color var(--d1) var(--ez);
+}
+.pl-plus:hover{border-color:var(--c1);color:var(--c1)}
+.pl-plus svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+.pl-liste{display:flex;flex-direction:column;gap:6px}
+.pl-leer{font-size:12.5px;color:var(--faint);padding:3px 2px 6px}
+.pl-block{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:11px 13px;border-radius:var(--r);touch-action:manipulation;
+  border:1px solid color-mix(in srgb,var(--dc) 24%,transparent);
+  background:color-mix(in srgb,var(--dc) 7%,transparent);
+  border-left:3px solid var(--dc);
+  transition:transform var(--d1) var(--ez),opacity var(--d2) var(--ez);
+}
+.pl-block:active{transform:scale(.985)}
+.pl-block.fertig{opacity:.55}
+.pl-zeit{flex:0 0 auto;font-size:12.5px;color:var(--dc);font-weight:600}
+.pl-n{flex:1;min-width:0;font-size:14.5px;font-weight:600;overflow:hidden}
+.pl-n small{display:block;font-size:11.5px;font-weight:400;color:var(--faint);margin-top:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-dauer{flex:0 0 auto;font-size:12px;color:var(--faint)}
+.pl-ok{width:20px;height:20px;flex:0 0 auto;display:grid;place-items:center;color:var(--dc)}
+.pl-block.fertig .pl-ok{color:var(--good)}
+.pl-ok svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* Tagesplan auf dem Startbildschirm */
+.tp{margin-bottom:22px}
+.tp-leer{
+  display:flex;align-items:center;gap:11px;flex-wrap:wrap;
+  padding:13px 14px;border-radius:var(--r);border:1px dashed var(--line-2);
+  font-size:13px;color:var(--faint);margin-bottom:22px;
+}
+.tp-leer .chip{margin-left:auto}
+
+/* Zeitwahl im Block-Editor */
+.pb-zeit{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pb-zeit select{flex:0 0 auto;width:auto;min-width:92px}
+.pb-zeit span{font-size:13px;color:var(--faint)}
+
+/* Künftige Tage im Streifen: wählbar zum Planen, aber sichtbar noch offen */
+.wtag.kuenftig .wtag-z{opacity:.5}
+
 /* Übungsvorschau in der Auswahlliste unten: kleine Kacheln mit der
    Muskelkarte statt Fotos, die es dafür nicht gibt. */
 .wp-bilder{display:flex;gap:5px;flex:0 0 auto}
@@ -498,7 +549,7 @@ main{flex:1;padding:0 18px calc(var(--bar-h) + var(--pad-b) + 14px)}
 .fuss .b{flex:1}
 
 nav{
-  position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);
+  position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);
   border-top:1px solid var(--line);
   /* Kein backdrop-filter mehr — zusammen mit position:fixed auf iOS
      Safari eine weitere bekannt unzuverlässige Kombination bei
@@ -559,15 +610,15 @@ const TOK_ALT="satz_gh_token", SYNC_ALT="satz_sync_on";
    „dauer" — nichts läuft. Man trägt hinterher ein, wie lange es ging.
              Beim Tennis steht man nicht am Handy, um eine Uhr zu starten. */
 const DISZ=[
-  {id:"tennis",   n:"Tennis",       nova:"tennis",   art:"dauer", farbe:"var(--tennis)", kf:"var(--k-tennis)", ico:"tennis",
+  {id:"tennis",   n:"Tennis",       nova:"tennis", novaPlan:"tennis",   art:"dauer", farbe:"var(--tennis)", kf:"var(--k-tennis)", ico:"tennis",
    sub:["Training","Match","Medenspiel","Turnier","Paddel"], std:120},
-  {id:"kraft",    n:"Kraft",        nova:"kraft",    art:"satz",  farbe:"var(--kraft)", kf:"var(--k-kraft)", ico:"hantel",
+  {id:"kraft",    n:"Kraft",        nova:"kraft", novaPlan:"gym",    art:"satz",  farbe:"var(--kraft)", kf:"var(--k-kraft)", ico:"hantel",
    sub:["Oberkörper","Unterkörper","Rumpf","Ganzkörper"], std:60},
-  {id:"athletik", n:"Athletik",     nova:"kraft",    art:"satz",  farbe:"var(--athletik)", kf:"var(--k-athletik)", ico:"blitz",
+  {id:"athletik", n:"Athletik",     nova:"kraft", novaPlan:"sport",    art:"satz",  farbe:"var(--athletik)", kf:"var(--k-athletik)", ico:"blitz",
    sub:["Sprünge","Würfe","Antritte","Koordination","Kondition"], std:45},
-  {id:"zone2",    n:"Zone 2",       nova:"zone2",    art:"dauer", farbe:"var(--zone2)", kf:"var(--k-zone2)", ico:"herz",
+  {id:"zone2",    n:"Zone 2",       nova:"zone2", novaPlan:"zone2",    art:"dauer", farbe:"var(--zone2)", kf:"var(--k-zone2)", ico:"herz",
    sub:["Laufen","Rad","Ergometer","Schwimmen"], std:45},
-  {id:"mobility", n:"Mobility",     nova:"mobility", art:"dauer", farbe:"var(--mobility)", kf:"var(--k-mobility)", ico:"welle",
+  {id:"mobility", n:"Mobility",     nova:"mobility", novaPlan:"mobility", art:"dauer", farbe:"var(--mobility)", kf:"var(--k-mobility)", ico:"welle",
    sub:["Hüfte","Schulter","Ganzkörper","Regeneration"], std:15}
 ];
 const dz=id=>DISZ.find(d=>d.id===id)||DISZ[0];
@@ -607,7 +658,7 @@ const addT=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
 const mow=d=>{const x=new Date(d);const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);x.setHours(0,0,0,0);return x};
 /* Steht unter „Mehr" ganz unten. Auf beiden Geräten dieselbe Zahl =
    beide haben dieselbe Fassung. Bei jeder Auslieferung hochzählen. */
-const FASSUNG="2026-09-03.1";
+const FASSUNG="2026-09-07.1";
 const WD=["Mo","Di","Mi","Do","Fr","Sa","So"];
 const MS=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 const kurz=d=>`${d.getDate()}. ${MS[d.getMonth()]}`;
@@ -720,6 +771,54 @@ function einzigesProgramm(disz){
 }
 const progAlle=()=>S.programme&&S.programme.length?S.programme:PROG_STD;
 const progById=id=>progAlle().find(p=>p.id===id)||null;
+/* ── Wochenplan ────────────────────────────────────────
+   Was du wann trainierst, als Zeitblöcke pro Tag — dasselbe Muster
+   wie NOVAs Planer, damit die Blöcke dort ohne Übersetzung landen.
+
+   S.plan   = { "YYYY-MM-DD": [ {id,disz,prog,start,end,notiz,t} ] }
+   S.planWeg= { blockId: Zeitstempel }   Grabsteine
+
+   Grabsteine wie bei den Häkchen: ein rein hinzufügender Abgleich
+   könnte ein gelöschtes Training sonst nie loswerden, es käme beim
+   nächsten Abgleich vom anderen Gerät zurück. */
+const planTag=k=>(S.plan&&S.plan[k]||[]).slice()
+  .sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+const hm2min=t=>{const[h,m]=(t||"0:0").split(":").map(Number);return h*60+(m||0)};
+const min2hm=m=>`${p2(Math.floor(m/60)%24)}:${p2(m%60)}`;
+const blockDauer=b=>{
+  const s=hm2min(b.start), e=hm2min(b.end);
+  return e>s ? e-s : (1440-s)+e;                /* über Mitternacht */
+};
+function blockById(id){
+  for(const k of Object.keys(S.plan||{})){
+    const b=(S.plan[k]||[]).find(x=>x.id===id);
+    if(b) return {block:b, datum:k};
+  }
+  return null;
+}
+/* Ein Block gilt als erledigt, sobald eine erfasste Einheit auf ihn
+   zeigt. Kein zweites Häkchen-System für dasselbe. */
+const blockEinheit=id=>S.einheiten.find(e=>e.block===id)||null;
+
+function planSichern(datum,block){
+  S.plan=S.plan||{};
+  const liste=S.plan[datum]=S.plan[datum]||[];
+  const i=liste.findIndex(b=>b.id===block.id);
+  block.t=Date.now();
+  if(i>=0) liste[i]=block; else liste.push(block);
+  sichernSofort();
+}
+function planLoeschen(id){
+  const tr=blockById(id); if(!tr) return;
+  S.plan[tr.datum]=(S.plan[tr.datum]||[]).filter(b=>b.id!==id);
+  if(!S.plan[tr.datum].length) delete S.plan[tr.datum];
+  S.planWeg=S.planWeg||{}; S.planWeg[id]=Date.now();
+  /* Die Einheit bleibt bestehen — gelöscht wird der Plan, nicht das
+     Training. Nur die Verknüpfung fällt weg. */
+  S.einheiten.forEach(e=>{ if(e.block===id) e.block=null; });
+  sichernSofort();
+}
+
 /* Der Tag, auf den sich die Häkchen oben beziehen. Standard ist heute;
    über die Leiste oben lässt sich ein vergangener Tag wählen, um
    nachzutragen. Bewusst nicht gespeichert — beim nächsten Start steht
@@ -741,16 +840,11 @@ function progTage(id){
 }
 function progDieseWoche(id){ return progTage(id).size; }
 
-/* Tagesauswahl: nie in die Zukunft, sonst hakt man Tage ab, die noch
-   nicht stattgefunden haben. */
-function tagWaehlen(tag){
-  if(tag>heute()) tag=heute();
-  AKT_TAG=tag; zeichnen();
-}
-function wocheSchieben(n){
-  const ziel=dk(addT(pdk(AKT_TAG),n*7));
-  tagWaehlen(ziel>heute()?heute():ziel);
-}
+/* Jeder Tag ist wählbar — auch künftige, denn geplant wird nach vorn.
+   Abgehakt werden kann trotzdem nur, was schon stattgefunden hat;
+   darum kümmert sich wpZeile(). */
+function tagWaehlen(tag){ AKT_TAG=tag; zeichnen(); }
+function wocheSchieben(n){ tagWaehlen(dk(addT(pdk(AKT_TAG),n*7))); }
 
 /* Eine einzelne Zeile des Wochenplans als HTML.
    Eigene Funktion, damit nach dem Abhaken GENAU DIESE Zeile ersetzt
@@ -759,6 +853,8 @@ function wpZeile(p){
   const d=dz(p.disz), k=AKT_TAG;                 /* gewählter Tag, nicht zwingend heute */
   const echtAmTag=S.einheiten.some(e=>e.programm===p.id&&e.datum===k);
   const hakAmTag=(S.haken?.[p.id]||[]).includes(k);
+  const kuenftig=k>heute();          /* was noch nicht war, kann nicht erledigt sein */
+  const gesperrt=echtAmTag||kuenftig;
   /* Der Haken links zeigt den GEWÄHLTEN TAG, die Punkte rechts den
      Stand der Woche — sonst weiß man beim Nachtragen nicht, ob man
      diesen Tag schon erwischt hat. */
@@ -766,9 +862,9 @@ function wpZeile(p){
     ? `<span class="wp-haken">${ico("check")}</span>`
     : `<span class="wp-ring"></span>`;
   return `<button class="wp-row${p.fertig?" fertig":""}" style="--dc:${d.farbe}"
-    data-prog="${p.id}" ${echtAmTag?"disabled":`data-tag="${p.id}|${k}"`}
+    data-prog="${p.id}" ${gesperrt?"disabled":`data-tag="${p.id}|${k}"`}
     aria-pressed="${hakAmTag}"
-    title="${echtAmTag?"an diesem Tag schon als Einheit erfasst":hakAmTag?"antippen, um Häkchen zu entfernen":"antippen, um diesen Tag abzuhaken"}">
+    title="${echtAmTag?"an diesem Tag schon als Einheit erfasst":kuenftig?"liegt in der Zukunft":hakAmTag?"antippen, um Häkchen zu entfernen":"antippen, um diesen Tag abzuhaken"}">
     ${status}
     <span class="wp-n">${esc(p.name)}<small>${p.uebungen.length?`${p.uebungen.length} Übungen`:"Wochenziel"}${p.tag?` · meist ${p.tag}`:""}</small></span>
     <span class="wp-punkte" title="Stand der Woche">${[...Array(p.proWoche)].map((_,i)=>
@@ -850,11 +946,10 @@ function tickToggle(id,tag){
 function wochenstreifen(){
   const mo=aktMo(), k0=heute();
   const bisSo=dk(addT(mo,6));
-  const kannVor=bisSo<k0;                       /* nie in die Zukunft */
   return `<div class="wtag-kopf">
     <button class="wtag-pf" data-woche="-1" aria-label="Woche zurück">${ico("zurueck")}</button>
     <span class="wtag-sp">${istDieseWoche()?"Diese Woche":`${mo.getDate()}.${mo.getMonth()+1}. – ${addT(mo,6).getDate()}.${addT(mo,6).getMonth()+1}.`}</span>
-    <button class="wtag-pf" data-woche="1" aria-label="Woche vor" ${kannVor?"":"disabled"}>${ico("zurueck")}</button>
+    <button class="wtag-pf" data-woche="1" aria-label="Woche vor">${ico("zurueck")}</button>
   </div>
   <div class="wtag-streifen">
     ${[...Array(7)].map((_,i)=>{
@@ -862,10 +957,10 @@ function wochenstreifen(){
       const istHeute=k===k0, gewaehlt=k===AKT_TAG, kuenftig=k>k0;
       const hat=S.einheiten.some(e=>e.datum===k)
         || Object.values(S.haken||{}).some(l=>l.includes(k));
-      return `<button class="wtag${gewaehlt?" gewaehlt":""}${istHeute?" heute":""}"
-        ${kuenftig?"disabled":`data-tagwahl="${k}"`}
-        aria-pressed="${gewaehlt}"
-        aria-label="${WD[i]}, ${d.getDate()}.${d.getMonth()+1}.${kuenftig?" (liegt in der Zukunft)":""}">
+      const geplant=planTag(k).length;
+      return `<button class="wtag${gewaehlt?" gewaehlt":""}${istHeute?" heute":""}${kuenftig?" kuenftig":""}"
+        data-tagwahl="${k}" aria-pressed="${gewaehlt}"
+        aria-label="${WD[i]}, ${d.getDate()}.${d.getMonth()+1}.${geplant?`, ${geplant} geplant`:""}">
         <span class="wtag-t">${WD[i]}</span>
         <span class="wtag-z">${d.getDate()}</span>
         <i class="wtag-p${hat?" an":""}"></i>
@@ -883,7 +978,7 @@ function wochenPlan(){
 /* ── Zustand ───────────────────────────────────────── */
 const leer=()=>({einheiten:[],uebungen:UEB_STD.map(([g,n,kg])=>({id:uid(),gruppe:g,name:n,kg:!!kg})),
   programme:PROG_STD.map(p=>({...p,uebungen:p.uebungen.map(u=>[...u])})),
-  haken:{}, hakenLog:{}, weg:{}, laufend:null});
+  haken:{}, hakenLog:{}, weg:{}, plan:{}, planWeg:{}, laufend:null});
 
 /* Neue voreingestellte Programme (wie Mobility) bei bestehenden Nutzern
    nachtragen, ohne etwas Vorhandenes anzurühren — nur was an Kennung
@@ -931,7 +1026,7 @@ function migriereProgramme(){
     if(!S.hakenLog[neu]||alt.t>S.hakenLog[neu].t) S.hakenLog[neu]={...alt};
     delete S.hakenLog[k];
   });
-  S.weg=S.weg||{};
+  S.weg=S.weg||{}; S.plan=S.plan||{}; S.planWeg=S.planWeg||{};
 
   /* Schon erfasste Einheiten nachträglich ihrem Wochenziel zuordnen —
      nur dort, wo die Disziplin eindeutig ist. Ohne das stünde ein neu
@@ -997,6 +1092,7 @@ const I={
   check:'<path d="M4 12.5 9.5 18 20 6.5"/>',
   x:'<path d="M6 6l12 12M18 6 6 18"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   wolke:'<path d="M17.5 19a4.5 4.5 0 0 0 .5-9 6 6 0 0 0-11.6-1.5A4 4 0 0 0 6.5 19z"/>',
   zurueck:'<path d="M15 5 8 12l7 7"/>'
 };
@@ -1094,9 +1190,36 @@ R.start=function(){
     <div class="kopf-akt"><button class="ib" onclick="R2('einstellungen')" aria-label="Einstellungen">${ico("zahn")}</button></div>
   </div>
   <main>
+    ${wochenstreifen()}
+    ${(()=>{
+      /* Tagesplan: was du dir für diesen Tag vorgenommen hast.
+         Antippen trägt ein, was du wirklich gemacht hast — genau der
+         Weg „erst planen, hinterher eintragen". */
+      const bl=planTag(k);
+      if(!bl.length) return `<div class="tp tp-leer">
+        <span>Für ${AKT_TAG===heute()?"heute":"diesen Tag"} ist nichts geplant.</span>
+        <button class="chip" data-nav="plan">Plan öffnen</button>
+      </div>`;
+      const offen=bl.filter(b=>!blockEinheit(b.id)).length;
+      return `<div class="tp">
+        <div class="wp-kopf">
+          <span class="wp-kopf-n">Plan für ${AKT_TAG===heute()?"heute":`${WD[(pdk(AKT_TAG).getDay()+6)%7]}, ${pdk(AKT_TAG).getDate()}.${pdk(AKT_TAG).getMonth()+1}.`}</span>
+          <span class="wp-kopf-s mono">${offen?`${bl.length-offen}/${bl.length} erledigt`:"alles erledigt"}</span>
+        </div>
+        <div class="pl-liste">${bl.map(b=>{
+          const d=dz(b.disz), e=blockEinheit(b.id);
+          return `<button class="pl-block${e?" fertig":""}" style="--dc:${d.farbe}" data-erledigen="${b.id}">
+            <span class="pl-zeit mono">${b.start}</span>
+            <span class="pl-n">${esc(b.prog&&progName(b.prog)||d.n)}${
+              b.notiz?`<small>${esc(b.notiz)}</small>`:""}</span>
+            <span class="pl-dauer mono">${e?hmm(minuten(e)):hmm(blockDauer(b))}</span>
+            <span class="pl-ok">${e?ico("check"):ico("plus")}</span>
+          </button>`;}).join("")}</div>
+      </div>`;
+    })()}
+
     ${plan.length?`
     <div class="wp">
-      ${wochenstreifen()}
       <div class="wp-kopf">
         <span class="wp-kopf-n">${istDieseWoche()?"Diese Woche":"Diese Woche (zurückgeblättert)"}</span>
         <span class="wp-kopf-s mono">${plan.filter(p=>p.fertig).length}/${plan.length} erledigt</span>
@@ -1549,8 +1672,199 @@ R.einstellungen=function(){
   ${navi()}`;
 };
 
+/* ── Plan ──────────────────────────────────────────────
+   Die Woche als Zeitplan. Jede Woche wird frisch geplant — es gibt
+   bewusst keine Vorlage, die sich stumm über deine Woche legt.
+   Blöcke tragen Uhrzeiten, damit sie unverändert in NOVAs Planer
+   passen und du Überschneidungen mit Uni und Terminen siehst. */
+const progName=id=>{const p=progById(id);return p?p.name:null;};
+
+R.plan=function(){
+  const mo=aktMo();
+  const tage=[...Array(7)].map((_,i)=>{const d=addT(mo,i);return {d,k:dk(d),wd:WD[i]};});
+  const anzahl=tage.reduce((a,t)=>a+planTag(t.k).length,0);
+  const minGes=tage.reduce((a,t)=>a+planTag(t.k).reduce((x,b)=>x+blockDauer(b),0),0);
+  return `
+  <div class="kopf">
+    <span class="marke">NOVA<i>Plan</i></span>
+    <span class="kopf-sub mono">${anzahl?`${anzahl} Trainings · ${hmm(minGes)}`:"Woche noch leer"}</span>
+    <div class="kopf-akt"><button class="ib" data-nav="einstellungen" aria-label="Einstellungen">${ico("zahn")}</button></div>
+  </div>
+  <main>
+    <div class="wtag-kopf">
+      <button class="wtag-pf" data-woche="-1" aria-label="Woche zurück">${ico("zurueck")}</button>
+      <span class="wtag-sp">${istDieseWoche()?"Diese Woche":`${mo.getDate()}.${mo.getMonth()+1}. – ${addT(mo,6).getDate()}.${addT(mo,6).getMonth()+1}.`}</span>
+      <button class="wtag-pf" data-woche="1" aria-label="Woche vor">${ico("zurueck")}</button>
+    </div>
+    ${tage.map(t=>{
+      const bl=planTag(t.k);
+      return `<div class="pl-tag${t.k===heute()?" heute":""}">
+        <div class="pl-kopf">
+          <span class="pl-wd">${t.wd}</span>
+          <span class="pl-dat mono">${t.d.getDate()}.${t.d.getMonth()+1}.</span>
+          <button class="pl-plus" data-neu="${t.k}"
+            aria-label="Training am ${t.wd}, ${t.d.getDate()}.${t.d.getMonth()+1}. planen">${ico("plus")}</button>
+        </div>
+        ${bl.length?`<div class="pl-liste">${bl.map(blockZeile).join("")}</div>`
+                   :`<div class="pl-leer">nichts geplant</div>`}
+      </div>`;}).join("")}
+  </main>
+  ${navi()}`;
+};
+
+function blockZeile(b){
+  const d=dz(b.disz), e=blockEinheit(b.id);
+  return `<button class="pl-block${e?" fertig":""}" style="--dc:${d.farbe}" data-block="${b.id}">
+    <span class="pl-zeit mono">${b.start}</span>
+    <span class="pl-n">${esc(b.prog&&progName(b.prog)||d.n)}${
+      b.notiz?`<small>${esc(b.notiz)}</small>`:""}</span>
+    <span class="pl-dauer mono">${hmm(blockDauer(b))}</span>
+    <span class="pl-ok">${e?ico("check"):""}</span>
+  </button>`;
+}
+
+/* ── Block anlegen und ändern ──────────────────────── */
+let PB=null;
+function blockNeu(datum){
+  const letzte=planTag(datum).slice(-1)[0];
+  const start=letzte?min2hm(Math.min(hm2min(letzte.end)+30,1380)):"18:00";
+  PB={id:uid(), datum, disz:"tennis", prog:null,
+      start, end:min2hm(hm2min(start)+dz("tennis").std), notiz:"", neu:true};
+  pbBlatt();
+}
+function blockOeffnen(id){
+  const tr=blockById(id); if(!tr) return;
+  PB={...tr.block, datum:tr.datum, neu:false};
+  pbBlatt();
+}
+function pbSetz(feld,wert){
+  PB[feld]=wert;
+  /* Disziplin gewechselt: Dauer auf den üblichen Wert der neuen
+     Disziplin bringen, solange nichts Eigenes eingestellt wurde. */
+  if(feld==="disz"){
+    PB.prog=null;
+    PB.end=min2hm(hm2min(PB.start)+dz(wert).std);
+  }
+  if(feld==="prog"&&wert){
+    const p=progById(wert);
+    if(p){ PB.disz=p.disz; PB.end=min2hm(hm2min(PB.start)+dz(p.disz).std); }
+  }
+  pbBlatt();
+}
+function pbZeit(feld,wert){
+  PB[feld]=wert;
+  if(feld==="start"&&hm2min(PB.end)<=hm2min(wert))
+    PB.end=min2hm(hm2min(wert)+dz(PB.disz).std);
+  pbBlatt();
+}
+function pbSichern(){
+  PB.notiz=document.getElementById("pbNotiz")?.value.trim()||"";
+  const {datum,neu,...block}=PB;
+  /* Verschoben? Dann am alten Tag entfernen, sonst stünde er zweimal. */
+  const vorher=blockById(block.id);
+  if(vorher&&vorher.datum!==datum){
+    S.plan[vorher.datum]=(S.plan[vorher.datum]||[]).filter(x=>x.id!==block.id);
+    if(!S.plan[vorher.datum].length) delete S.plan[vorher.datum];
+  }
+  planSichern(datum,block);
+  zu(); zeichnen();
+  toast(neu?"Eingeplant":"Plan geändert");
+}
+function pbLoeschen(){
+  if(!confirm("Geplantes Training entfernen?")) return;
+  planLoeschen(PB.id); zu(); zeichnen(); toast("Aus dem Plan entfernt");
+}
+function pbBlatt(){
+  const d=dz(PB.disz);
+  const progs=progAlle().filter(p=>p.disz===PB.disz);
+  const zeiten=[];
+  for(let m=5*60;m<=23*60;m+=30) zeiten.push(min2hm(m));
+  const tage=[...Array(7)].map((_,i)=>{const x=addT(aktMo(),i);return {k:dk(x),l:WD[i]};});
+  return blatt(`<div style="--dc:${d.farbe}">
+    <h3 style="display:flex;align-items:center;gap:11px">
+      <span class="dz-ico" style="width:32px;height:32px;border-radius:9px">${ico(d.ico)}</span>
+      ${PB.neu?"Training einplanen":"Geplantes Training"}</h3>
+
+    <div class="feldblock"><label>Was?</label>
+      <div class="chips">
+        ${DISZ.map(x=>`<button class="chip${PB.disz===x.id?" on":""}"
+          onclick="pbSetz('disz','${x.id}')">${x.n}</button>`).join("")}
+      </div>
+    </div>
+
+    ${progs.length?`<div class="feldblock"><label>Welches Programm?</label>
+      <div class="chips">
+        ${progs.map(p=>`<button class="chip${PB.prog===p.id?" on":""}"
+          onclick="pbSetz('prog','${p.id}')">${esc(p.name)}${
+            p.uebungen.length?` · ${p.uebungen.length}`:""}</button>`).join("")}
+        <button class="chip${PB.prog?"":" on"}" onclick="pbSetz('prog',null)">ohne</button>
+      </div>
+    </div>`:""}
+
+    <div class="feldblock"><label>Wann?</label>
+      <div class="chips">
+        ${tage.map(t=>`<button class="chip${PB.datum===t.k?" on":""}"
+          onclick="pbSetz('datum','${t.k}')">${t.l}</button>`).join("")}
+      </div>
+    </div>
+
+    <div class="feldblock"><label>Von wann bis wann?</label>
+      <div class="pb-zeit">
+        <select onchange="pbZeit('start',this.value)">
+          ${zeiten.map(z=>`<option value="${z}"${z===PB.start?" selected":""}>${z}</option>`).join("")}
+        </select>
+        <span>bis</span>
+        <select onchange="pbZeit('end',this.value)">
+          ${zeiten.map(z=>`<option value="${z}"${z===PB.end?" selected":""}>${z}</option>`).join("")}
+        </select>
+        <span class="mono" style="color:var(--dc)">${hmm(blockDauer(PB))}</span>
+      </div>
+    </div>
+
+    <div class="feldblock"><label>Notiz</label>
+      <textarea id="pbNotiz" rows="2" placeholder="Medenspiel, Platz 3, mit Andreas …">${esc(PB.notiz||"")}</textarea>
+    </div>
+
+    <div class="blatt-akt">
+      ${PB.neu?`<button class="b" onclick="zu()">Abbrechen</button>`
+              :`<button class="b" onclick="pbLoeschen()">Entfernen</button>`}
+      <button class="b b-dz" onclick="pbSichern()">${PB.neu?"Einplanen":"Sichern"}</button>
+    </div>
+  </div>`);
+}
+
+/* Geplanten Block hinterher eintragen. Ist er schon erfasst, führt
+   der Weg direkt ins Ändern — nie ein zweiter Eintrag für dasselbe. */
+function blockErledigen(id){
+  const tr=blockById(id); if(!tr) return;
+  const b=tr.block, d=dz(b.disz), fertig=blockEinheit(id);
+  if(fertig) return nachtragen(b.disz,fertig);
+  const p=b.prog?progById(b.prog):null;
+  const mitSaetzen=p&&p.uebungen&&p.uebungen.length;
+  if(!mitSaetzen) return ntAusBlock(b,tr.datum);
+  blatt(`<div style="--dc:${d.farbe}">
+    <h3>${esc(p.name)}</h3>
+    <p style="color:var(--faint);font-size:13.5px;margin-bottom:16px">
+      ${b.start}–${b.end} · ${hmm(blockDauer(b))} geplant</p>
+    <div class="prog-wahl">
+      <button class="prog-wahl-z" onclick="zu();progStarten('${p.id}','${b.id}')">
+        <span class="prog-wahl-n"><span class="prog-wahl-t">Sätze erfassen</span>
+        <span class="prog-wahl-s">Mit Uhr und Satzprotokoll — für jetzt</span></span></button>
+      <button class="prog-wahl-z" onclick="zu();ntAusBlock(blockById('${b.id}').block,'${tr.datum}')">
+        <span class="prog-wahl-n"><span class="prog-wahl-t">Nur eintragen</span>
+        <span class="prog-wahl-s">Dauer erfassen, ohne Sätze — für hinterher</span></span></button>
+    </div>
+  </div>`);
+}
+function ntAusBlock(b,datum){
+  NT={disz:b.disz, datum, dauer:blockDauer(b),
+      unter:b.prog?progName(b.prog):null, rpe:null, notiz:b.notiz||"",
+      bearbeitet:null, block:b.id, prog:b.prog||null};
+  ntBlatt();
+}
+
 /* ── Navigation ────────────────────────────────────── */
-const NAV=[["start","Start","haus"],["verlauf","Verlauf","chart"],
+const NAV=[["start","Start","haus"],["plan","Plan","cal"],["verlauf","Verlauf","chart"],
            ["uebungen","Übungen","liste"],["einstellungen","Mehr","zahn"]];
 const navi=()=>`<nav>${NAV.map(([id,t,i])=>
   `<button class="${VIEW===id?"on":""}" data-nav="${id}">${ico(i)}<span>${t}</span></button>`).join("")}</nav>`;
@@ -1570,6 +1884,12 @@ document.addEventListener("click",ev=>{
   if(w&&!w.disabled) return wocheSchieben(+w.dataset.woche);
   const tw=ev.target.closest("[data-tagwahl]");
   if(tw&&!tw.disabled) return tagWaehlen(tw.dataset.tagwahl);
+  const nb=ev.target.closest("[data-neu]");
+  if(nb) return blockNeu(nb.dataset.neu);
+  const bb=ev.target.closest("[data-block]");
+  if(bb) return blockOeffnen(bb.dataset.block);
+  const be=ev.target.closest("[data-erledigen]");
+  if(be) return blockErledigen(be.dataset.erledigen);
   const t=ev.target.closest("[data-tag]");
   if(t&&!t.disabled){ const[id,tag]=t.dataset.tag.split("|"); tickToggle(id,tag); }
 });
@@ -1614,10 +1934,10 @@ function uhrLauf(){
 /* ── Ablauf ────────────────────────────────────────── */
 /* Aus einem Programm heraus starten: die Übungen liegen in der
    richtigen Reihenfolge bereit, die erste ist offen. */
-function progStarten(pid){
+function progStarten(pid,block){
   const p=progById(pid); if(!p) return;
   if(S.laufend&&!confirm("Es läuft schon eine Einheit. Verwerfen?")) return;
-  S.laufend={id:uid(),disz:p.disz,programm:p.id,start:Date.now(),unter:p.name,
+  S.laufend={id:uid(),disz:p.disz,programm:p.id,block:block||null,start:Date.now(),unter:p.name,
     rpe:null,notiz:"",kg:20,wdh:10,rir:null,pause:null,
     uebungen:p.uebungen.map(([n])=>({name:n,saetze:[]})),
     soll:Object.fromEntries(p.uebungen.map(([n,st,w])=>[n,{saetze:st,wdh:w}])),
@@ -1681,7 +2001,7 @@ function programWaehlen(diszId,programme){
    Beim Tennis steht man nicht am Handy, um eine Uhr zu starten,
    und hinterher weiß man ohnehin nur ungefähr, wie lang es war.
    Deshalb: Datum, Dauer, Art — drei Tipper, fertig. */
-let NT={disz:null,datum:null,dauer:0,unter:null,rpe:null,bearbeitet:null};
+let NT={disz:null,datum:null,dauer:0,unter:null,rpe:null,bearbeitet:null,block:null,prog:null};
 const NT_BEISPIEL={tennis:"Gegner, Ergebnis, wie es lief",zone2:"Strecke, Wetter, wie es lief",
   mobility:"Was gedehnt, wie beweglich",athletik:"Übungen, Bedingungen, wie es lief"};
 const ntPlatzhalter=id=>NT_BEISPIEL[id]||"Wie es lief";
@@ -1689,8 +2009,10 @@ function nachtragen(id,vorhandene){
   const d=dz(id);
   NT = vorhandene
     ? {disz:id,datum:vorhandene.datum,dauer:vorhandene.dauer,unter:vorhandene.unter,
-       rpe:vorhandene.rpe,bearbeitet:vorhandene.id}
-    : {disz:id,datum:heute(),dauer:d.std,unter:null,rpe:null,bearbeitet:null};
+       rpe:vorhandene.rpe,notiz:vorhandene.notiz||"",bearbeitet:vorhandene.id,
+       block:vorhandene.block||null,prog:vorhandene.programm||null}
+    : {disz:id,datum:AKT_TAG,dauer:d.std,unter:null,rpe:null,notiz:"",
+       bearbeitet:null,block:null,prog:null};
   ntBlatt();
 }
 function ntBlatt(){
@@ -1765,15 +2087,18 @@ function ntSichern(){
   /* Passt genau ein Wochenziel zu dieser Disziplin — bei Mobility der
      Fall —, zählt der Eintrag automatisch dafür, ohne dass zusätzlich
      oben angehakt werden müsste. */
-  const passendesProgramm=einzigesProgramm(NT.disz);
+  /* Kam die Einheit aus einem geplanten Block, gilt dessen Programm —
+     das ist die genauere Information als die Ableitung aus der
+     Disziplin. */
+  const passendesProgramm=NT.prog||einzigesProgramm(NT.disz);
   if(NT.bearbeitet){
     const e=S.einheiten.find(x=>x.id===NT.bearbeitet);
     if(e) Object.assign(e,{datum:NT.datum,dauer:NT.dauer,unter:NT.unter,rpe:NT.rpe,notiz,
-      programm:passendesProgramm||e.programm||null});
+      programm:passendesProgramm||e.programm||null, block:NT.block||e.block||null});
   } else {
     S.einheiten.push({id:uid(),datum:NT.datum,disz:NT.disz,unter:NT.unter,
       dauer:NT.dauer,rpe:NT.rpe,notiz,programm:passendesProgramm||null,
-      uebungen:[],beendet:Date.now()});
+      block:NT.block||null, uebungen:[],beendet:Date.now()});
   }
   S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
   sichernSofort(); zu(); zeichnen();
@@ -1839,6 +2164,7 @@ function beenden(){
   const min=Math.max(1,Math.round((Date.now()-L.start)/60000));
   const notiz=document.getElementById("notiz")?.value ?? L.notiz;
   const e={id:L.id,datum:dk(new Date(L.start)),disz:L.disz,unter:L.unter,programm:L.programm||null,
+           block:L.block||null,
            dauer:min,rpe:L.rpe,notiz:notiz||null,
            uebungen:(L.uebungen||[]).filter(u=>u.saetze.length),
            beendet:Date.now()};
@@ -1972,7 +2298,24 @@ function fuerNova(){
       kraftSubtype:e.disz==="kraft"&&e.unter?e.unter.toLowerCase():null
     });
   });
-  return {quelle:"NOVA Training", stand:new Date().toISOString(), sport:o};
+  /* Der Plan wandert als Zeitblöcke in NOVAs Planer. Die Kennungen
+     tragen dasselbe Präfix wie die Einheiten, damit NOVA auf seiner
+     Seite zweifelsfrei erkennt, was von hier stammt — und nur das
+     anfasst. Grabsteine reisen mit, sonst bliebe ein hier gelöschtes
+     Training in NOVA für immer stehen. */
+  const pl={};
+  Object.entries(S.plan||{}).forEach(([datum,liste])=>{
+    (liste||[]).forEach(b=>{
+      const d=dz(b.disz);
+      (pl[datum]=pl[datum]||[]).push({
+        id:"satz_"+b.id, type:d.novaPlan||"sport",
+        start:b.start, end:b.end,
+        note:[b.prog&&progName(b.prog)||d.n, b.notiz].filter(Boolean).join(" · ")
+      });
+    });
+  });
+  return {quelle:"NOVA Training", stand:new Date().toISOString(),
+          sport:o, planer:pl, planerWeg:Object.keys(S.planWeg||{}).map(id=>"satz_"+id)};
 }
 async function hochladen(){
   if(!syncAn()) return;
@@ -2040,6 +2383,31 @@ function mischeFerneDaten(fern){
   });
   hakenNeuAufbauen();
 
+  /* Plan: je Block gewinnt der jüngere Stand, Grabsteine räumen ab.
+     Dieselbe Regel wie bei den Häkchen — ein rein hinzufügender
+     Abgleich könnte ein gelöschtes oder verschobenes Training sonst
+     nie loswerden. */
+  S.plan=S.plan||{}; S.planWeg=S.planWeg||{};
+  Object.entries(fern.planWeg||{}).forEach(([id,t])=>{
+    if(!S.planWeg[id]||t>S.planWeg[id]) S.planWeg[id]=t;
+  });
+  Object.entries(fern.plan||{}).forEach(([datum,liste])=>{
+    (liste||[]).forEach(b=>{
+      if(!b||!b.id||S.planWeg[b.id]) return;
+      const da=blockById(b.id);
+      if(!da){ (S.plan[datum]=S.plan[datum]||[]).push(b); return; }
+      if((b.t||0)>(da.block.t||0)){                 /* fern ist jünger */
+        S.plan[da.datum]=S.plan[da.datum].filter(x=>x.id!==b.id);
+        if(!S.plan[da.datum].length) delete S.plan[da.datum];
+        (S.plan[datum]=S.plan[datum]||[]).push(b);
+      }
+    });
+  });
+  Object.keys(S.plan).forEach(datum=>{
+    S.plan[datum]=S.plan[datum].filter(b=>!S.planWeg[b.id]);
+    if(!S.plan[datum].length) delete S.plan[datum];
+  });
+
   if(n) S.einheiten.sort((a,b)=>a.datum.localeCompare(b.datum)||(a.beendet||0)-(b.beendet||0));
   try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
   return n;
@@ -2059,7 +2427,8 @@ async function hochladenVoll(){
     }
     const inhalt=btoa(unescape(encodeURIComponent(JSON.stringify(
       {einheiten:S.einheiten,uebungen:S.uebungen,haken:S.haken||{},
-       hakenLog:S.hakenLog||{},weg:S.weg||{}}))));
+       hakenLog:S.hakenLog||{},weg:S.weg||{},
+       plan:S.plan||{},planWeg:S.planWeg||{}}))));
     const r=await fetch(VOLL_API,{method:"PUT",headers:{...kopf,"Content-Type":"application/json"},
       body:JSON.stringify({message:"Training "+new Date().toISOString(),content:inhalt,sha:vollSha||undefined})});
     if(r.ok){ vollSha=(await r.json()).content.sha; zeichnen(); }

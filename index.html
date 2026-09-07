@@ -741,6 +741,27 @@ select option{ background:#141a26; }
   .pl-todo{ grid-column:1/-1; } }
 @media(max-width:640px){ .pl-grid{ grid-template-columns:minmax(0,1fr); } }
 
+/* Trainingsplaner: die ganze Woche als Stundenplan. Sieben Spalten
+   passen auf keinem Handy nebeneinander — deshalb waagerecht
+   scrollbar, mit der Stundenspalte fest am linken Rand, damit man
+   beim Schieben nie die Uhrzeit verliert. */
+.tp-scroll{ overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
+.tp-raster{ display:flex; min-width:max-content; }
+.tp-uhr{
+  flex:0 0 auto; width:26px; position:sticky; left:0; z-index:2;
+  background:var(--surf); border-right:1px solid var(--line);
+}
+.tp-sp{ flex:0 0 auto; width:104px; border-right:1px solid var(--line); }
+.tp-sp:last-child{ border-right:0; }
+.tp-sp.heute{ background:rgba(79,227,210,.05); }
+.tp-kopf{
+  height:30px; display:grid; place-items:center; font-size:var(--t-sm); font-weight:700;
+  border-bottom:1px solid var(--line); color:var(--text-dim);
+}
+.tp-sp.heute .tp-kopf{ color:var(--c1); }
+.tp-spalte{ position:relative; }
+@media(max-width:640px){ .tp-sp{ width:88px; } }
+
 /* Aufgabenzeile im Planer */
 .td-row{
   display:flex; align-items:flex-start; gap:8px; padding:9px 10px;
@@ -982,7 +1003,7 @@ const CLOUD_ON="nova_cloud_on", CLOUD_TOK="nova_gh_token";
 const GH_USER="mattiknp", GH_REPO="routine-tracker", GH_FILE="nova.json";
 const GH_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
 
-const blank=()=>({habits:[],habitLog:{},metrics:{},sport:{},todos:[],planer:{},
+const blank=()=>({habits:[],habitLog:{},metrics:{},sport:{},todos:[],planer:{},tplan:{},
   dayCheck:{},planerTypes:[],planerHidden:[],sportTypes:[],sportHidden:[],
   goals:{sleep:8,study:3,phone:0,sport:300},zielTage:null,notes:{},mood:{},water:{},todoFocus:null});
 
@@ -1069,6 +1090,19 @@ const today=()=>dk(new Date());
 const sow=d=>{ const x=new Date(d); const w=(x.getDay()+6)%7; x.setDate(x.getDate()-w); x.setHours(0,0,0,0); return x; };
 const WD=["Mo","Di","Mi","Do","Fr","Sa","So"];
 const WDL=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+
+/* ── Trainingsplaner ────────────────────────────────────
+   Anders als der Tagesplaner hängt er nicht am Datum, sondern am
+   Wochentag: ein fester Stundenplan, der jede Woche gleich gilt.
+   Deshalb 0..6 als Schlüssel (0 = Montag), nicht "2026-09-07".
+   ──────────────────────────────────────────────────────── */
+const TWD=["Mo","Di","Mi","Do","Fr","Sa","So"];
+const TWDL=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+const tplanTag=i=>((S.tplan&&S.tplan[i])||[]).slice()
+  .sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+/* Montag als 0: getDay() liefert Sonntag als 0, das passt nicht zu
+   einer Woche, die montags beginnt. */
+const wtagIdx=d=>(d.getDay()+6)%7;
 const MS=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
 const MSL=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
 const fmtLong=d=>`${WDL[d.getDay()]}, ${d.getDate()}. ${MSL[d.getMonth()]} ${d.getFullYear()}`;
@@ -4204,7 +4238,186 @@ R.verlauf=function(){
    14 — PLANER
    ============================================================ */
 let plDate=today(), plSel=0, plDragType=null, plDragTodo=null, todoPrio="mid";
+let tpTyp=null;
 const PL_H0=6, PL_H1=24, PL_HH=34;
+
+/* Nur Trainingsarten — Lernen und Aufgaben gehören in den Tagesplan
+   darüber, nicht in den Stundenplan fürs Training. Eigene Typen, die
+   du selbst angelegt hast (etwa „kondi"), zählen mit. */
+const TP_TYPEN=["tennis","gym","sport","zone2","mobility"];
+const tplanTypen=()=>BLOCKS.concat(S.planerTypes||[])
+  .filter(t=>!(S.planerHidden||[]).includes(t.id))
+  .filter(t=>TP_TYPEN.includes(t.id)||String(t.id).startsWith("c_"));
+const TP_HH=30;                       /* etwas flacher als der Tagesplan: 7 Spalten */
+
+function tplanStunden(){
+  /* Zeigt nur den Bereich, in dem wirklich etwas steht — plus Luft.
+     Ein leerer Plan startet bei 6, damit man sieht, wo man anfängt. */
+  let von=24, bis=0;
+  for(let i=0;i<7;i++) tplanTag(i).forEach(b=>{
+    von=Math.min(von,Math.floor(hm2min(b.start)/60));
+    bis=Math.max(bis,Math.ceil(hm2min(b.end)/60));
+  });
+  if(von>bis) return [6,23];
+  return [Math.max(0,Math.min(von-1,22)), Math.min(24,Math.max(bis+1,von+3))];
+}
+
+function tplanHtml(){
+  const [H0,H1]=tplanStunden();
+  const heuteIdx=wtagIdx(new Date());
+  const anzahl=[...Array(7)].reduce((a,_,i)=>a+tplanTag(i).length,0);
+  const minGes=[...Array(7)].reduce((a,_,i)=>
+    a+tplanTag(i).reduce((x,b)=>x+Math.max(0,hm2min(b.end)-hm2min(b.start)),0),0);
+
+  const spalte=i=>{
+    let rows="";
+    for(let h=H0;h<H1;h++)
+      rows+=`<div data-tslot="${i}|${h}" style="height:${TP_HH}px;border-top:1px solid var(--line);cursor:pointer"></div>`;
+    let bl="";
+    tplanTag(i).forEach(b=>{
+      const t=blockById(b.type);
+      const von=hm2min(b.start), bis=Math.max(von+15,hm2min(b.end));
+      const top=(von/60-H0)*TP_HH, hh=Math.max(15,(bis-von)/60*TP_HH);
+      bl+=`<div data-tblk="${i}|${b.id}" title="${esc(b.note||t.label)} · ${b.start}–${b.end}"
+        style="position:absolute;left:2px;right:2px;top:${top}px;height:${hh-2}px;border-radius:var(--r-xs);
+        background:${t.bg};padding:${hh>28?"4px 6px":"0 6px"};overflow:hidden;cursor:pointer;
+        box-shadow:var(--sh-1);color:#08111a;font-size:${hh>28?"11px":"9.5px"};line-height:1.2">
+        <b style="font-weight:700">${esc(b.note||t.label)}</b>${
+          hh>40?`<div style="opacity:.75;font-size:9px;margin-top:1px">${b.start}–${b.end}</div>`:""}</div>`;
+    });
+    return `<div class="tp-sp${i===heuteIdx?" heute":""}">
+      <div class="tp-kopf">${TWD[i]}</div>
+      <div class="tp-spalte">${rows}${bl}</div>
+    </div>`;
+  };
+
+  let stunden="";
+  for(let h=H0;h<H1;h++)
+    stunden+=`<div style="height:${TP_HH}px;border-top:1px solid var(--line);font-family:var(--f-mono);
+      font-size:9px;color:var(--text-faint);padding-right:5px;text-align:right;line-height:1">${p2(h)}</div>`;
+
+  return `
+  <div class="p-head" style="margin:26px 0 14px">
+    <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Trainingsplaner</div>
+    <div class="p-note">Dein fester Wochenrhythmus — gilt jede Woche gleich.
+      Art wählen, dann eine Stunde antippen.</div></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span class="tag">${anzahl?`${anzahl} · ${Math.round(minGes/6)/10} h`:"leer"}</span>
+      <button class="b b-sm" id="tpUeber">In die Woche übernehmen</button></div>
+  </div>
+  <div class="p" style="margin-bottom:14px">
+    <div class="p-title" style="margin-bottom:10px;font-size:var(--t-base)">Trainingsarten</div>
+    <div class="chips">${tplanTypen().map(t=>
+      `<button class="chip" data-tbt="${t.id}"
+        style="border-color:${t.bg}66;background:${t.bg}1f;color:${t.bg}">${esc(t.label)}</button>`).join("")}</div>
+  </div>
+  <div class="p" style="padding:0;overflow:hidden">
+    <div class="tp-scroll">
+      <div class="tp-raster">
+        <div class="tp-uhr"><div class="tp-kopf">&nbsp;</div>${stunden}</div>
+        ${[...Array(7)].map((_,i)=>spalte(i)).join("")}
+      </div>
+    </div>
+  </div>`;
+}
+
+function tplanWiring(V){
+  V.querySelectorAll("[data-tbt]").forEach(b=>b.onclick=()=>{
+    tpTyp=b.dataset.tbt;
+    V.querySelectorAll("[data-tbt]").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    toast(blockById(tpTyp).label+" gewählt, jetzt eine Stunde antippen");
+  });
+  V.querySelectorAll("[data-tslot]").forEach(s=>s.onclick=()=>{
+    const [i,h]=s.dataset.tslot.split("|").map(Number);
+    if(!tpTyp){ toast("Erst eine Trainingsart wählen","x"); return; }
+    openTBlock(i,tpTyp,p2(h)+":00",p2(Math.min(23,h+1))+":00",null,null);
+  });
+  V.querySelectorAll("[data-tblk]").forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const [i,id]=b.dataset.tblk.split("|");
+    const bl=tplanTag(+i).find(x=>x.id===id);
+    if(bl) openTBlock(+i,bl.type,bl.start,bl.end,bl.note,id);
+  });
+  V.querySelector("#tpUeber")?.addEventListener("click",tplanUebernehmenModal);
+}
+
+function openTBlock(i,type,start,end,note,id){
+  modal(`<h3>${id?"Training bearbeiten":"Training einplanen"}</h3>
+    <label>Art</label>
+    <select id="tbType">${tplanTypen().map(t=>`<option value="${t.id}"${t.id===type?" selected":""}>${esc(t.label)}</option>`).join("")}</select>
+    <label>Wochentag</label>
+    <select id="tbTag">${TWDL.map((l,x)=>`<option value="${x}"${x===i?" selected":""}>${l}</option>`).join("")}</select>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label>Von</label><input type="time" id="tbS" value="${start}"></div>
+      <div style="flex:1"><label>Bis</label><input type="time" id="tbE" value="${end}"></div></div>
+    <label>Notiz</label><input id="tbN" value="${esc(note||"")}" placeholder="Halle 2, mit Andreas …">
+    <div class="mo-act">
+      ${id?`<button class="b" id="tbDel" style="margin-right:auto;color:var(--bad)">${ico("trash")}Löschen</button>`:""}
+      <button class="b" onclick="closeModal()">Abbrechen</button>
+      <button class="b b-1" id="tbSave">Speichern</button></div>`);
+  document.getElementById("tbSave").onclick=()=>{
+    const t=document.getElementById("tbType").value;
+    const tag=+document.getElementById("tbTag").value;
+    const st=document.getElementById("tbS").value||start;
+    const en=document.getElementById("tbE").value||end;
+    const n=document.getElementById("tbN").value.trim();
+    S.tplan=S.tplan||{};
+    if(id){                                   /* Tag gewechselt? Dann umhängen. */
+      for(let x=0;x<7;x++) if(S.tplan[x]) S.tplan[x]=S.tplan[x].filter(b=>b.id!==id);
+      (S.tplan[tag]=S.tplan[tag]||[]).push({id,type:t,start:st,end:en,note:n});
+    } else {
+      (S.tplan[tag]=S.tplan[tag]||[]).push({id:uid(),type:t,start:st,end:en,note:n});
+    }
+    for(let x=0;x<7;x++) if(S.tplan[x]&&!S.tplan[x].length) delete S.tplan[x];
+    save(); closeModal(); toast(id?"Gespeichert":"Eingeplant"); R.planer();
+  };
+  const del=document.getElementById("tbDel");
+  if(del) del.onclick=()=>{
+    for(let x=0;x<7;x++) if(S.tplan[x]) S.tplan[x]=S.tplan[x].filter(b=>b.id!==id);
+    for(let x=0;x<7;x++) if(S.tplan[x]&&!S.tplan[x].length) delete S.tplan[x];
+    save(); closeModal(); toast("Gelöscht"); R.planer();
+  };
+}
+
+/* Den festen Plan in eine echte Woche schreiben. Bewusst auf Knopf­druck
+   statt stillschweigend: der Tagesplaner gehört dir, da soll nichts von
+   allein hineinlaufen. Mehrfaches Übernehmen fügt nichts doppelt ein —
+   jeder erzeugte Block trägt die Kennung seiner Vorlage und des Tages. */
+function tplanUebernehmen(montag){
+  let n=0;
+  S.planer=S.planer||{};
+  for(let i=0;i<7;i++){
+    const k=dk(addD(montag,i));
+    tplanTag(i).forEach(b=>{
+      const id="tp_"+b.id+"_"+k;
+      if(!S.planer[k]) S.planer[k]=[];
+      if(S.planer[k].some(x=>x.id===id)) return;      /* schon übernommen */
+      S.planer[k].push({id,type:b.type,start:b.start,end:b.end,note:b.note||""});
+      n++;
+    });
+    if(S.planer[k]&&!S.planer[k].length) delete S.planer[k];
+  }
+  if(n) save();
+  return n;
+}
+function tplanUebernehmenModal(){
+  const mo=sow(new Date());
+  const naechste=addD(mo,7);
+  const zeig=d=>`${fmtShort(d)} – ${fmtShort(addD(d,6))}`;
+  modal(`<h3>In die Woche übernehmen</h3>
+    <p style="color:var(--text-dim);font-size:var(--t-sm);line-height:1.5;margin-bottom:14px">
+      Schreibt deinen festen Trainingsplan als Blöcke in den Tagesplaner.
+      Schon übernommene Trainings werden nicht doppelt eingefügt.</p>
+    <div class="mo-act" style="flex-wrap:wrap">
+      <button class="b" onclick="closeModal()">Abbrechen</button>
+      <button class="b" id="tpW1">Diese Woche · ${zeig(mo)}</button>
+      <button class="b b-1" id="tpW2">Nächste · ${zeig(naechste)}</button></div>`);
+  const lauf=d=>{ const n=tplanUebernehmen(d); closeModal();
+    toast(n?`${n} ${n===1?"Training":"Trainings"} übernommen`:"Alles schon übernommen"); R.planer(); };
+  document.getElementById("tpW1").onclick=()=>lauf(mo);
+  document.getElementById("tpW2").onclick=()=>lauf(naechste);
+}
 
 R.planer=function(){
   const base=parsedk(plDate);
@@ -4317,6 +4530,8 @@ R.planer=function(){
       </div></div>
   </div>`;
 
+  document.getElementById("v-planer").insertAdjacentHTML("beforeend", tplanHtml());
+
   const V=document.getElementById("v-planer");
   V.querySelector("#plPrev").onclick=()=>{ plDate=dk(addD(parsedk(plDate),-1)); R.planer(); };
   V.querySelector("#plNext").onclick=()=>{ plDate=dk(addD(parsedk(plDate),1)); R.planer(); };
@@ -4397,6 +4612,7 @@ R.planer=function(){
     save(); ti.value=""; R.planer(); };
   V.querySelector("#tdAdd").onclick=addT;
   ti.onkeydown=e=>{ if(e.key==="Enter") addT(); };
+  tplanWiring(V);
 };
 
 /* Altlasten einzeln durchgehen. Ohne diese Frage wächst die Liste

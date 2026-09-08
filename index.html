@@ -745,6 +745,28 @@ select option{ background:#141a26; }
    passen auf keinem Handy nebeneinander — deshalb waagerecht
    scrollbar, mit der Stundenspalte fest am linken Rand, damit man
    beim Schieben nie die Uhrzeit verliert. */
+/* Sperre: gestreift, nie flächig. Eine gesperrte Stunde ist kein
+   Training, sie sieht deshalb bewusst anders aus. */
+.tp-sperre{
+  background:repeating-linear-gradient(45deg,
+    rgba(125,136,153,.42) 0 5px, rgba(125,136,153,.14) 5px 10px);
+  border:1px solid rgba(125,136,153,.5);
+}
+/* Dieselbe Sperre im Zwei-Tage-Planer oben — nur Anzeige, kein
+   Eintrag: nicht anklickbar, liegt hinter den echten Blöcken. */
+.pl-sperre{
+  position:absolute; left:38px; right:5px; z-index:0; pointer-events:none;
+  border-radius:var(--r-xs); overflow:hidden;
+  background:repeating-linear-gradient(45deg,
+    rgba(125,136,153,.30) 0 5px, rgba(125,136,153,.10) 5px 10px);
+  border:1px dashed rgba(125,136,153,.45);
+  display:flex; align-items:center;
+}
+.pl-sperre span{
+  font-size:10px; color:var(--text-faint); padding:0 7px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
 .tp-scroll{
   overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch;
   /* Ohne diese Zeile schluckt der waagerechte Scrollbereich auch das
@@ -1301,8 +1323,23 @@ const BLOCKS=[
   {id:"zone2",label:"Zone 2",bg:"#4fe3d2"},{id:"schlafen",label:"Schlafen",bg:"#8b7cf0"},
   {id:"mobility",label:"Mobility",bg:"#d488b8"},{id:"todo",label:"Aufgabe",bg:"#d9a441"},
   {id:"sonstig",label:"Sonstiges",bg:"#7d8899"},
+  /* Krafttraining getrennt nach Bereich. „gym" bleibt bestehen, sonst
+     verlören alle schon geplanten Gym-Blöcke ihre Farbe und ihren
+     Namen — die drei kommen dazu, sie ersetzen nichts. */
+  {id:"kraft_ob",label:"Kraft Oberkörper",bg:"#e8825e"},
+  {id:"kraft_ba",label:"Kraft Bauch",bg:"#eba85f"},
+  {id:"kraft_un",label:"Kraft Unterkörper",bg:"#d2683f"},
+  /* Reine Zeitsperre: es zählt nur, DASS die Zeit weg ist. Wird beim
+     Übernehmen bewusst nicht in den Tagesplaner geschrieben. */
+  {id:"blocked",label:"Geblockt",bg:"#7d8899"},
 ];
-const blockTypes=()=>BLOCKS.concat(S.planerTypes||[]).filter(t=>!(S.planerHidden||[]).includes(t.id));
+const IST_SPERRE=t=>t==="blocked";
+/* „Geblockt" ist ein Begriff des Trainingsplaners: eine Zeitsperre, die
+   bewusst NICHT in den Tagesplan übernommen wird. Als Baustein im
+   Tagesplaner wäre sie sinnlos — dort gibt es dafür „Sonstiges". */
+const blockTypes=()=>BLOCKS.concat(S.planerTypes||[])
+  .filter(t=>!(S.planerHidden||[]).includes(t.id))
+  .filter(t=>!IST_SPERRE(t.id));
 const blockById=id=>BLOCKS.concat(S.planerTypes||[]).find(t=>t.id===id)||BLOCKS[8];
 const planDay=k=>(S.planer&&S.planer[k])||[];
 const hm2min=s=>{ const[h,m]=String(s||"0:0").split(":").map(Number); return h*60+(m||0); };
@@ -4254,7 +4291,7 @@ const PL_H0=6, PL_H1=24, PL_HH=34;
 /* Nur Trainingsarten — Lernen und Aufgaben gehören in den Tagesplan
    darüber, nicht in den Stundenplan fürs Training. Eigene Typen, die
    du selbst angelegt hast (etwa „kondi"), zählen mit. */
-const TP_TYPEN=["tennis","gym","sport","zone2","mobility"];
+const TP_TYPEN=["kraft_ob","kraft_ba","kraft_un","tennis","sport","zone2","mobility","blocked"];
 const tplanTypen=()=>BLOCKS.concat(S.planerTypes||[])
   .filter(t=>!(S.planerHidden||[]).includes(t.id))
   .filter(t=>TP_TYPEN.includes(t.id)||String(t.id).startsWith("c_"));
@@ -4288,10 +4325,12 @@ function tplanHtml(){
       const t=blockById(b.type);
       const von=hm2min(b.start), bis=Math.max(von+15,hm2min(b.end));
       const top=(von/60-H0)*TP_HH, hh=Math.max(15,(bis-von)/60*TP_HH);
-      bl+=`<div data-tblk="${i}|${b.id}" title="${esc(b.note||t.label)} · ${b.start}–${b.end}"
+      const sperre=IST_SPERRE(b.type);
+      bl+=`<div data-tblk="${i}|${b.id}" class="${sperre?"tp-sperre":""}"
+        title="${esc(b.note||t.label)} · ${b.start}–${b.end}${sperre?" · wird nicht übernommen":""}"
         style="position:absolute;left:2px;right:2px;top:${top}px;height:${hh-2}px;border-radius:var(--r-xs);
-        background:${t.bg};padding:${hh>28?"4px 6px":"0 6px"};overflow:hidden;cursor:pointer;
-        box-shadow:var(--sh-1);color:#08111a;font-size:${hh>28?"11px":"9.5px"};line-height:1.2">
+        ${sperre?"":`background:${t.bg};`}padding:${hh>28?"4px 6px":"0 6px"};overflow:hidden;cursor:pointer;
+        box-shadow:var(--sh-1);color:${sperre?"var(--text-dim)":"#08111a"};font-size:${hh>28?"11px":"9.5px"};line-height:1.2">
         <b style="font-weight:700">${esc(b.note||t.label)}</b>${
           hh>40?`<div style="opacity:.75;font-size:9px;margin-top:1px">${b.start}–${b.end}</div>`:""}</div>`;
     });
@@ -4400,6 +4439,7 @@ function tplanUebernehmen(montag){
   for(let i=0;i<7;i++){
     const k=dk(addD(montag,i));
     tplanTag(i).forEach(b=>{
+      if(IST_SPERRE(b.type)) return;        /* Sperre ist keine Verabredung */
       const id="tp_"+b.id+"_"+k;
       if(!S.planer[k]) S.planer[k]=[];
       if(S.planer[k].some(x=>x.id===id)) return;      /* schon übernommen */
@@ -4450,6 +4490,14 @@ R.planer=function(){
       rows+=`<div data-slot="${idx}|${h}" style="height:${PL_HH}px;border-top:1px solid var(--line);position:relative;cursor:pointer">
         <span style="position:absolute;left:5px;top:2px;font-family:var(--f-mono);font-size:9px;color:var(--text-faint)">${p2(h)}</span></div>`;
     let bl="";
+    tplanTag(wtagIdx(c.d)).forEach(b=>{
+      if(!IST_SPERRE(b.type)) return;
+      const von=Math.max(hm2min(b.start),PL_H0*60), bis=Math.max(von+15,hm2min(b.end));
+      if(bis<=PL_H0*60) return;
+      const top=(von/60-PL_H0)*PL_HH, hh=Math.max(14,(bis-von)/60*PL_HH);
+      bl+=`<div class="pl-sperre" title="Geblockt${b.note?" · "+esc(b.note):""} · aus dem Trainingsplaner"
+        style="top:${top}px;height:${hh-2}px">${hh>26?`<span>${esc(b.note||"Geblockt")}</span>`:""}</div>`;
+    });
     segs.forEach(g=>{
       const t=blockById(g.b.type);
       const from=Math.max(g.from,PL_H0*60), to=Math.max(from+15,g.to);

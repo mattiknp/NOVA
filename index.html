@@ -745,6 +745,37 @@ select option{ background:#141a26; }
    passen auf keinem Handy nebeneinander — deshalb waagerecht
    scrollbar, mit der Stundenspalte fest am linken Rand, damit man
    beim Schieben nie die Uhrzeit verliert. */
+/* Ereignisse: gehören an einen Tag, nicht an eine Uhrzeit — deshalb
+   eine Zeile über dem Stundenraster statt eines Blocks darin. */
+.ev-leiste{
+  display:flex; flex-wrap:wrap; gap:5px; padding:8px 14px;
+  border-bottom:1px solid var(--line); background:rgba(255,255,255,.02);
+}
+.ev-chip{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:4px 9px; border-radius:var(--r-pill); font-size:var(--t-xs);
+  border:1px solid color-mix(in srgb, var(--ev) 45%, transparent);
+  background:color-mix(in srgb, var(--ev) 13%, transparent);
+  color:var(--text); max-width:100%; cursor:pointer;
+  transition:background-color var(--d2) var(--ez);
+}
+.ev-chip:hover{ background:color-mix(in srgb, var(--ev) 24%, transparent); }
+.ev-chip i{ font-style:normal; color:var(--ev); font-family:var(--f-mono); }
+.ev-chip b{
+  font-weight:600; color:var(--text-faint); font-size:var(--t-xs);
+  padding-left:6px; margin-left:2px; border-left:1px solid var(--line-2);
+}
+.ev-vorschau{
+  display:flex; flex-wrap:wrap; align-items:center; gap:7px;
+  padding:10px 12px; margin-bottom:14px;
+  border:1px solid var(--line); border-radius:var(--r); background:var(--surf);
+}
+.ev-vorschau-t{ font-size:var(--t-xs); color:var(--text-faint); font-weight:600; }
+.ev-mehr{ font-size:var(--t-xs); color:var(--text-faint); }
+.ev-jahr{ display:flex; gap:9px; align-items:flex-start; cursor:pointer; }
+.ev-jahr input{ width:auto; margin-top:3px; flex:0 0 auto; }
+.ev-jahr i{ display:block; font-style:normal; font-size:var(--t-xs); color:var(--text-faint); margin-top:2px; }
+
 /* Sperre: gestreift, nie flächig. Eine gesperrte Stunde ist kein
    Training, sie sieht deshalb bewusst anders aus. */
 .tp-sperre{
@@ -1035,7 +1066,7 @@ const CLOUD_ON="nova_cloud_on", CLOUD_TOK="nova_gh_token";
 const GH_USER="mattiknp", GH_REPO="routine-tracker", GH_FILE="nova.json";
 const GH_API=`https://api.github.com/repos/${GH_USER}/${GH_REPO}/contents/${GH_FILE}`;
 
-const blank=()=>({habits:[],habitLog:{},metrics:{},sport:{},todos:[],planer:{},tplan:{},
+const blank=()=>({habits:[],habitLog:{},metrics:{},sport:{},todos:[],planer:{},tplan:{},events:[],
   dayCheck:{},planerTypes:[],planerHidden:[],sportTypes:[],sportHidden:[],
   goals:{sleep:8,study:3,phone:0,sport:300},zielTage:null,notes:{},mood:{},water:{},todoFocus:null});
 
@@ -1128,6 +1159,46 @@ const WDL=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Sams
    Wochentag: ein fester Stundenplan, der jede Woche gleich gilt.
    Deshalb 0..6 als Schlüssel (0 = Montag), nicht "2026-09-07".
    ──────────────────────────────────────────────────────── */
+/* ── Ereignisse ─────────────────────────────────────────
+   Geburtstage, Termine, Stichtage: gehören an ein Datum, aber an
+   keine Uhrzeit. Deshalb kein Planer-Block, sondern eine eigene
+   Zeile über dem Tag. Geburtstage wiederholen sich jährlich — dafür
+   merkt sich der Eintrag nur Monat und Tag.
+   ──────────────────────────────────────────────────────── */
+const EVENT_ARTEN=[
+  {id:"geburtstag", label:"Geburtstag", icon:"🎂", bg:"#d488b8", jaehrlich:true},
+  {id:"termin",     label:"Termin",     icon:"📌", bg:"#5a9ded", jaehrlich:false},
+  {id:"frist",      label:"Frist",      icon:"⏳", bg:"#d9a441", jaehrlich:false},
+  {id:"sonstig",    label:"Sonstiges",  icon:"✳️", bg:"#7d8899", jaehrlich:false},
+];
+const eventArt=id=>EVENT_ARTEN.find(a=>a.id===id)||EVENT_ARTEN[3];
+const eventsAlle=()=>S.events||[];
+/* Trifft ein Ereignis auf diesen Tag? Jährliche vergleichen nur
+   Monat und Tag, alle anderen das volle Datum. */
+function eventAmTag(e,k){
+  if(!e||!e.datum) return false;
+  return e.jaehrlich ? e.datum.slice(5)===k.slice(5) : e.datum===k;
+}
+const eventsAmTag=k=>eventsAlle().filter(e=>eventAmTag(e,k))
+  .sort((a,b)=>(a.titel||"").localeCompare(b.titel||""));
+/* Wie alt wird jemand? Nur sinnvoll, wenn das Ursprungsjahr bekannt
+   ist und in der Vergangenheit liegt. */
+function eventAlter(e,k){
+  if(!e.jaehrlich||e.art!=="geburtstag") return null;
+  const j0=+e.datum.slice(0,4), j1=+k.slice(0,4);
+  return j1>j0 ? j1-j0 : null;
+}
+/* Die nächsten Ereignisse ab heute — ohne diese Vorschau sähe man
+   einen Geburtstag im Zwei-Tage-Planer erst, wenn er da ist. */
+function eventsDemnaechst(tage=45){
+  const heute=parsedk(today()), out=[];
+  for(let i=0;i<tage;i++){
+    const k=dk(addD(heute,i));
+    eventsAmTag(k).forEach(e=>out.push({e,k,in:i}));
+  }
+  return out;
+}
+
 const TWD=["Mo","Di","Mi","Do","Fr","Sa","So"];
 const TWDL=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const tplanTag=i=>((S.tplan&&S.tplan[i])||[]).slice()
@@ -4391,6 +4462,59 @@ function tplanWiring(V){
   V.querySelector("#tpUeber")?.addEventListener("click",tplanUebernehmenModal);
 }
 
+function openEvent(id,vorgabe){
+  const e = id ? eventsAlle().find(x=>x.id===id) : null;
+  const art = e?e.art:"geburtstag";
+  const datum = e?e.datum:(vorgabe||today());
+  modal(`<h3>${e?"Ereignis bearbeiten":"Ereignis hinzufügen"}</h3>
+    <label>Was ist es?</label>
+    <div class="chips" id="evArten">${EVENT_ARTEN.map(a=>
+      `<button class="chip${a.id===art?" on":""}" data-eva="${a.id}"
+        style="${a.id===art?`border-color:${a.bg};color:${a.bg};background:color-mix(in srgb, ${a.bg} 14%, transparent)`:""}">
+        ${a.icon} ${a.label}</button>`).join("")}</div>
+    <label>Bezeichnung</label>
+    <input id="evT" value="${esc(e?e.titel:"")}" placeholder="z. B. Mama" autofocus>
+    <label>Datum</label>
+    <input type="date" id="evD" value="${datum}">
+    <label class="ev-jahr"><input type="checkbox" id="evJ" ${
+      (e?e.jaehrlich:eventArt(art).jaehrlich)?"checked":""}>
+      <span>Jedes Jahr wiederholen<i>Beim Geburtstag zeigt NOVA dann auch das Alter — dafür muss das Geburtsjahr stimmen.</i></span></label>
+    <div class="mo-act">
+      ${e?`<button class="b" id="evDel" style="margin-right:auto;color:var(--bad)">${ico("trash")}Löschen</button>`:""}
+      <button class="b" onclick="closeModal()">Abbrechen</button>
+      <button class="b b-1" id="evSave">Speichern</button></div>`);
+
+  let gewaehlt=art;
+  const M=document.getElementById("evArten");
+  M.querySelectorAll("[data-eva]").forEach(b=>b.onclick=()=>{
+    gewaehlt=b.dataset.eva;
+    const a=eventArt(gewaehlt);
+    M.querySelectorAll("[data-eva]").forEach(x=>{ x.classList.remove("on"); x.removeAttribute("style"); });
+    b.classList.add("on");
+    b.style.cssText=`border-color:${a.bg};color:${a.bg};background:color-mix(in srgb, ${a.bg} 14%, transparent)`;
+    /* Nur bei einem neuen Eintrag nachführen — bei einem bestehenden
+       wäre es übergriffig, die Wahl des Nutzers zu überschreiben. */
+    if(!e) document.getElementById("evJ").checked=a.jaehrlich;
+  });
+
+  document.getElementById("evSave").onclick=()=>{
+    const titel=document.getElementById("evT").value.trim();
+    const datum=document.getElementById("evD").value;
+    const jaehrlich=document.getElementById("evJ").checked;
+    if(!titel){ toast("Bezeichnung fehlt","x"); return; }
+    if(!datum){ toast("Datum fehlt","x"); return; }
+    S.events=S.events||[];
+    if(e) Object.assign(e,{art:gewaehlt,titel,datum,jaehrlich});
+    else S.events.push({id:uid(),art:gewaehlt,titel,datum,jaehrlich});
+    save(); closeModal(); toast(e?"Gespeichert":"Ereignis angelegt"); R.planer();
+  };
+  const del=document.getElementById("evDel");
+  if(del) del.onclick=()=>{
+    S.events=(S.events||[]).filter(x=>x.id!==id);
+    save(); closeModal(); toast("Gelöscht"); R.planer();
+  };
+}
+
 function openTBlock(i,type,start,end,note,id){
   modal(`<h3>${id?"Training bearbeiten":"Training einplanen"}</h3>
     <label>Art</label>
@@ -4519,6 +4643,12 @@ R.planer=function(){
         <div style="font-size:var(--t-sm);color:var(--text-dim)">${fmtShort(c.d)} · ${Math.round(hrs*10)/10} h geplant</div></div>
         <button class="b b-sm ${isChecked(c.k)?"b-1":""}" data-chk="${c.k}">${isChecked(c.k)?"Erledigt":"Abhaken"}</button>
       </div>
+      ${(()=>{ const ev=eventsAmTag(c.k); if(!ev.length) return "";
+        return `<div class="ev-leiste">${ev.map(e=>{
+          const a=eventArt(e.art), alter=eventAlter(e,c.k);
+          return `<button class="ev-chip" data-ev="${e.id}" style="--ev:${a.bg}"
+            title="${esc(e.titel)}${alter?` · wird ${alter}`:""} — antippen zum Ändern">
+            <span>${a.icon}</span>${esc(e.titel)}${alter?` <i>${alter}</i>`:""}</button>`;}).join("")}</div>`;})()}
       <div style="position:relative;max-height:600px;overflow-y:auto" data-drop="${idx}">
         <div style="position:relative">${rows}${bl}</div>
       </div></div>`;
@@ -4532,8 +4662,19 @@ R.planer=function(){
       <button class="b b-i" id="plPrev">${ico("left")}</button>
       <input type="date" id="plDate" value="${plDate}" style="width:auto;padding:7px 10px;font-size:var(--t-sm)">
       <button class="b b-sm" id="plNow">Heute</button>
-      <button class="b b-i" id="plNext">${ico("right")}</button></div>
+      <button class="b b-i" id="plNext">${ico("right")}</button>
+      <button class="b b-sm" id="evAdd">+ Ereignis</button></div>
   </div>
+  ${(()=>{ const n=eventsDemnaechst(); if(!n.length) return "";
+    return `<div class="ev-vorschau">
+      <span class="ev-vorschau-t">Demnächst</span>
+      ${n.slice(0,6).map(({e,k,in:tage})=>{
+        const a=eventArt(e.art), alter=eventAlter(e,k);
+        return `<button class="ev-chip" data-ev="${e.id}" style="--ev:${a.bg}">
+          <span>${a.icon}</span>${esc(e.titel)}${alter?` <i>${alter}</i>`:""}
+          <b>${tage===0?"heute":tage===1?"morgen":`in ${tage} T`}</b></button>`;}).join("")}
+      ${n.length>6?`<span class="ev-mehr">+${n.length-6}</span>`:""}
+    </div>`;})()}
   <div class="p" style="margin-bottom:14px">
     <div class="p-title" style="margin-bottom:10px;font-size:var(--t-base)">Blöcke</div>
     <div class="chips">${blockTypes().map(t=>
@@ -4596,6 +4737,8 @@ R.planer=function(){
   V.querySelector("#plNow").onclick=()=>{ plDate=today(); R.planer(); };
   V.querySelector("#plDate").onchange=e=>{ plDate=e.target.value||today(); R.planer(); };
   V.querySelectorAll("[data-chk]").forEach(b=>b.onclick=()=>{ toggleCheck(b.dataset.chk); R.planer(); paintOrb(); });
+  V.querySelector("#evAdd").onclick=()=>openEvent(null,plDate);
+  V.querySelectorAll("[data-ev]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); openEvent(b.dataset.ev); });
   V.querySelectorAll("[data-bt]").forEach(b=>{
     b.onclick=()=>{ plDragType=b.dataset.bt; plDragTodo=null;
       V.querySelectorAll("[data-bt]").forEach(x=>x.classList.remove("on")); b.classList.add("on");

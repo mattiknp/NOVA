@@ -1402,7 +1402,10 @@ const BLOCKS=[
      verlören alle schon geplanten Gym-Blöcke ihre Farbe und ihren
      Namen — die drei kommen dazu, sie ersetzen nichts. */
   {id:"kraft_ob",label:"Kraft Oberkörper",bg:"#e9703f"},
-  {id:"kraft_ba",label:"Kraft Bauch",bg:"#c9812e"},
+  /* Kennung bleibt "kraft_ba": sie steckt schon in eingetragenen
+     Blöcken, und ein neuer Schlüssel würde die auf „Sonstiges"
+     zurückfallen lassen. Nur die Beschriftung ändert sich. */
+  {id:"kraft_ba",label:"Kraft Ganzkörper",bg:"#c9812e"},
   {id:"kraft_un",label:"Kraft Unterkörper",bg:"#b79063"},
   /* Reine Zeitsperre: es zählt nur, DASS die Zeit weg ist. Wird beim
      Übernehmen bewusst nicht in den Tagesplaner geschrieben. */

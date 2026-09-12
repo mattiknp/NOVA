@@ -788,6 +788,25 @@ select option{ background:#141a26; }
 .tp-titel-n{ flex:0 1 auto; min-width:0; font-weight:700; font-size:var(--t-base); }
 .tp-titel .tag{ margin-right:auto; }
 .tp-titel-n i{ font-style:normal; font-weight:400; color:var(--text-dim); font-size:var(--t-sm); margin-left:7px; }
+/* Säulen-Tooltip: steht über dem Chart, folgt der angetippten Säule. */
+.sb-wrap{ position:relative; }
+.sb-feld{ transition:fill var(--d1) var(--ez); }
+.sb-feld.an{ fill:rgba(255,255,255,.05); }
+.sb-tip{
+  position:absolute; top:0; z-index:5; pointer-events:none;
+  background:#131b26; border:1px solid var(--line-2); border-radius:var(--r-xs);
+  padding:8px 10px; box-shadow:0 10px 28px rgba(0,0,0,.5);
+  font-size:var(--t-xs); line-height:1.45; white-space:nowrap;
+}
+.sb-tip b{ display:block; font-size:var(--t-sm); margin-bottom:4px; }
+.sb-tip-z{ float:right; margin-left:14px; font-family:var(--f-mono); color:var(--text); }
+.sb-tip-r{ display:flex; align-items:center; gap:6px; color:var(--text-dim); }
+.sb-tip-r i{ width:7px; height:7px; border-radius:2px; flex:0 0 auto; }
+.sb-tip-s{
+  margin-top:5px; padding-top:5px; border-top:1px solid var(--line);
+  color:var(--text-faint);
+}
+
 /* Angeheftet: kleine Nadel oben rechts im Block. Bewusst zurück-
    haltend — die Information ist wichtig, soll aber den Namen des
    Trainings nicht verdrängen. */
@@ -2392,6 +2411,73 @@ function lineChart(labels,series,opt={}){
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}${paths}${xs}</svg>`;
 }
 
+/* ── Säulen-Tooltip ─────────────────────────────────────
+   Ein einziger Zuhörer am Dokument statt einer Verdrahtung nach jedem
+   Zeichnen: der Chart wird an mehreren Stellen neu gebaut, und eine
+   Bindung, die man dabei vergisst, fällt erst beim Nutzer auf.
+   Berührung und Maus laufen über dieselbe Stelle. */
+/* Inhalt eines Wochen-Tooltips: Summe oben, darunter die Arten mit
+   ihrer Dauer, absteigend. Stunden ab einer Stunde, darunter Minuten —
+   „0.3 h" sagt niemandem etwas. */
+function sbDauer(min){
+  if(min<60) return Math.round(min)+" min";
+  const h=Math.floor(min/60), m=Math.round(min%60);
+  /* Bewusst „5 h 30" statt „5:30 h": Letzteres liest sich wie eine
+     Uhrzeit, und im Chart geht es um Dauern. */
+  return m? `${h} h ${m}` : `${h} h`;
+}
+function wochenTip(label,tot,typen){
+  const zeilen=typen.filter(t=>tot[t.id])
+    .sort((a,b)=>tot[b.id]-tot[a.id])
+    .map(t=>`<div class="sb-tip-r"><i style="background:${t.color}"></i>${esc(t.label)}
+      <span class="sb-tip-z">${sbDauer(tot[t.id])}</span></div>`).join("");
+  const summe=Object.values(tot).reduce((a,b)=>a+b,0);
+  const n=typen.filter(t=>tot[t.id]).length;
+  if(!summe) return `<b>Woche ab ${esc(label)}</b><div class="sb-tip-r">kein Training</div>`;
+  return `<b>Woche ab ${esc(label)}<span class="sb-tip-z">${sbDauer(summe)}</span></b>${zeilen}`
+    + (n>1?`<div class="sb-tip-s">${n} Arten</div>`:"");
+}
+
+function sbZeigen(feld){
+  const wrap=feld.closest(".sb-wrap"); if(!wrap) return;
+  const tip=wrap.querySelector(".sb-tip"); if(!tip) return;
+  let tips; try{ tips=JSON.parse(wrap.dataset.sbtips||"[]"); }catch(e){ return; }
+  const i=+feld.dataset.sbi, inhalt=tips[i];
+  if(inhalt==null){ sbWeg(wrap); return; }
+  tip.innerHTML=inhalt;
+  tip.hidden=false;
+  /* Das SVG skaliert auf die Breite des Behälters; die x-Angabe steht
+     aber in SVG-Einheiten. Deshalb umrechnen statt raten. */
+  const breite=+wrap.dataset.sbbreite||680;
+  const faktor=wrap.clientWidth/breite;
+  const mitte=(+feld.dataset.sbx)*faktor;
+  const halb=tip.offsetWidth/2;
+  const links=Math.max(4,Math.min(wrap.clientWidth-tip.offsetWidth-4,mitte-halb));
+  tip.style.left=links+"px";
+  wrap.querySelectorAll(".sb-feld").forEach(f=>f.classList.remove("an"));
+  feld.classList.add("an");
+}
+function sbWeg(wrap){
+  if(!wrap) return;
+  const tip=wrap.querySelector(".sb-tip"); if(tip) tip.hidden=true;
+  wrap.querySelectorAll(".sb-feld").forEach(f=>f.classList.remove("an"));
+}
+document.addEventListener("pointerover",ev=>{
+  const feld=ev.target.closest?.(".sb-feld");
+  if(feld) sbZeigen(feld);
+});
+document.addEventListener("pointerdown",ev=>{
+  const feld=ev.target.closest?.(".sb-feld");
+  if(feld){ sbZeigen(feld); return; }
+  document.querySelectorAll(".sb-wrap").forEach(sbWeg);
+});
+document.addEventListener("pointerout",ev=>{
+  const wrap=ev.target.closest?.(".sb-wrap");
+  /* Nur ausblenden, wenn der Zeiger den Chart wirklich verlässt —
+     beim Wechsel zwischen zwei Säulen soll er stehen bleiben. */
+  if(wrap && !wrap.contains(ev.relatedTarget)) sbWeg(wrap);
+});
+
 function stackBar(labels,series,opt={}){
   const W=680,H=opt.h||210,pL=40,pR=14,pT=16,pB=30;
   const pw=W-pL-pR, ph=H-pT-pB, n=labels.length;
@@ -2432,7 +2518,25 @@ function stackBar(labels,series,opt={}){
     if(shown.has(i))
       bars+=`<text x="${x}" y="${H-9}" text-anchor="middle" font-family="var(--f-mono)" font-size="9.5" fill="var(--text-faint)">${esc(l)}</text>`;
   });
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}${bars}</svg>`;
+  /* Antippen und Überfahren: je Säule ein unsichtbares Feld über der
+     vollen Höhe. Es liegt zuletzt im SVG, damit es über den Balken
+     liegt, und deckt auch die leere Fläche darüber ab — sonst müsste
+     man eine niedrige Säule millimetergenau treffen. */
+  let felder="";
+  if(opt.tip){
+    labels.forEach((l,i)=>{
+      const x=pL+(pw/n)*(i+.5);
+      felder+=`<rect class="sb-feld" data-sbi="${i}" data-sbx="${x.toFixed(1)}"
+        x="${(x-(pw/n)/2).toFixed(1)}" y="${pT}" width="${(pw/n).toFixed(1)}" height="${ph}"
+        fill="transparent" style="cursor:pointer"/>`;
+    });
+  }
+  const svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}${bars}${felder}</svg>`;
+  if(!opt.tip) return svg;
+  /* Die Inhalte hängen am Behälter, nicht an jedem Feld — so steht der
+     Text genau einmal im Dokument, egal wie viele Säulen es sind. */
+  return `<div class="sb-wrap" data-sbbreite="${W}" data-sbtips="${esc(JSON.stringify(opt.tip))}">
+    ${svg}<div class="sb-tip" hidden></div></div>`;
 }
 
 const legend=items=>`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;">
@@ -3077,7 +3181,8 @@ R.sport=function(){
           <span class="p-note">Stunden</span></div>
         ${stackBar(weeks.map(w=>w.label),
            usedTypes.map(t=>({color:t.color,data:weeks.map(w=>(w.tot[t.id]||0))})),
-           {unit:60,emptyText:"Noch kein Training erfasst."})}
+           {unit:60,emptyText:"Noch kein Training erfasst.",
+            tip:weeks.map(w=>wochenTip(w.label,w.tot,usedTypes))})}
         ${usedTypes.length?legend(usedTypes.map(t=>({color:t.color,label:t.label}))):""}
       </div>
       <div class="p">

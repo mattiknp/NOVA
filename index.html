@@ -782,7 +782,11 @@ select option{ background:#141a26; }
   display:flex; align-items:center; gap:8px; flex-wrap:wrap;
   padding:11px 13px; border-bottom:1px solid var(--line);
 }
-.tp-titel-n{ flex:1; min-width:0; font-weight:700; font-size:var(--t-base); }
+/* Das Abzeichen gehört zur ganzen Woche. Rechtsbündig landete es
+   über der Sonntagsspalte und sah aus, als gehörte es zu Sonntag —
+   deshalb steht es jetzt direkt neben dem Wochennamen. */
+.tp-titel-n{ flex:0 1 auto; min-width:0; font-weight:700; font-size:var(--t-base); }
+.tp-titel .tag{ margin-right:auto; }
 .tp-titel-n i{ font-style:normal; font-weight:400; color:var(--text-dim); font-size:var(--t-sm); margin-left:7px; }
 /* Angeheftet: kleine Nadel oben rechts im Block. Bewusst zurück-
    haltend — die Information ist wichtig, soll aber den Namen des
@@ -4429,12 +4433,17 @@ function wochenTitel(mk){
   const diff=Math.round((mo-parsedk(jetzt))/604800000);
   const name = diff===0?"Diese Woche" : diff===1?"Nächste Woche"
              : diff===-1?"Letzte Woche" : diff>0?`In ${diff} Wochen` : `Vor ${-diff} Wochen`;
-  const anzahl=[...Array(7)].reduce((a,_,i)=>a+wocheTag(mk,i).length,0);
-  const min=[...Array(7)].reduce((a,_,i)=>
-    a+wocheTag(mk,i).reduce((x,b)=>x+(IST_SPERRE(b.type)?0:Math.max(0,hm2min(b.end)-hm2min(b.start))),0),0);
+  /* Beide Zahlen müssen dasselbe meinen: Sperren sind kein Training,
+     also zählen sie weder zur Anzahl noch zu den Stunden. Vorher war
+     die Anzahl inklusive Sperren — das passte nicht zusammen. */
+  const training=[...Array(7)].flatMap((_,i)=>wocheTag(mk,i)).filter(b=>!IST_SPERRE(b.type));
+  const anzahl=training.length;
+  const min=training.reduce((x,b)=>x+Math.max(0,hm2min(b.end)-hm2min(b.start)),0);
+  const std=Math.round(min/6)/10;
   return `<div class="tp-titel">
     <span class="tp-titel-n">${name}<i>${fmtShort(mo)} – ${fmtShort(so)}</i></span>
-    <span class="tag">${anzahl?`${anzahl} · ${Math.round(min/6)/10} h`:"leer"}</span>
+    <span class="tag" title="Geplante Trainings dieser Woche und ihre Dauer zusammengerechnet. Gesperrte Zeiten zählen nicht mit.">${
+      anzahl?`${anzahl} ${anzahl===1?"Training":"Trainings"} · ${std} h`:"nichts geplant"}</span>
   </div>`;
 }
 

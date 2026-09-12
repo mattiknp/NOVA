@@ -1128,7 +1128,9 @@ let S=blank(), imported=false, garminNeu=0;
 function load(){
   try{
     const raw=localStorage.getItem(KEY);
-    if(raw){ S=Object.assign(blank(),JSON.parse(raw)); return; }
+    if(raw){ S=Object.assign(blank(),JSON.parse(raw));
+      if(tplanAufraeumen()) persist();
+      return; }
     const old=localStorage.getItem(OLD_KEY);
     if(old){ S=Object.assign(blank(),JSON.parse(old)); imported="alt"; persist(); return; }
     if(typeof SEED!=="undefined"&&SEED&&SEED.habits){
@@ -1150,6 +1152,37 @@ function loadSeed(){
     persist(); closeModal(); toast("Stand geladen"); go(VIEW); paintOrb();
   };
 }
+/* ── Altlast im Trainingsplaner ─────────────────────────
+   Früher ERSETZTE eine Wochenkopie den festen Plan, heute ERGÄNZT sie
+   ihn. Wochen, die unter der alten Regel entstanden sind, enthalten
+   deshalb eine vollständige Kopie aller angehefteten Blöcke — und
+   alles stünde doppelt da. Solche Kopien hier einmalig entfernen.
+
+   Erkannt wird ein Doppel an der Kennung oder, falls die Kopie eine
+   eigene bekam, an vollständiger Gleichheit am selben Wochentag.
+   Echte Einzeltermine unterscheiden sich in mindestens einem Punkt
+   und bleiben unangetastet. */
+function tplanAufraeumen(){
+  if(!S.tplanWoche||!S.tplan) return 0;
+  let weg=0;
+  const festeIds=new Set();
+  Object.values(S.tplan).forEach(l=>(l||[]).forEach(b=>festeIds.add(b.id)));
+  const gleich=(a,b)=>a.type===b.type&&a.start===b.start&&a.end===b.end
+                    &&((a.note||"")===(b.note||""));
+  Object.keys(S.tplanWoche).forEach(mk=>{
+    const W=S.tplanWoche[mk]||{};
+    Object.keys(W).forEach(tag=>{
+      const fest=S.tplan[tag]||[];
+      const vor=W[tag].length;
+      W[tag]=W[tag].filter(b=>!(festeIds.has(b.id)||fest.some(f=>gleich(f,b))));
+      weg+=vor-W[tag].length;
+      if(!W[tag].length) delete W[tag];
+    });
+    if(!Object.keys(W).length) delete S.tplanWoche[mk];
+  });
+  return weg;
+}
+
 function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
 function save(){ persist(); if(cloudOn()) queueSync(); }
 
@@ -1368,15 +1401,15 @@ const BLOCKS=[
   /* Krafttraining getrennt nach Bereich. „gym" bleibt bestehen, sonst
      verlören alle schon geplanten Gym-Blöcke ihre Farbe und ihren
      Namen — die drei kommen dazu, sie ersetzen nichts. */
-  {id:"kraft_ob",label:"Kraft Oberkörper",bg:"#e8825e"},
-  {id:"kraft_ba",label:"Kraft Bauch",bg:"#eba85f"},
-  {id:"kraft_un",label:"Kraft Unterkörper",bg:"#d2683f"},
+  {id:"kraft_ob",label:"Kraft Oberkörper",bg:"#e9703f"},
+  {id:"kraft_ba",label:"Kraft Bauch",bg:"#c9812e"},
+  {id:"kraft_un",label:"Kraft Unterkörper",bg:"#b79063"},
   /* Reine Zeitsperre: es zählt nur, DASS die Zeit weg ist. Wird beim
      Übernehmen bewusst nicht in den Tagesplaner geschrieben. */
   {id:"blocked",label:"Geblockt",bg:"#7d8899"},
   /* Geburtstage, Termine, Fristen: ein Baustein wie jeder andere,
      den man sich in den Tag zieht — kein eigenes System daneben. */
-  {id:"ereignis",label:"Ereignis",bg:"#c9a227"},
+  {id:"ereignis",label:"Ereignis",bg:"#e35d6a"},
 ];
 const IST_SPERRE=t=>t==="blocked";
 /* „Geblockt" ist ein Begriff des Trainingsplaners: eine Zeitsperre, die
@@ -1384,7 +1417,12 @@ const IST_SPERRE=t=>t==="blocked";
    Tagesplaner wäre sie sinnlos — dort gibt es dafür „Sonstiges". */
 const blockTypes=()=>BLOCKS.concat(S.planerTypes||[])
   .filter(t=>!(S.planerHidden||[]).includes(t.id))
-  .filter(t=>!IST_SPERRE(t.id));
+  .filter(t=>!IST_SPERRE(t.id))
+  /* „Schlafen" wird nicht mehr als Baustein angeboten. Der Typ bleibt
+     bestehen, damit schon eingetragene Schlaf-Blöcke ihren Namen,
+     ihre Farbe und ihre Sonderbehandlung behalten — nur neu anlegen
+     kann man ihn nicht mehr. */
+  .filter(t=>t.id!=="schlafen");
 const blockById=id=>BLOCKS.concat(S.planerTypes||[]).find(t=>t.id===id)||BLOCKS[8];
 const planDay=k=>(S.planer&&S.planer[k])||[];
 const hm2min=s=>{ const[h,m]=String(s||"0:0").split(":").map(Number); return h*60+(m||0); };
@@ -1809,6 +1847,7 @@ async function pullCloud(){
     if(!r.ok){ cloudFehler="GitHub antwortet mit Fehler "+r.status; setSync("err"); return false; }
     const j=await r.json(); syncSha=j.sha;
     S=Object.assign(blank(),JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,""))))));
+    tplanAufraeumen();          /* auch das, was vom anderen Gerät kommt */
     persist(); setSync("ok","Synchron"); cloudFehler=""; return true;
   }catch(e){
     /* Ein abgewiesener fetch ohne Statuscode heißt fast immer: die

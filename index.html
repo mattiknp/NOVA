@@ -797,7 +797,27 @@ select option{ background:#141a26; }
 .pl-kat .chip i{ font-style:normal; margin-left:5px; opacity:.6; }
 .pl-arten{ padding-top:2px; }
 .chip-neu{ border-style:dashed; color:var(--text-faint); }
-.na-farbe.on{ box-shadow:0 0 0 2px var(--bg),0 0 0 4px currentColor; }
+/* Farbpalette: nach Familien gestapelt, damit man gezielt einen
+   weiteren Blauton findet. Schon vergebene Töne bleiben wählbar, sind
+   aber gekennzeichnet — verbieten wäre bevormundend, verschweigen
+   führt zu zwei gleichen Bausteinen. */
+.na-fam{ display:flex; align-items:center; gap:9px; margin-bottom:6px; }
+.na-fam-n{ flex:0 0 52px; font-size:var(--t-xs); color:var(--text-faint); }
+.na-reihe{ display:flex; gap:5px; flex-wrap:wrap; }
+.na-farbe{
+  width:26px; height:24px; border-radius:var(--r-xs); flex:0 0 auto;
+  border:1px solid rgba(0,0,0,.25); position:relative;
+  transition:transform var(--d1) var(--ez);
+}
+.na-farbe:hover{ transform:scale(1.12); }
+.na-farbe.on{ box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--c1); }
+/* Schon vergeben: ein kleiner Punkt in der Ecke statt einer Schraffur
+   über die ganze Fläche — man soll die Farbe noch beurteilen können. */
+.na-farbe.belegt::after{
+  content:""; position:absolute; top:2px; right:2px;
+  width:5px; height:5px; border-radius:50%;
+  background:rgba(0,0,0,.5); box-shadow:0 0 0 1px rgba(255,255,255,.35);
+}
 
 /* Abhaken im Spaltenkopf */
 .tp-hak{
@@ -1456,46 +1476,52 @@ const sportMin=k=>sportOn(k).reduce((a,e)=>a+(e.duration||0),0);
 /* Bausteine mit Kategorie: der Wähler oben klappt nach Sport, Uni und
    Alltag auf, statt zwanzig Knöpfe nebeneinander zu zeigen. */
 const BLOCKS=[
-  /* ── Uni ── */
-  {id:"lernen",   label:"Lernen",    bg:"#5a9ded", kat:"uni"},
-  {id:"vorlesung",label:"Vorlesung", bg:"#47b5cc", kat:"uni"},
-  {id:"uebung",   label:"Übung",     bg:"#98d7ea", kat:"uni"},
-  {id:"klausur",  label:"Klausur",   bg:"#b252ea", kat:"uni"},
-  /* ── Sport ── */
+  /* ── Uni: ein Blau-Band ── */
+  {id:"lernen",   label:"Lernen",    bg:"#3683db", kat:"uni"},
+  {id:"vorlesung",label:"Vorlesung", bg:"#3091c1", kat:"uni"},
+  {id:"uebung",   label:"Übung",     bg:"#9dd5f2", kat:"uni"},
+  {id:"klausur",  label:"Klausur",   bg:"#9db4f2", kat:"uni"},
+  /* ── Sport: Tennis grün, Kraft in Orangetönen, der Rest eigenständig ── */
+  {id:"tennis",   label:"Tennis",           bg:"#5ec47a", kat:"sport"},
   {id:"sport",    label:"Sport",            bg:"#3fc9a4", kat:"sport"},
   {id:"gym",      label:"Gym",              bg:"#e8825e", kat:"sport"},
-  {id:"tennis",   label:"Tennis",           bg:"#6fc48a", kat:"sport"},
-  {id:"zone2",    label:"Zone 2",           bg:"#4fe3d2", kat:"sport"},
-  {id:"mobility", label:"Mobility",         bg:"#d488b8", kat:"sport"},
-  {id:"kraft_ob", label:"Kraft Oberkörper", bg:"#e9703f", kat:"sport"},
+  {id:"kraft_ob", label:"Kraft Oberkörper", bg:"#ed7134", kat:"sport"},
   /* Kennung bleibt "kraft_ba": sie steckt schon in eingetragenen
      Blöcken, und ein neuer Schlüssel würde die auf „Sonstiges"
      zurückfallen lassen. Nur die Beschriftung ist eine andere. */
-  {id:"kraft_ba", label:"Kraft Ganzkörper", bg:"#c9812e", kat:"sport"},
-  {id:"kraft_un", label:"Kraft Unterkörper",bg:"#b79063", kat:"sport"},
+  {id:"kraft_ba", label:"Kraft Ganzkörper", bg:"#b2906e", kat:"sport"},
+  {id:"kraft_un", label:"Kraft Unterkörper",bg:"#eda893", kat:"sport"},
+  {id:"zone2",    label:"Zone 2",           bg:"#4fe3d2", kat:"sport"},
+  {id:"mobility", label:"Mobility",         bg:"#d488b8", kat:"sport"},
   /* ── Alltag ── */
   {id:"todo",     label:"Aufgabe",   bg:"#d9a441", kat:"alltag"},
   {id:"ereignis", label:"Ereignis",  bg:"#e35d6a", kat:"alltag"},
-  {id:"blocked",  label:"Geblockt",  bg:"#7d8899", kat:"alltag"},
   {id:"sonstig",  label:"Sonstiges", bg:"#7d8899", kat:"alltag"},
-  /* Wird nicht mehr angeboten, bleibt aber bestehen, damit schon
-     eingetragene Schlaf-Blöcke ihren Namen und ihre Sonderbehandlung
-     behalten. */
+  /* Werden nicht mehr angeboten, bleiben aber bestehen, damit schon
+     eingetragene Blöcke ihren Namen und ihre Farbe behalten. */
   {id:"schlafen", label:"Schlafen",  bg:"#8b7cf0", kat:"alltag"},
+  {id:"blocked",  label:"Geblockt",  bg:"#7d8899", kat:"alltag"},
 ];
 const IST_SPERRE=t=>t==="blocked";
 const KATEGORIEN=[["sport","Sport"],["uni","Uni"],["alltag","Alltag"]];
-/* Eigene Bausteine ohne Kategorie stammen aus der Zeit davor. Der
-   einzige vorhandene ist „kondi" — ein Sport. */
 const katVon=t=>t.kat||"sport";
+/* Nicht mehr anzubieten, aber weiter darstellbar. */
+/* Nicht mehr anzubieten, aber weiter darstellbar: „Gym" ist durch die
+   drei Kraft-Bausteine ersetzt, „Geblockt" ist entfallen, „Schlafen"
+   wurde abbestellt. Eingetragene Blöcke behalten Name und Farbe. */
+const VERSTECKT=["schlafen","blocked","gym"];
 const blockTypes=()=>BLOCKS.concat(S.planerTypes||[])
   .filter(t=>!(S.planerHidden||[]).includes(t.id))
   /* „Schlafen" wird nicht mehr als Baustein angeboten. Der Typ bleibt
      bestehen, damit schon eingetragene Schlaf-Blöcke ihren Namen,
      ihre Farbe und ihre Sonderbehandlung behalten — nur neu anlegen
      kann man ihn nicht mehr. */
-  .filter(t=>t.id!=="schlafen");
-const blockById=id=>BLOCKS.concat(S.planerTypes||[]).find(t=>t.id===id)||BLOCKS[8];
+  .filter(t=>!VERSTECKT.includes(t.id));
+/* Rückfall über die Kennung, nicht über einen Index: die Reihenfolge
+   im Array hat sich schon mehrfach geändert, ein fester Index zeigt
+   dann irgendwann auf den falschen Baustein. */
+const blockById=id=>BLOCKS.concat(S.planerTypes||[]).find(t=>t.id===id)
+  ||BLOCKS.find(t=>t.id==="sonstig");
 const planDay=k=>(S.planer&&S.planer[k])||[];
 const hm2min=s=>{ const[h,m]=String(s||"0:0").split(":").map(Number); return h*60+(m||0); };
 const min2hm=v=>`${p2(Math.floor(v/60)%24)}:${p2(Math.round(v%60))}`;
@@ -4690,20 +4716,41 @@ function tplanWiring(V){
 /* Eigener Baustein, etwa ein Uni-Modul. Farbe aus einer Palette, die
    sich von den bestehenden abhebt — freie Farbwahl führt erfahrungs-
    gemäß zu zwei kaum unterscheidbaren Tönen. */
-const EIGEN_FARBEN=["#7c9ef0","#9b6fd4","#4fb3a0","#d9728f","#b0923f","#5fa8d9",
-                    "#c47ad0","#6fae72","#cf8a52","#8891c9"];
+/* Palette für eigene Bausteine: nach Farbfamilien sortiert, damit man
+   gezielt „noch ein Blau" findet statt zwischen Zufallstönen zu suchen.
+   Jede Zeile ist eine Familie von hell nach kräftig. Alle Töne sind auf
+   Lesbarkeit der dunklen Blockschrift geprüft. */
+const FARB_FAMILIEN=[
+  ["Blau",   ["#9dd5f2","#6ab7e8","#3091c1","#3683db","#5f7fe0","#9db4f2"]],
+  ["Grün",   ["#a8e0b4","#7ad194","#5ec47a","#3fae63","#4d9e6e","#7fc9a8"]],
+  ["Türkis", ["#9df0e6","#4fe3d2","#35bfb2","#3fc9a4","#6fd9c0","#2aa697"]],
+  ["Gelb",   ["#f0d58a","#e8c35c","#d9a441","#c9892e","#b2906e","#e0b878"]],
+  ["Orange", ["#f5c0a8","#eda893","#ed7134","#e8825e","#d4612c","#c47a4a"]],
+  ["Rot",    ["#f09aa2","#e35d6a","#cf4453","#e07a85","#b83d4a","#f0b5bb"]],
+  ["Violett",["#c9b0f5","#9d8cf0","#8b7cf0","#a86fe0","#7c5fd0","#bb70e0"]],
+  ["Rosa",   ["#f0b8d8","#d488b8","#c96fa8","#e09ec9","#b05890","#f0a0c8"]],
+  ["Grau",   ["#b8c2cc","#9aa6b2","#7d8899","#5f6b7a","#a8b4c0","#6e7a88"]],
+];
+const EIGEN_FARBEN=FARB_FAMILIEN.flatMap(([,l])=>l);
+
 function neueArt(kat){
   const belegt=new Set(blockTypes().map(t=>t.bg));
-  const frei=EIGEN_FARBEN.filter(c=>!belegt.has(c));
-  let farbe=(frei.length?frei:EIGEN_FARBEN)[0];
+  /* Vorschlag: erster freier Ton der Familie, die zur Kategorie passt —
+     Uni-Module bekommen also von sich aus ein Blau. */
+  const heim={uni:"Blau",sport:"Grün",alltag:"Gelb"}[kat]||"Blau";
+  const heimfam=FARB_FAMILIEN.find(([n])=>n===heim)[1];
+  let farbe=heimfam.find(c=>!belegt.has(c))||EIGEN_FARBEN.find(c=>!belegt.has(c))||EIGEN_FARBEN[0];
   modal(`<h3>Eigener Baustein</h3>
     <p style="color:var(--text-dim);font-size:var(--t-sm);margin-bottom:12px">
       Kommt unter „${esc(KATEGORIEN.find(k=>k[0]===kat)?.[1]||kat)}".</p>
     <label>Name</label><input id="naName" placeholder="z. B. Technische Mechanik" autofocus>
     <label>Farbe</label>
-    <div class="chips" id="naFarben">${(frei.length?frei:EIGEN_FARBEN).map((c,x)=>
-      `<button class="chip na-farbe${x===0?" on":""}" data-naf="${c}"
-        style="background:${c};border-color:${c};width:34px;height:28px;padding:0"></button>`).join("")}</div>
+    <div id="naFarben">${FARB_FAMILIEN.map(([name,liste])=>
+      `<div class="na-fam"><span class="na-fam-n">${name}</span>
+        <div class="na-reihe">${liste.map(c=>
+          `<button class="na-farbe${c===farbe?" on":""}${belegt.has(c)?" belegt":""}" data-naf="${c}"
+            style="background:${c}" title="${c}${belegt.has(c)?" — schon vergeben":""}"></button>`).join("")}</div>
+      </div>`).join("")}</div>
     <div class="mo-act">
       <button class="b" onclick="closeModal()">Abbrechen</button>
       <button class="b b-1" id="naOk">Anlegen</button></div>`);

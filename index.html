@@ -828,13 +828,24 @@ select option{ background:#141a26; }
 .tp-hak.an{ background:var(--good); border-color:var(--good); }
 .tp-hak svg{ width:9px; height:9px; stroke-width:3.4; }
 
-/* Ausgesetzte Anheftung: als Schemen sichtbar, damit man sieht, was
-   normalerweise hier stünde — und sie mit einem Tipp zurückholen kann. */
-.tp-aus{
-  opacity:.3; filter:grayscale(.7);
-  outline:1px dashed var(--line-2); outline-offset:-1px;
+/* Ausgesetztes wird NICHT blass hinterlegt — ausgesetzt heißt weg.
+   Der Weg zurück führt über das Abzeichen im Wochenkopf. */
+.tp-aus-z{
+  color:var(--text-faint); cursor:pointer;
+  transition:color var(--d2) var(--ez),border-color var(--d2) var(--ez);
 }
-.tp-aus-z{ color:var(--text-faint); }
+.tp-aus-z:hover{ color:var(--text); border-color:var(--line-2); }
+.aus-liste{ display:flex; flex-direction:column; gap:6px; margin-bottom:6px; }
+.aus-zeile{
+  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+  padding:9px 11px; border-radius:var(--r-xs); background:rgba(255,255,255,.035);
+  transition:background-color var(--d2) var(--ez);
+}
+.aus-zeile:hover{ background:rgba(255,255,255,.07); }
+.aus-zeile i{ width:9px; height:9px; border-radius:2px; flex:0 0 auto; }
+.aus-zeile span{ flex:1; min-width:0; font-size:var(--t-sm); }
+.aus-zeile small{ display:block; color:var(--text-faint); font-size:var(--t-xs); margin-top:1px; }
+.aus-zeile b{ flex:0 0 auto; font-size:var(--t-xs); color:var(--c1); font-weight:600; }
 
 /* Aufgaben quer unter den Wochen statt als schmale Spalte daneben.
    Die Darstellung steht bewusst hier und nicht im style-Attribut —
@@ -4635,14 +4646,13 @@ function wochenRaster(mk,H0,H1){
     for(let h=H0;h<H1;h++)
       rows+=`<div data-wslot="${mk}|${i}|${h}" style="height:${TP_HH}px;border-top:1px solid var(--line);cursor:pointer"></div>`;
     let bl="";
-    wocheTag(mk,i,true).filter(imFilter).forEach(b=>{
+    wocheTag(mk,i).filter(imFilter).forEach(b=>{
       const t=blockById(b.type), sperre=IST_SPERRE(b.type);
       const von=hm2min(b.start), bis=Math.max(von+15,hm2min(b.end));
       const top=(von/60-H0)*TP_HH, hh=Math.max(15,(bis-von)/60*TP_HH);
-      bl+=`<div data-wblk="${mk}|${i}|${b.id}" class="${sperre?"tp-sperre":""}${b.fix?" tp-fix":""}${b.aus?" tp-aus":""}"
+      bl+=`<div data-wblk="${mk}|${i}|${b.id}" class="${sperre?"tp-sperre":""}${b.fix?" tp-fix":""}"
         title="${esc(b.note||t.label)} · ${b.start}–${b.end}${
-          b.aus?" · diese Woche ausgesetzt, antippen zum Zurückholen"
-              :b.fix?" · angeheftet, steht jede Woche":""}${sperre?" · gesperrte Zeit":""}"
+          b.fix?" · angeheftet, steht jede Woche":""}${sperre?" · gesperrte Zeit":""}"
         style="position:absolute;left:2px;right:2px;top:${top}px;height:${hh-2}px;border-radius:var(--r-xs);
         ${sperre?"":`background:${t.bg};`}padding:${hh>28?"4px 6px":"0 6px"};overflow:hidden;cursor:pointer;
         box-shadow:var(--sh-1);color:${sperre?"var(--text-dim)":"#08111a"};font-size:${hh>28?"11px":"9.5px"};line-height:1.2">
@@ -4685,7 +4695,8 @@ function wochenTitel(mk){
     <span class="tp-titel-n">${name}<i>${fmtShort(mo)} – ${fmtShort(so)}</i></span>
     <span class="tag" title="Geplante Trainings dieser Woche und ihre Dauer zusammengerechnet. Gesperrte Zeiten zählen nicht mit.">${
       anzahl?`${anzahl} ${anzahl===1?"Eintrag":"Einträge"} · ${std} h`:"nichts geplant"}</span>
-    ${ausgesetzt?`<span class="tag tp-aus-z" title="Angeheftetes, das in dieser Woche ausgesetzt ist">${ausgesetzt} ausgesetzt</span>`:""}
+    ${ausgesetzt?`<button class="tag tp-aus-z" data-ausz="${mk}"
+      title="Angeheftetes, das in dieser Woche nicht stattfindet — antippen zum Zurückholen">${ausgesetzt} ausgesetzt</button>`:""}
   </div>`;
 }
 
@@ -4705,9 +4716,6 @@ function tplanWiring(V){
   V.querySelectorAll("[data-wblk]").forEach(b=>b.onclick=e=>{
     e.stopPropagation();
     const [mk,i,id]=b.dataset.wblk.split("|");
-    if(b.classList.contains("tp-aus")){     /* Schemen: direkt zurückholen */
-      ausSchalten(mk,id,false); R.planer(); toast("Wieder in dieser Woche"); return;
-    }
     const bl=blockSuchen(mk,+i,id);
     if(bl) openTBlock(mk,+i,bl.type,bl.start,bl.end,bl.note,id,bl.fix);
   });
@@ -4732,6 +4740,42 @@ const FARB_FAMILIEN=[
   ["Grau",   ["#b8c2cc","#9aa6b2","#7d8899","#5f6b7a","#a8b4c0","#6e7a88"]],
 ];
 const EIGEN_FARBEN=FARB_FAMILIEN.flatMap(([,l])=>l);
+
+/* Was ist in dieser Woche ausgesetzt — und wie hole ich es zurück?
+   Ohne diesen Weg wäre „nur diese Woche aussetzen" eine Einbahnstraße,
+   seit das Ausgesetzte nicht mehr blass im Raster steht. */
+function ausgesetztModal(mk){
+  const ids=((S.tplanAus||{})[mk]||[]);
+  const liste=ids.map(id=>{
+    for(let i=0;i<7;i++){
+      const b=(tplanTag(i)||[]).find(x=>x.id===id);
+      if(b) return {b,tag:i};
+    }
+    return null;
+  }).filter(Boolean);
+  if(!liste.length){ toast("Nichts ausgesetzt"); return; }
+  modal(`<h3>Diese Woche ausgesetzt</h3>
+    <p style="color:var(--text-dim);font-size:var(--t-sm);line-height:1.5;margin-bottom:12px">
+      Angeheftetes, das in der Woche ab ${fmtShort(parsedk(mk))} nicht stattfindet.
+      Es steht weiter in jeder anderen Woche.</p>
+    <div class="aus-liste">${liste.map(({b,tag})=>{
+      const t=blockById(b.type);
+      return `<button class="aus-zeile" data-zurueck="${b.id}">
+        <i style="background:${t.bg}"></i>
+        <span>${esc(b.note||t.label)}<small>${TWDL[tag]} · ${b.start}–${b.end}</small></span>
+        <b>zurückholen</b></button>`;}).join("")}</div>
+    <div class="mo-act">
+      <button class="b" onclick="closeModal()">Schließen</button>
+      ${liste.length>1?`<button class="b b-1" id="ausAlle">Alle zurückholen</button>`:""}</div>`);
+  document.querySelectorAll("[data-zurueck]").forEach(b=>b.onclick=()=>{
+    ausSchalten(mk,b.dataset.zurueck,false);
+    closeModal(); toast("Wieder in dieser Woche"); R.planer();
+  });
+  document.getElementById("ausAlle")?.addEventListener("click",()=>{
+    delete S.tplanAus[mk]; save(); closeModal();
+    toast("Alles zurückgeholt"); R.planer();
+  });
+}
 
 function neueArt(kat){
   const belegt=new Set(blockTypes().map(t=>t.bg));
@@ -4926,6 +4970,7 @@ R.planer=function(){
   V.querySelectorAll("[data-pk]").forEach(b=>b.onclick=()=>{
     katOffen = katOffen===b.dataset.pk ? null : b.dataset.pk; R.planer(); });
   V.querySelectorAll("[data-neuart]").forEach(b=>b.onclick=()=>neueArt(b.dataset.neuart));
+  V.querySelectorAll("[data-ausz]").forEach(b=>b.onclick=()=>ausgesetztModal(b.dataset.ausz));
   V.querySelectorAll("[data-chk]").forEach(b=>b.onclick=e=>{
     e.stopPropagation(); toggleCheck(b.dataset.chk); R.planer(); paintOrb(); });
   tplanWiring(V);

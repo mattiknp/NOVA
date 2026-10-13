@@ -58,6 +58,7 @@
 .rb-z.sp{ background:repeating-linear-gradient(45deg, rgba(139,124,240,.30) 0 2px, rgba(139,124,240,.08) 2px 4px); }
 .rb-z.heute{ outline:1px solid var(--text-dim); outline-offset:1px; }
 .rb-z.sel{ outline:2px solid var(--text); outline-offset:1px; }
+.rb-z.gold{ box-shadow:inset 0 0 0 1.5px var(--gold), 0 0 6px -1px color-mix(in srgb, var(--gold) 70%, transparent); }
 @media (hover:hover) and (pointer:fine){ .rb-z:not(.sz):hover{ transform:scale(1.35); } }
 .rb-fuss{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
   margin-top:10px; font-size:var(--t-xs); color:var(--text-faint); }
@@ -102,6 +103,9 @@
 .se-z{ display:grid; grid-template-columns:minmax(0,1fr) auto 54px 76px; align-items:center; gap:12px;
   padding:11px 0; border-top:1px solid var(--line); }
 .se-z:first-child{ border-top:0; padding-top:2px; }
+.se-z.se-gold{ margin:0 -10px 4px; padding:11px 10px; border-radius:var(--r); border:1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  background:color-mix(in srgb, var(--gold) 7%, transparent); }
+.se-z.se-gold + .se-z{ border-top:0; }
 .se-n{ min-width:0; display:flex; flex-direction:column; }
 .se-n b{ font-size:var(--t-base); }
 .se-n span{ font-size:var(--t-xs); color:var(--text-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -146,6 +150,82 @@
 .sl-nacht-v span{ font-size:var(--t-lg); color:var(--text-faint); margin-left:4px; }
 .sl-nacht-s{ font-size:var(--t-sm); color:var(--text-dim); margin-top:4px; font-variant-numeric:tabular-nums; }
 .sl-felder{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.sl-serie{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:14px; padding-top:12px;
+  border-top:1px solid var(--line); font-size:var(--t-sm); color:var(--text-dim); }
+.sl-serie span{ color:var(--m-sleep); display:grid; }
+.sl-serie svg{ width:14px; height:14px; }
+.sl-serie b{ font-family:var(--f-disp); font-size:var(--t-lg); color:var(--text); font-variant-numeric:tabular-nums; }
+.sl-serie em{ font-style:normal; font-size:var(--t-xs); color:var(--text-faint); margin-left:auto; }
+.sl-wann{ margin-bottom:14px; }
+.sl-wann .empty .b{ display:inline-flex; }
+.sl-wann-svg{ width:100%; height:auto; display:block; margin-top:4px; }
+.sl-rhythmus{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:10px; }
+@media(max-width:700px){ .sl-rhythmus{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.sl-rhythmus > div{ display:flex; flex-direction:column; gap:2px; padding:10px 12px; border-radius:var(--r);
+  background:color-mix(in srgb, var(--m-sleep) 7%, transparent); border:1px solid color-mix(in srgb, var(--m-sleep) 18%, transparent); }
+.sl-rhythmus span{ font-size:var(--t-xs); color:var(--text-faint); }
+.sl-rhythmus b{ font-size:var(--t-lg); font-weight:600; font-variant-numeric:tabular-nums; line-height:1.2; }
+.sl-rhythmus em{ font-style:normal; font-size:var(--t-xs); color:var(--m-sleep); min-height:1em; }
+@media(max-width:640px){ .sl-rhythmus > div{ padding:8px 10px; } .sl-rhythmus b{ font-size:var(--t-base); } }
+.sl-fuss{ font-size:var(--t-xs); color:var(--text-faint); margin-top:8px; }
+.sl-kacheln{ grid-template-columns:repeat(4,minmax(0,1fr)); }
+/* Uni */
+.un-oben{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:14px; margin-bottom:14px; }
+@media(max-width:860px){ .un-oben{ grid-template-columns:1fr; } }
+.un-label{ font-size:var(--t-xs); color:var(--text-faint); text-transform:uppercase; letter-spacing:.08em; margin-bottom:7px; }
+.un-next{ padding:12px 14px; border-radius:var(--r); border-left:3px solid var(--uf);
+  background:color-mix(in srgb, var(--uf) 10%, transparent); display:flex; flex-direction:column; gap:3px; }
+.un-next b{ font-family:var(--f-disp); font-size:var(--t-lg); font-weight:600; }
+.un-next span{ font-size:var(--t-sm); color:var(--text-dim); font-variant-numeric:tabular-nums; }
+.un-leer{ font-size:var(--t-sm); color:var(--text-faint); line-height:1.55; padding:4px 0; }
+.un-heute{ display:flex; flex-direction:column; gap:4px; }
+.un-h{ display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:var(--r-xs);
+  background:rgba(255,255,255,.03); border-left:3px solid var(--uf); font-size:var(--t-sm); }
+.un-h.vorbei{ opacity:.45; }
+.un-h.live{ background:color-mix(in srgb, var(--uf) 14%, transparent); }
+.un-h-z{ font-family:var(--f-mono); color:var(--text-dim); font-variant-numeric:tabular-nums; }
+.un-h-n{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.un-live{ font-size:var(--t-xs); font-weight:600; color:var(--uf); }
+.un-balken{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; align-items:end; height:150px; }
+.un-b{ display:flex; flex-direction:column; align-items:center; gap:5px; height:100%; }
+.un-b-v{ font-family:var(--f-mono); font-size:var(--t-xs); color:var(--text-dim); min-height:1.2em; }
+.un-b-s{ position:relative; flex:1; width:100%; max-width:34px; border-radius:6px; background:rgba(255,255,255,.04); display:flex; align-items:flex-end; }
+.un-b-s i{ display:block; width:100%; border-radius:6px; background:color-mix(in srgb, var(--m-study) 55%, transparent); transition:height .6s var(--ez); }
+.un-b-s i.voll{ background:var(--m-study); }
+.un-b-s em{ position:absolute; left:-3px; right:-3px; height:0; border-top:1px dashed color-mix(in srgb, var(--m-study) 70%, transparent); }
+.un-b-t{ font-size:var(--t-xs); color:var(--text-faint); }
+.un-b.heute .un-b-t{ color:var(--text); font-weight:600; }
+.un-tliste{ display:flex; flex-direction:column; gap:6px; }
+.un-t{ display:grid; grid-template-columns:52px minmax(0,1fr) auto auto; align-items:center; gap:12px;
+  padding:9px 10px; border-radius:var(--r); background:rgba(255,255,255,.03); border:1px solid var(--line); }
+.un-t-cd{ display:flex; flex-direction:column; align-items:center; line-height:1; }
+.un-t-cd b{ font-family:var(--f-disp); font-size:var(--t-xl); font-weight:700; font-variant-numeric:tabular-nums; }
+.un-t-cd span{ font-size:10px; color:var(--text-faint); margin-top:2px; }
+.un-t-n{ min-width:0; display:flex; flex-direction:column; gap:2px; }
+.un-t-n b{ font-size:var(--t-base); }
+.un-t-n span{ font-size:var(--t-xs); color:var(--text-faint); }
+.un-t-n i{ font-style:normal; }
+.un-t-w{ font-size:var(--t-xs); color:var(--text-dim); white-space:nowrap; }
+.un-t.nah{ border-color:color-mix(in srgb, var(--bad) 45%, transparent); }
+.un-t.nah .un-t-cd b, .un-t.nah .un-t-w{ color:var(--bad); }
+.un-t.mittel .un-t-cd b{ color:var(--warn); }
+.un-t.fern .un-t-cd b{ color:var(--m-study); }
+.un-t.alt{ opacity:.5; }
+.un-alt{ margin-top:10px; }
+.un-alt summary{ cursor:pointer; font-size:var(--t-sm); color:var(--text-faint); margin-bottom:8px; }
+@media(max-width:520px){ .un-t{ grid-template-columns:44px minmax(0,1fr) auto; } .un-t-w{ display:none; } }
+.un-mods{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; }
+.un-m{ position:relative; padding:12px 14px; border-radius:var(--r); background:rgba(255,255,255,.03);
+  border:1px solid var(--line); border-top:3px solid var(--uf); display:flex; flex-direction:column; gap:8px; }
+.un-m-k{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.un-m-k b{ font-family:var(--f-disp); font-size:var(--t-lg); font-weight:600; }
+.un-m-k span{ font-size:var(--t-xs); color:var(--text-faint); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.un-m-s{ display:flex; flex-wrap:wrap; gap:5px; }
+.un-m-s span{ font-size:var(--t-xs); color:var(--text-dim); padding:2px 8px; border-radius:var(--r-pill);
+  background:color-mix(in srgb, var(--uf) 12%, transparent); font-variant-numeric:tabular-nums; }
+.un-m-t{ display:flex; align-items:center; gap:6px; font-size:var(--t-xs); color:var(--warn); }
+.un-m-t svg{ width:12px; height:12px; }
+@media(max-width:520px){ .sl-kacheln{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .sl-felder label{ display:flex; flex-direction:column; gap:5px; font-size:var(--t-xs); color:var(--text-faint); }
 
 /* ── Wie eine App, nicht wie eine Webseite (nach mobile-native) ──
@@ -165,8 +245,8 @@ button,a,[role="button"],.chip,.rl,[data-go],[data-bt],[data-pk],[data-pf]{
 @media (pointer:coarse){
   input,textarea,select{ font-size:16px !important; }
   /* kleine Kästchen behalten ihre Optik, bekommen aber eine größere Trefferfläche */
-  .tp-hak,.td-stern,[data-tdone]{ position:relative; }
-  .tp-hak::after,.td-stern::after,[data-tdone]::after{ content:""; position:absolute; inset:-9px; }
+  .td-stern,[data-tdone]{ position:relative; }
+  .td-stern::after,[data-tdone]::after{ content:""; position:absolute; inset:-9px; }
 }
 
 /* ============================================================
@@ -203,6 +283,7 @@ button,a,[role="button"],.chip,.rl,[data-go],[data-bt],[data-pk],[data-pf]{
   /* Semantik */
   --good:      #52c98a;
   --warn:      #d9a441;
+  --gold:      #f0c04e;
   --bad:       #e0697c;
 
   /* Messreihen */
@@ -759,7 +840,33 @@ select option{ background:#141a26; }
 }
 
 /* ── Ziele: das Herzstück der Startseite ──────────────── */
-.hd-goals{ margin-bottom:14px; }
+.hd-ziele{ margin-bottom:14px; padding:12px; border-radius:calc(var(--r) + 6px);
+  border:1px solid var(--line); background:rgba(255,255,255,.015);
+  transition:border-color .5s var(--ez), box-shadow .5s var(--ez); }
+.hd-ziele.voll{ border-color:color-mix(in srgb, var(--gold) 70%, transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--gold) 35%, transparent),
+             0 0 34px -6px color-mix(in srgb, var(--gold) 38%, transparent);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--gold) 6%, transparent), transparent 55%); }
+.hz-kopf{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:2px 4px 12px; }
+.hz-ico{ display:grid; place-items:center; width:30px; height:30px; border-radius:50%;
+  color:var(--text-faint); background:rgba(255,255,255,.04); border:1px solid var(--line); }
+.hz-ico svg{ width:15px; height:15px; }
+.voll .hz-ico{ color:var(--gold); border-color:color-mix(in srgb, var(--gold) 50%, transparent);
+  background:color-mix(in srgb, var(--gold) 14%, transparent); }
+.voll .hz-ico svg{ fill:var(--gold); }
+.hz-t{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+.hz-t b{ font-size:var(--t-base); font-weight:650; }
+.voll .hz-t b{ color:var(--gold); }
+.hz-t span{ font-size:var(--t-xs); color:var(--text-faint); }
+.hz-pips{ display:flex; gap:4px; }
+.hz-pips i{ width:18px; height:5px; border-radius:var(--r-pill); background:var(--track); }
+.hz-pips i.an{ background:var(--gold); }
+.hz-serie{ margin-left:auto; font-size:var(--t-sm); color:var(--text-dim); font-variant-numeric:tabular-nums; }
+.hz-serie b{ font-family:var(--f-disp); font-size:var(--t-lg); color:var(--text); margin-right:2px; }
+.voll .hz-serie b{ color:var(--gold); }
+.hz-serie em{ font-style:normal; font-size:var(--t-xs); color:var(--text-faint); margin-left:8px; }
+@media(max-width:560px){ .hz-serie{ margin-left:0; width:100%; } }
+.hd-goals{ margin-bottom:0; }
 .goal{
   position:relative; overflow:hidden; padding:16px 17px;
   border-color:color-mix(in srgb, var(--gc) 22%, transparent);
@@ -986,14 +1093,9 @@ select option{ background:#141a26; }
   background:rgba(0,0,0,.5); box-shadow:0 0 0 1px rgba(255,255,255,.35);
 }
 
-/* Abhaken im Spaltenkopf */
-.tp-hak{
-  width:15px; height:15px; flex:0 0 auto; border-radius:5px;
-  border:1.5px solid var(--line-2); display:grid; place-items:center;
-  color:#08131a; transition:background-color var(--d1) var(--ez),border-color var(--d1) var(--ez);
-}
-.tp-hak.an{ background:var(--good); border-color:var(--good); }
-.tp-hak svg{ width:9px; height:9px; stroke-width:3.4; }
+/* Solider Tag im Spaltenkopf: ergibt sich aus den vier Zielen, nichts zum Anklicken */
+.tp-solid{ display:grid; place-items:center; color:var(--gold); flex:0 0 auto; }
+.tp-solid svg{ width:14px; height:14px; fill:var(--gold); stroke:var(--gold); }
 
 /* Ausgesetztes wird NICHT blass hinterlegt — ausgesetzt heißt weg.
    Der Weg zurück führt über das Abzeichen im Wochenkopf. */
@@ -1608,7 +1710,7 @@ function wocheIstPause(montagK){
 
 function ersterTag(){
   const alle=[...Object.keys(S.metrics||{}),...Object.keys(S.habitLog||{}),
-              ...Object.keys(S.sport||{}),...Object.keys(S.dayCheck||{})].sort();
+              ...Object.keys(S.sport||{})].sort();
   return alle[0]||today();
 }
 
@@ -1779,7 +1881,10 @@ function planHours(k){ return daySegments(k).reduce((a,g)=>a+(g.to-g.from),0)/60
    auch ein Journaleintrag zählt. dayHasData bleibt eng, weil der
    Tageswert davon abhängt. */
 const tagGenutzt=k=>dayHasData(k)||!!((S.mood||{})[k]);
-const dayHasData=k=>!!(S.habitLog[k]&&Object.keys(S.habitLog[k]).length)||!!S.metrics[k]||!!S.sport[k]||!!(S.dayCheck||{})[k];
+/* Alte „Tag abgehakt"-Markierungen (dayCheck) zählen nicht mehr: Solide
+   Tage ergeben sich jetzt aus den vier Zielen, und ein bloßer Haken im
+   Planer ist kein Eintrag — sonst füllten sie Ferienlücken auf. */
+const dayHasData=k=>!!(S.habitLog[k]&&Object.keys(S.habitLog[k]).length)||!!S.metrics[k]||!!S.sport[k];
 const G=()=>Object.assign({sleep:8,study:3,phone:0,sport:300},S.goals||{});
 function dayScore(k){
   /* Zukunft hat keinen Wert, und ein Tag ohne jede Eingabe ist keine
@@ -1810,7 +1915,7 @@ function checkStreak(){ let n=0,d=new Date(); if(!isChecked(dk(d))) d=addD(d,-1)
    Ohne Rekord ist eine Zahl nur eine Zahl. */
 function bestRun(ok){
   const days=new Set([...Object.keys(S.metrics||{}),...Object.keys(S.habitLog||{}),
-                      ...Object.keys(S.sport||{}),...Object.keys(S.dayCheck||{})]);
+                      ...Object.keys(S.sport||{})]);
   const list=[...days].sort();
   if(!list.length) return 0;
   let best=0,run=0,prev=null;
@@ -1830,8 +1935,6 @@ function bestRun(ok){
   return best;
 }
 
-/* Die drei Ziele, die zählen. Solide Tage hakst du selbst ab; die
-   anderen beiden ergeben sich aus deinen Werten. */
 /* ── Ziele ──────────────────────────────────────────────
    Vorher: „jeden Tag" plus Serie. Das hatte denselben Fehler wie die
    Gewohnheiten — und beim Scrolling war es schlimmer als das: Das Ziel
@@ -1842,7 +1945,7 @@ function bestRun(ok){
    Jetzt hat jedes Ziel eine Schwelle UND ein Wochenziel, dazu dieselbe
    zerfallende Stärke wie die Gewohnheiten. Beides ist einstellbar.
    ──────────────────────────────────────────────────────── */
-const ZIEL_STD={ studyTage:5, phoneTage:3, solidTage:3, phoneMax:1 };
+const ZIEL_STD={ sleepTage:4, studyTage:5, phoneTage:3, phoneMax:1 };
 const ZG=()=>Object.assign({},ZIEL_STD,S.zielTage||{});
 
 /* Scroll-Bewertung. Vorher wurde durch das Ziel geteilt. Stand das Ziel
@@ -1863,7 +1966,7 @@ function phoneAnteil(v){
    ──────────────────────────────────────────────────────── */
 const SCHUTZ_ALLE=7, SCHUTZ_MAX=3;
 
-function serieSchutz(ok,von,bis){
+function serieSchutz(ok,von,bis,pauseNeutral=true){
   let serie=0, schutz=0, best=0, seitSchutz=0, genutzt=0, gerettet=[];
   /* Der heutige Tag darf keine Serie reißen — er ist noch nicht vorbei.
      Erfüllt zählt er sofort, unerfüllt wird er einfach nicht bewertet. */
@@ -1872,7 +1975,7 @@ function serieSchutz(ok,von,bis){
   for(let d=parsedk(von); ; d=addD(d,1)){
     const k=dk(d);
     if(k>ende) break;
-    if(!ok(k)&&istPause(k)) continue;            /* Pause: neutral */
+    if(pauseNeutral&&!ok(k)&&istPause(k)) continue;   /* Pause: neutral */
     if(ok(k)){
       serie++; seitSchutz++;
       if(seitSchutz>=SCHUTZ_ALLE&&schutz<SCHUTZ_MAX){ schutz++; seitSchutz=0; }
@@ -1899,28 +2002,51 @@ function gerettetText(tage){
        : `${tage.length} Tage gerettet — zuletzt ${wann.toLowerCase()==="heute"||wann.toLowerCase()==="gestern"?wann.toLowerCase():wann}`;
 }
 
-function buildGoals(){
-  const g=G(), z=ZG(), t=today(), von=ersterTag();
-  const m=k=>S.metrics[k]||{};
-  const okSolid  = k=>isChecked(k);
-  const okStudy  = k=>nv(m(k).study)&&m(k).study>=g.study;
-  const okScroll = k=>nv(m(k).phone)&&m(k).phone<=z.phoneMax;
+/* Die vier Tagesziele als reine Prüfungen — gebraucht von den Karten
+   auf Heute, vom Rückblick und vom Planer. */
+function zielPruefer(){
+  const g=G(), z=ZG(), m=k=>S.metrics[k]||{};
+  return {
+    eintrag: tagGenutzt,
+    sleep:   k=>nv(m(k).sleepHours)&&m(k).sleepHours>=g.sleep,
+    study:   k=>nv(m(k).study)&&m(k).study>=g.study,
+    scroll:  k=>nv(m(k).phone)&&m(k).phone<=z.phoneMax
+  };
+}
+/* Ein solider Tag ist einer, an dem alle vier Ziele erfüllt sind —
+   nichts zum Abhaken mehr, er ergibt sich aus den Werten. */
+function solideTag(k){
+  const P=zielPruefer();
+  return P.eintrag(k)&&P.sleep(k)&&P.study(k)&&P.scroll(k);
+}
+function solideSerie(){
+  const S2=serieSchutz(solideTag,ersterTag(),today());
+  const P=zielPruefer(), t=today();
+  const heute=["eintrag","sleep","study","scroll"].filter(x=>P[x](t)).length;
+  return {serie:S2.serie, best:S2.best, schutz:S2.schutz, bisSchutz:S2.bisSchutz,
+          gerettet:S2.gerettet, heute, voll:heute===4};
+}
 
-  const bau=(key,label,icon,color,ok,regel)=>{
-    const S2=serieSchutz(ok,von,t);
+function buildGoals(){
+  const g=G(), z=ZG(), t=today(), von=ersterTag(), P=zielPruefer();
+
+  const bau=(key,label,icon,color,ok,regel,pauseNeutral=true)=>{
+    const S2=serieSchutz(ok,von,t,pauseNeutral);
     return {key,label,icon,color,regel,todayOk:ok(t),
             serie:S2.serie, schutz:S2.schutz, best:S2.best,
             genutzt:S2.genutzt, gerettet:S2.gerettet, bisSchutz:S2.bisSchutz};
   };
 
   /* „Eingetragen" steht vorn: Es misst genau das, worum es geht —
-     NOVA jeden Tag benutzen. Gold, die Farbe für Serien. */
+     NOVA jeden Tag benutzen. Deshalb rettet hier auch eine Pause
+     nichts: wer nichts einträgt, beginnt von vorn. */
   return [
-    bau("eintrag","Eingetragen","flame","var(--warn)",tagGenutzt,"etwas in NOVA erfasst"),
-    bau("solid","Solide Tage","check","var(--c1)",okSolid,"von dir abgehakt"),
-    bau("study","Gelernt","book","var(--m-study)",okStudy,
+    bau("eintrag","Eingetragen","flame","var(--warn)",P.eintrag,"etwas in NOVA erfasst",false),
+    bau("sleep","Geschlafen","moon","var(--m-sleep)",P.sleep,
+        `mindestens ${f(g.sleep)} h geschlafen`),
+    bau("study","Gelernt","book","var(--m-study)",P.study,
         `mindestens ${f(g.study)} h gelernt`),
-    bau("scroll","Scroll-Ziel","phone","var(--m-phone)",okScroll,
+    bau("scroll","Scroll-Ziel","phone","var(--m-phone)",P.scroll,
         `höchstens ${f(z.phoneMax)} h Scrolling`)
   ];
 }
@@ -2241,6 +2367,8 @@ const I=(()=>{
     face3:  w('<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/>'),
     schild: w('<path d="M12 3l7.5 3v5.4c0 4.4-3 8.2-7.5 9.6-4.5-1.4-7.5-5.2-7.5-9.6V6z"/>'),
     bulb:   w('<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/>'),
+    star:   w('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'),
+    cap:    w('<path d="M2.5 9L12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c0 1.4 2.5 3 5.5 3s5.5-1.6 5.5-3V11"/><path d="M21.5 9v5"/>'),
   };
 })();
 const ico=(n,cls="")=>I[n]?I[n].replace("<svg",`<svg class="${cls}"`):"";
@@ -2302,9 +2430,9 @@ function toast(msg,icon="check"){
 const NAV=[
   {id:"heute",   t:"Heute",        i:"home",   g:0},
   {id:"planer",  t:"Planer",       i:"cal",    g:0},
-  {id:"journal", t:"Journal",      i:"note",   g:1},
+  {id:"uni",     t:"Uni",          i:"cap",    g:1},
+  {id:"schlaf",  t:"Schlaf",       i:"moon",   g:1},
   {id:"rueckblick",t:"Rückblick",  i:"grid",   g:2},
-  {id:"schlaf",  t:"Schlaf",       i:"moon",   g:2},
   {id:"sport",   t:"Training",     i:"run",    g:2},
   {id:"habits",  t:"Gewohnheiten", i:"list",   g:4},
 ];
@@ -2473,7 +2601,6 @@ function cmdkSource(){
   a.push({g:"Eintragen",t:"Sleep Score eintragen",i:"heart",run:()=>quickPrompt("sleepScore","Sleep Score 0–100","z. B. 78")});
   a.push({g:"Eintragen",t:"Training hinzufügen",i:"run",run:()=>{go("sport");}});
   a.push({g:"Eintragen",t:"Gewohnheit anlegen",i:"plus",run:()=>habitModal(null)});
-  a.push({g:"Eintragen",t:"Stimmung und Lernen eintragen",i:"note",run:()=>{jDate=today();go("journal");}});
   activeHabits().forEach(h=>a.push({g:"Heute abhaken",t:h.name,i:"check",
     run:()=>{ toggleHabit(today(),h.id); toast(h.name+" umgeschaltet"); go(VIEW); }}));
   a.push({g:"Daten",t:"Backup herunterladen",i:"down",run:exportData});
@@ -2583,7 +2710,7 @@ function settingsModal(){
         auf null. Mit einem Wochenziel misst NOVA, was du dir vornimmst.</div>
     </div>
     <div class="grid c3" style="gap:10px">
-      ${[["zSolid","Solide Tage",z.solidTage],["zStudy","Gelernt",z.studyTage],
+      ${[["zSleep","Geschlafen",z.sleepTage],["zStudy","Gelernt",z.studyTage],
          ["zPhone","Scroll-Ziel",z.phoneTage]].map(([id,l,v])=>
         `<div><label style="margin-top:0">${l}</label>
          <input type="number" min="1" max="7" step="1" id="${id}" value="${v}"></div>`).join("")}
@@ -2606,7 +2733,7 @@ function settingsModal(){
              study:+document.getElementById("gStudy").value||3,
              phone:parseFloat(document.getElementById("gPhone").value)||0,
              sport:+document.getElementById("gSport").value||300};
-    S.zielTage={ solidTage:nz("zSolid"), studyTage:nz("zStudy"), phoneTage:nz("zPhone"),
+    S.zielTage={ sleepTage:nz("zSleep"), studyTage:nz("zStudy"), phoneTage:nz("zPhone"),
                  phoneMax:Math.max(0,parseFloat(document.getElementById("gPhone").value)||0) };
     save(); closeModal(); toast("Ziele gespeichert"); go(VIEW);
   };
@@ -2897,7 +3024,7 @@ R.heute=function(){
   const gruss=hrs<5?"Gute Nacht":hrs<11?"Guten Morgen":hrs<18?"Guten Tag":"Guten Abend";
   const nm=S.userName?", "+esc(S.userName):"";
 
-  const GOALS=buildGoals();
+  const GOALS=buildGoals(), SO=solideSerie();
 
   const hs=activeHabits().filter(h=>h.createdAt<=k);
   const offen=todoOffen();
@@ -2917,7 +3044,6 @@ R.heute=function(){
           <div class="hd-sub">${total?`${done} von ${total} Gewohnheiten`:"Noch keine Gewohnheiten"}${sp.length?` · ${Math.round(sportMin(k))} min Training`:""}</div>
         </div>
         <div style="display:flex;gap:6px">
-          <button class="b b-sm" onclick="go('journal')" title="Journal">${ico("note")}</button>
 
         </div>
       </div>
@@ -2961,7 +3087,20 @@ R.heute=function(){
     </div>
   </div>
 
-  <!-- Ziele: das Wichtigste, deshalb groß und mit Fortschritt zum nächsten Rekord -->
+  <!-- Ziele: das Wichtigste, deshalb groß und mit Fortschritt zum nächsten Rekord.
+       Sind alle vier erfüllt, ist der Tag solide — dann bekommt der
+       ganze Block einen goldenen Rahmen. -->
+  <div class="hd-ziele${SO.voll?" voll":""}">
+  <div class="hz-kopf">
+    <span class="hz-ico">${ico("star")}</span>
+    <div class="hz-t"><b>Solider Tag</b>
+      <span>${SO.voll?"Heute geschafft — alle vier Ziele erfüllt"
+        :`Heute ${SO.heute} von 4 Zielen${SO.heute===3?" — eins fehlt noch":""}`}</span></div>
+    <span class="hz-pips">${[0,1,2,3].map(i=>`<i class="${i<SO.heute?"an":""}"></i>`).join("")}</span>
+    <span class="hz-serie" title="${SO.schutz?`${SO.schutz} Schutztag${SO.schutz===1?"":"e"} auf Vorrat`:"kein Schutztag auf Vorrat"}">
+      <b>${SO.serie}</b> ${SO.serie===1?"Tag":"Tage"} in Folge
+      <em>${SO.best>0?(SO.serie>=SO.best&&SO.serie>0?"Bestwert":"Rekord "+SO.best):"noch kein Rekord"}</em></span>
+  </div>
   <div class="grid c4 hd-goals">
     ${GOALS.map(G2=>{
       const heute=G2.todayOk;
@@ -2985,9 +3124,8 @@ R.heute=function(){
         </div>
         ${G2.gerettet.length?`<div class="goal-rettung">
           ${ico("schild")}<span>${gerettetText(G2.gerettet)}</span></div>`:""}
-        ${G2.key==="solid"?`<button class="b b-sm goal-act ${heute?"b-1":""}" id="hCheck">
-          ${ico("check")}${heute?"Heute abgehakt":"Heute abhaken"}</button>`:""}
       </div>`;}).join("")}
+  </div>
   </div>
 
   <div class="grid hd-main">
@@ -3112,7 +3250,6 @@ R.heute=function(){
     toggleHabit(tag,id); R.heute(); paintOrb(); });
   V.querySelector("#hDate").onchange=e=>{ dayView=e.target.value||today(); R.heute(); };
   V.querySelector("#hToday")?.addEventListener("click",()=>{ dayView=today(); R.heute(); });
-  V.querySelector("#hCheck").onclick=()=>{ toggleCheck(k); R.heute(); paintOrb(); };
   V.querySelector("#mSave").onclick=()=>{
     const e={};
     V.querySelectorAll("[data-m]").forEach(i=>{ const v=parseFloat(i.value); if(!isNaN(v)) e[i.dataset.m]=v; });
@@ -3201,10 +3338,10 @@ function zielSchemaVorschlag(){
   const g=G(), z=ZG(), m=k=>S.metrics[k]||{};
   const raus=[];
 
-  const solidIst=istProWoche(k=>isChecked(k));
-  raus.push({id:"solidTage", label:"Solide Tage", ist:solidIst,
-    alt:z.solidTage, neu:clamp(Math.round(solidIst)+1,1,7),
-    text:t=>`an ${t} Tagen pro Woche`});
+  const sleepIst=istProWoche(k=>nv(m(k).sleepHours)&&m(k).sleepHours>=g.sleep);
+  raus.push({id:"sleepTage", label:"Geschlafen", ist:sleepIst,
+    alt:z.sleepTage, neu:clamp(Math.round(sleepIst)+1,1,7),
+    text:t=>`an ${t} Tagen mindestens ${f(g.sleep)} h`});
 
   const studyIst=istProWoche(k=>nv(m(k).study)&&m(k).study>=g.study);
   raus.push({id:"studyTage", label:"Gelernt", ist:studyIst,
@@ -4012,109 +4149,8 @@ function setNote(k,t){ if(!S.mood)S.mood={}; const e=S.mood[k]||(S.mood[k]={});
   t=t.trim(); if(t) e.note=t; else delete e.note;
   if(!e.v&&!e.note) delete S.mood[k]; save(); }
 
-let jDate=today(), jFilter="";
-
-R.journal=function(){
-  const k=jDate, m=moodOf(k)||{};
-  const alle=Object.entries(S.mood||{}).filter(([,e])=>e.note||e.v)
-    .sort((a,b)=>b[0].localeCompare(a[0]));
-  const suche=jFilter.trim().toLowerCase();
-  const liste=suche?alle.filter(([d,e])=>(e.note||"").toLowerCase().includes(suche)):alle;
-
-  /* Stimmungsverlauf der letzten acht Wochen */
-  const tage=[...Array(56)].map((_,i)=>addD(new Date(),-55+i));
-  const werte=tage.map(d=>{const e=moodOf(dk(d));return e&&e.v?e.v:null;});
-  const mitWert=werte.filter(v=>v!==null);
-  const schnitt=mitWert.length?avg(mitWert):null;
-
-  /* Wie hängt Stimmung mit Schlaf zusammen? Nur zeigen, wenn genug da ist. */
-  let paare=[];
-  Object.entries(S.mood||{}).forEach(([d,e])=>{
-    const mm=S.metrics[d]||{};
-    if(e.v&&nv(mm.sleepHours)) paare.push([mm.sleepHours,e.v]);
-  });
-  let hinweis="";
-  if(paare.length>=8){
-    const gut=paare.filter(p=>p[1]>=4), schlecht=paare.filter(p=>p[1]<=2);
-    if(gut.length>=3&&schlecht.length>=3){
-      const sg=avg(gut.map(p=>p[0])), ss=avg(schlecht.map(p=>p[0]));
-      if(Math.abs(sg-ss)>=.4)
-        hinweis=`An guten Tagen hast du im Schnitt ${f(sg)} h geschlafen, an schlechten ${f(ss)} h.`;
-    }
-  }
-
-  document.getElementById("v-journal").innerHTML=`
-  <div class="p-head" style="margin-bottom:14px">
-    <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Journal</div>
-    <div class="p-note">${alle.length} Einträge${schnitt!==null?` · Stimmung ${f(schnitt)} von 5`:""}</div></div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <button class="b b-i" id="jPrev">${ico("left")}</button>
-      <input type="date" id="jDate" value="${k}" style="width:auto;padding:7px 10px;font-size:var(--t-sm)">
-      <button class="b b-i" id="jNext">${ico("right")}</button></div>
-  </div>
-
-  <div class="grid zwei-spalten">
-    <div class="grid">
-      <div class="p">
-        <div class="p-title" style="margin-bottom:14px">${ico("smile")}Wie war ${k===today()?"heute":fmtShort(parsedk(k))}?</div>
-        <div class="mood-row">
-          ${MOODS.map(x=>`<button class="mood${m.v===x.v?" on":""}" data-mv="${x.v}" style="--mc:${x.c}">
-            ${ico(x.i)}<span>${x.l}</span></button>`).join("")}
-        </div>
-        <label style="display:flex;align-items:center;gap:7px;font-size:var(--t-sm);color:var(--text-dim);margin:18px 0 7px">
-          ${ico("bulb").replace("<svg",'<svg width="14" height="14"')}Was hast du heute gelernt?</label>
-        <textarea id="jNote" rows="5" placeholder="Eine Sache reicht. Auch Kleinigkeiten zählen."
-          style="resize:vertical;line-height:1.6">${esc(m.note||"")}</textarea>
-        <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
-          <button class="b b-1" id="jSave">Speichern</button>
-          <span class="p-note" id="jHint"></span>
-        </div>
-      </div>
-
-      <div class="p">
-        <div class="p-head"><div class="p-title">${ico("spark")}Stimmung, acht Wochen</div>
-          <span class="p-note">${mitWert.length} Tage bewertet</span></div>
-        ${mitWert.length>1
-          ? lineChart(tage.map(d=>d.getDate()===1||d.getDay()===1?fmtShort(d):""),
-              [{data:werte,color:"var(--c1)"}],{min:1,max:5,h:150})
-          : `<div class="empty">${ico("smile")}<div>Bewerte ein paar Tage, dann entsteht hier eine Kurve.</div></div>`}
-        ${hinweis?`<div class="j-hint">${ico("bulb")}<span>${esc(hinweis)}</span></div>`:""}
-      </div>
-    </div>
-
-    <div class="p">
-      <div class="p-head">
-        <div class="p-title">${ico("note")}Rückschau</div>
-        <input id="jSuche" placeholder="Suchen…" value="${esc(jFilter)}" class="j-suche">
-      </div>
-      ${liste.length?`<div class="j-list">${liste.slice(0,60).map(([d,e])=>{
-        const mo=MOODS.find(x=>x.v===e.v);
-        return `<button class="j-item" data-jd="${d}">
-          <div class="j-item-top">
-            <span class="j-date">${fmtShort(parsedk(d))}<span class="j-wd">${WD[(parsedk(d).getDay()+6)%7]}</span></span>
-            ${mo?`<span class="j-mood" style="color:${mo.c}">${ico(mo.i).replace("<svg",'<svg width="14" height="14"')}${mo.l}</span>`:""}
-          </div>
-          ${e.note?`<p class="j-text">${esc(e.note)}</p>`:`<p class="j-text j-empty">nur bewertet</p>`}
-        </button>`;}).join("")}</div>`
-      :`<div class="empty">${ico("note")}<div>${suche?"Nichts gefunden.":"Noch keine Einträge.<br>Schreib links deine erste Notiz."}</div></div>`}
-    </div>
-  </div>`;
-
-  const V=document.getElementById("v-journal");
-  V.querySelector("#jPrev").onclick=()=>{ jDate=dk(addD(parsedk(jDate),-1)); R.journal(); };
-  V.querySelector("#jNext").onclick=()=>{ jDate=dk(addD(parsedk(jDate),1)); R.journal(); };
-  V.querySelector("#jDate").onchange=e=>{ jDate=e.target.value||today(); R.journal(); };
-  V.querySelectorAll("[data-mv]").forEach(b=>b.onclick=()=>{ setMood(k,+b.dataset.mv); R.journal(); });
-  V.querySelectorAll("[data-jd]").forEach(b=>b.onclick=()=>{ jDate=b.dataset.jd; R.journal(); });
-  const ta=V.querySelector("#jNote"), hint=V.querySelector("#jHint");
-  const sichern=()=>{ setNote(k,ta.value); hint.textContent="gespeichert"; setTimeout(()=>hint.textContent="",1800); };
-  V.querySelector("#jSave").onclick=sichern;
-  ta.onblur=()=>{ if((moodOf(k)||{}).note!==ta.value.trim()) sichern(); };
-  ta.onkeydown=e=>{ if((e.metaKey||e.ctrlKey)&&e.key==="Enter") sichern(); };
-  const su=V.querySelector("#jSuche");
-  su.oninput=()=>{ jFilter=su.value; const p=su.selectionStart; R.journal();
-    const n=document.getElementById("jSuche"); n.focus(); n.setSelectionRange(p,p); };
-};
+/* Die Journal-Seite ist entfernt; Stimmungen und Notizen bleiben in
+   den Daten erhalten und zählen weiter als „Eingetragen". */
 
 /* ============================================================
    12 — RÜCKBLICK
@@ -4170,8 +4206,9 @@ function rbKarte(){
       const d=addD(start,w*7+t), k=dk(d), st=rbStufe(m,k);
       if(st!=="z"&&st!=="x"&&st!=="p") mitDaten++;
       const p=st==="p"?pauseAm(k):null;
-      zellen.push(`<i class="rb-z s${st}${k===rbTag?" sel":""}${k===today()?" heute":""}" data-rbk="${k}"
-        title="${tagLang(k)}${p?` · Pause: ${esc(p.name)}`:st==="x"?" · kein Eintrag":st==="z"?"":` · ${m.l} ${m.txt(m.wert(k))}`}"></i>`);
+      const gold=k<=today()&&solideTag(k);
+      zellen.push(`<i class="rb-z s${st}${gold?" gold":""}${k===rbTag?" sel":""}${k===today()?" heute":""}" data-rbk="${k}"
+        title="${tagLang(k)}${gold?" · solider Tag":""}${p?` · Pause: ${esc(p.name)}`:st==="x"?" · kein Eintrag":st==="z"?"":` · ${m.l} ${m.txt(m.wert(k))}`}"></i>`);
       if(t===0&&d.getMonth()!==letzterMonat){
         if(w<52||d.getDate()<=7) monate.push(`<span style="grid-column:${w+1}">${MS[d.getMonth()]}</span>`);
         letzterMonat=d.getMonth();
@@ -4192,7 +4229,8 @@ function rbKarte(){
       <div class="rb-fuss">
         <span>${mitDaten} Tage mit Einträgen</span>
         <span class="rb-leg">weniger <i class="rb-z s0"></i><i class="rb-z s1"></i><i class="rb-z s2"></i><i class="rb-z s3"></i><i class="rb-z s4"></i> mehr
-          <i class="rb-z sp" style="margin-left:10px"></i> Pause</span>
+          <i class="rb-z sp" style="margin-left:10px"></i> Pause
+          <i class="rb-z s0 gold" style="margin-left:10px"></i> Solider Tag</span>
       </div>
     </div>`};
 }
@@ -4245,7 +4283,7 @@ function rbZahlen(tage){
     study: st.length?st.reduce((a,b)=>a+b,0):null,
     sport: tage.reduce((a,k)=>a+sportMin(k),0),
     sleep: sl.length?avg(sl):null,
-    solid: tage.filter(isChecked).length,
+    solid: tage.filter(solideTag).length,
     mitDaten: tage.filter(dayHasData).length
   };
 }
@@ -4334,7 +4372,7 @@ function rbZeitraum(){
         ${rbKachel("Lernen", a.study!==null?f(a.study)+" h":"–", a.study, b.study, v=>f(v)+" h", "var(--m-study)")}
         ${rbKachel("Training", a.sport?sbDauer(a.sport):"–", a.sport, b.sport, v=>sbDauer(v), "var(--m-sport)")}
         ${rbKachel("Ø Schlaf", a.sleep!==null?f(a.sleep)+" h":"–", a.sleep, b.sleep, v=>f(v)+" h", "var(--m-sleep)")}
-        ${rbKachel("Solide Tage", a.solid, a.solid, b.solid, v=>String(Math.round(v)), "var(--c1)")}
+        ${rbKachel("Solide Tage", a.solid, a.solid, b.solid, v=>String(Math.round(v)), "var(--gold)")}
       </div>
       <p class="rb-vgl">Vergleich mit ${rbZeit==="woche"?"der Vorwoche":rbZeit==="monat"?"dem Vormonat":"dem Vorjahr"}${sp.laufend?`, jeweils die ersten ${sp.tage} Tage`:""}${pausenTage>0?` · ${pausenTage} Pausentage nicht mitgezählt`:""}.</p>
       ${ein.length?`<div class="rb-ein">${ein.map(e=>`<p>${e}</p>`).join("")}</div>`:""}
@@ -4351,11 +4389,11 @@ function rbZeitraum(){
    Alles, was „in Folge" zählt, an einer Stelle. Neu ist „Eingetragen":
    genau das, worum es geht — NOVA jeden Tag benutzen. */
 function serienListe(){
-  const OK={eintrag:tagGenutzt, solid:k=>isChecked(k),
-    study:k=>nv((S.metrics[k]||{}).study)&&S.metrics[k].study>=G().study,
-    scroll:k=>nv((S.metrics[k]||{}).phone)&&S.metrics[k].phone<=ZG().phoneMax};
-  const zeilen=buildGoals().map(g=>({label:g.label, regel:g.regel, farbe:g.color, ok:OK[g.key],
-    serie:g.serie, best:g.best, schutz:g.schutz}));
+  const OK=zielPruefer(), so=solideSerie();
+  const zeilen=[{label:"Solider Tag", regel:"alle vier Ziele erfüllt", farbe:"var(--gold)", ok:solideTag,
+      serie:so.serie, best:so.best, schutz:so.schutz, gold:true}]
+    .concat(buildGoals().map(g=>({label:g.label, regel:g.regel, farbe:g.color, ok:OK[g.key],
+      serie:g.serie, best:g.best, schutz:g.schutz})));
   const habits=activeHabits().map(h=>{ const se=habitSerie(h); return {h,se}; })
     .filter(x=>x.se.n>0).sort((a,b)=>b.se.n-a.se.n).slice(0,5);
   return {zeilen,habits};
@@ -4372,9 +4410,9 @@ function rbSerien(){
   const {zeilen,habits}=serienListe();
   return `<div class="p">
     <div class="p-head"><div class="p-title">${ico("flame")}Serien</div>
-      <span class="p-note">Pausen zählen nicht mit · Schutztage fangen einen verpassten Tag ab</span></div>
+      <span class="p-note">Schutztage fangen einen verpassten Tag ab · Pausen zählen nicht mit, außer bei „Eingetragen"</span></div>
     <div class="se-liste">
-      ${zeilen.map(z=>`<div class="se-z" style="--sf:${z.farbe}">
+      ${zeilen.map(z=>`<div class="se-z${z.gold?" se-gold":""}" style="--sf:${z.farbe}">
         <div class="se-n"><b>${z.label}</b><span>${z.regel}</span></div>
         ${serieStreifen(z.ok)}
         <div class="se-w"><b>${z.serie}</b><span>${z.serie===1?"Tag":"Tage"}</span></div>
@@ -4408,7 +4446,7 @@ function rbPausen(){
   return `<div class="p">
     <div class="p-head"><div class="p-title">${ico("moon")}Pausen</div>
       <button class="b b-sm" id="psNeu">+ Pause</button></div>
-    <p class="p-note" style="margin:-4px 0 12px">Ferien, Urlaub, krank: in einer Pause läuft keine Serie aus und kein Schnitt wird verzerrt.</p>
+    <p class="p-note" style="margin:-4px 0 12px">Ferien, Urlaub, krank: In einer Pause verzerrt kein Schnitt, und die Ziel-Serien laufen nicht aus. „Eingetragen" zählt trotzdem weiter — wer nichts einträgt, beginnt dort von vorn.</p>
     ${lk.length?`<div class="ps-luecken">${lk.map(l=>`<div class="ps-l">
       <span>Lücke <b>${fmtShort(parsedk(l.von))} – ${fmtShort(parsedk(l.bis))}</b> · ${l.n} Tage ohne Eintrag</span>
       <button class="b b-sm" data-lueckepause="${l.von}|${l.bis}">Als Pause markieren</button></div>`).join("")}</div>`:""}
@@ -4495,59 +4533,154 @@ const nachtMin=t=>(hm2min(t)-18*60+1440)%1440;
 const nachtUhr=v=>min2hm((v+18*60)%1440);
 function streuung(a){ if(a.length<2) return null; const m=avg(a); return Math.sqrt(avg(a.map(x=>(x-m)**2))); }
 
-/* Wann geschlafen: je Nacht ein Balken vom Einschlafen bis zum
-   Aufwachen. Zeigt Regelmäßigkeit, was eine Stundenzahl nicht kann. */
-function schlafZeitenChart(nae){
+/* ── Wann du schläfst ───────────────────────────────────
+   Das Herz der Seite: je Nacht ein Balken vom Einschlafen bis zum
+   Aufwachen. Eine Stundenzahl sagt, wie viel — erst die Lage zeigt,
+   ob der Rhythmus hält. Dazu:
+   - die Achse passt sich deinen Zeiten an, statt starr 20–12 Uhr
+   - ein Band um deine übliche Einschlaf- und Aufwachzeit
+   - Wochenend-Nächte leicht hinterlegt (Fr→Sa, Sa→So)
+   - Nächte unter dem Ziel blasser, die Stunden stehen über dem Balken
+   - antippen zeigt die Nacht im Detail
+   ──────────────────────────────────────────────────────── */
+let slNacht=null;
+const istWeNacht=k=>{ const d=parsedk(k).getDay(); return d===6||d===0; };
+function schlafRhythmus(nae){
   const mit=nae.filter(n=>n.von&&n.bis);
-  if(mit.length<3) return noData("Bett- und Aufstehzeiten kommen von der Uhr. Für diese Ansicht fehlen noch Nächte.");
-  const W=680,H=220,pL=46,pR=12,pT=10,pB=26, pw=W-pL-pR, ph=H-pT-pB;
-  const a0=nachtMin("20:00"), a1=nachtMin("12:00");
+  const bett=mit.map(n=>nachtMin(n.von)), auf=mit.map(n=>nachtMin(n.bis));
+  const mitte=n=>{ const a=nachtMin(n.von); return a+((hm2min(n.bis)-hm2min(n.von)+1440)%1440)/2; };
+  const we=mit.filter(n=>istWeNacht(n.k)).map(mitte), wt=mit.filter(n=>!istWeNacht(n.k)).map(mitte);
+  return { n:mit.length,
+    bett: bett.length?avg(bett):null, auf: auf.length?avg(auf):null,
+    sBett: streuung(bett), sAuf: streuung(auf),
+    jetlag: we.length>=2&&wt.length>=2 ? avg(we)-avg(wt) : null };
+}
+function schlafZeitenChart(nae,ziel,r){
+  const mit=nae.filter(n=>n.von&&n.bis);
+  if(mit.length<2){
+    const aelter=Object.values(S.metrics||{}).filter(m=>m.sleepFrom&&m.sleepTo).length;
+    return `<div class="empty">${ico("clock")}<div>Trag beim Schlaf „Ins Bett“ und „Aufgewacht“ ein —
+      ab zwei Nächten entsteht hier dein Rhythmus.</div>
+      ${aelter>=2&&slTage<90?`<button class="b b-sm" data-slt="90" style="margin-top:10px">${aelter} ältere Nächte mit Uhrzeit zeigen</button>`:""}</div>`;
+  }
+  const lo=Math.min(...mit.map(n=>nachtMin(n.von))), hi=Math.max(...mit.map(n=>nachtMin(n.bis)));
+  const a0=Math.max(0,Math.floor((lo-40)/60)*60), a1=Math.min(1440,Math.ceil((hi+40)/60)*60);
+  /* Schmal (Handy): eigenes, höheres Seitenverhältnis — sonst wird die
+     Grafik flach und die Schrift winzig. */
+  const eng=window.innerWidth<640;
+  const W=eng?390:760,H=eng?360:330,pL=eng?40:46,pR=eng?48:58,pT=24,pB=30, pw=W-pL-pR, ph=H-pT-pB;
   const y=v=>pT+(clamp(v,a0,a1)-a0)/(a1-a0)*ph;
-  const n=nae.length, bw=Math.max(3,Math.min(14,pw/n*.6));
+  const n=nae.length, slot=pw/n, bw=clamp(slot*.62,2.5,22);
+  const x=i=>pL+slot*(i+.5);
   let g="";
-  ["20:00","22:00","00:00","02:00","04:00","06:00","08:00","10:00","12:00"].forEach(t=>{
-    const yy=y(nachtMin(t));
-    g+=`<line x1="${pL}" y1="${yy}" x2="${W-pR}" y2="${yy}" stroke="var(--track)" stroke-dasharray="3 5"/>
-        <text x="${pL-8}" y="${yy+3.5}" text-anchor="end" font-family="var(--f-mono)" font-size="9.5" fill="var(--text-faint)">${t}</text>`;
-  });
+  /* Wochenende hinterlegen */
+  nae.forEach((nn,i)=>{ if(istWeNacht(nn.k))
+    g+=`<rect x="${(pL+slot*i).toFixed(1)}" y="${pT}" width="${slot.toFixed(1)}" height="${ph}" fill="rgba(255,255,255,.028)"/>`; });
+  /* Stundenlinien */
+  const schritt=(a1-a0)>12*60?120:60;
+  for(let v=a0; v<=a1; v+=schritt){
+    g+=`<line x1="${pL}" y1="${y(v)}" x2="${W-pR}" y2="${y(v)}" stroke="var(--track)" stroke-dasharray="2 6"/>
+      <text x="${pL-8}" y="${y(v)+3.5}" text-anchor="end" font-family="var(--f-mono)" font-size="10" fill="var(--text-faint)">${nachtUhr(v)}</text>`;
+  }
+  /* Übliche Zeiten als Band (Schnitt ± Streuung) mit Beschriftung rechts */
+  const band=(m,sd,txt)=>{ if(m===null) return "";
+    const s=Math.max(sd||0,8);
+    return `<rect x="${pL}" y="${y(m-s)}" width="${pw}" height="${Math.max(2,y(m+s)-y(m-s))}" fill="var(--m-sleep)" opacity=".07"/>
+      <line x1="${pL}" y1="${y(m)}" x2="${W-pR}" y2="${y(m)}" stroke="var(--m-sleep)" stroke-opacity=".55" stroke-dasharray="5 4"/>
+      <text x="${W-pR+6}" y="${y(m)-2}" font-family="var(--f-mono)" font-size="10.5" font-weight="600" fill="var(--m-sleep)">${nachtUhr(Math.round(m))}</text>
+      <text x="${W-pR+6}" y="${y(m)+10}" font-size="9" fill="var(--text-faint)">${txt}</text>`; };
+  g+=band(r.bett,r.sBett,"Ø Bett")+band(r.auf,r.sAuf,"Ø auf");
+  /* Balken */
   let b="";
   nae.forEach((nn,i)=>{
-    if(!nn.von||!nn.bis) return;
-    const x=pL+pw/n*(i+.5)-bw/2, y1=y(nachtMin(nn.von)), y2=y(nachtMin(nn.bis));
-    b+=`<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(2,y2-y1)}" rx="${Math.min(4,bw/2)}" fill="var(--m-sleep)" opacity="${nn.pause?.35:.9}">
-      <title>${tagLang(nn.k)}: ${nn.von}–${nn.bis}${nn.h!==null?` · ${f(nn.h)} h`:""}</title></rect>`;
+    const sel=nn.k===slNacht;
+    if(nn.von&&nn.bis){
+      const y1=y(nachtMin(nn.von)), y2=y(nachtMin(nn.bis)), hoch=Math.max(3,y2-y1);
+      const gut=nn.h!==null&&nn.h>=ziel;
+      b+=`<rect x="${(x(i)-bw/2).toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${hoch.toFixed(1)}"
+        rx="${Math.min(5,bw/2).toFixed(1)}" fill="var(--m-sleep)" opacity="${nn.pause?.28:gut?.95:.5}"
+        ${sel?`stroke="var(--text)" stroke-width="1.6"`:""}/>`;
+      if(slot>=17&&nn.h!==null)
+        b+=`<text x="${x(i).toFixed(1)}" y="${(y1-6).toFixed(1)}" text-anchor="middle" font-family="var(--f-mono)" font-size="9.5"
+          fill="${gut?"var(--text-dim)":"var(--text-faint)"}">${f(nn.h)}</text>`;
+    } else if(nn.h!==null){
+      /* Nur die Dauer bekannt: kleiner Ring unten, damit die Nacht nicht verschwindet */
+      b+=`<circle cx="${x(i).toFixed(1)}" cy="${H-pB-5}" r="${slot>=10?2.6:1.8}" fill="none" stroke="var(--m-sleep)" stroke-opacity=".4"/>`;
+    }
+    /* Datumsachse: bei wenigen Nächten jede, sonst jeder Montag */
+    const d=parsedk(nn.k);
+    if(n<=16||d.getDay()===1)
+      b+=`<text x="${x(i).toFixed(1)}" y="${H-9}" text-anchor="middle" font-family="var(--f-mono)" font-size="9.5"
+        fill="${nn.k===today()?"var(--text)":"var(--text-faint)"}">${n<=16?WD[wtagIdx(d)]+" ":""}${d.getDate()}.</text>`;
+    /* Trefferfläche über die volle Höhe — schmale Balken sind sonst kaum zu treffen */
+    b+=`<rect data-sln="${nn.k}" x="${(pL+slot*i).toFixed(1)}" y="${pT}" width="${slot.toFixed(1)}" height="${ph}" fill="transparent" style="cursor:pointer">
+      <title>${tagLang(nn.k)}${nn.von?`: ${nn.von}–${nn.bis}`:""}${nn.h!==null?` · ${f(nn.h)} h`:""}</title></rect>`;
   });
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${g}${b}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="sl-wann-svg" role="img" aria-label="Schlafzeiten je Nacht">${g}${b}</svg>`;
+}
+function schlafNachtDetail(nae,r,ziel){
+  const nn=nae.find(x=>x.k===slNacht);
+  if(!nn) return `<span class="rb-hinweis">Tippe auf eine Nacht, um sie im Detail zu sehen.</span>`;
+  const teile=[];
+  if(nn.von) teile.push(`<span><b>${nn.von} – ${nn.bis}</b></span>`);
+  if(nn.h!==null) teile.push(`<span><b>${f(nn.h)} h</b>${nn.h>=ziel?" · Ziel erreicht":` · ${f(ziel-nn.h)} h unter dem Ziel`}</span>`);
+  if(nn.sc!==null) teile.push(`<span>Score <b>${nn.sc}</b></span>`);
+  if(nn.von&&r.bett!==null){
+    const d=Math.round(nachtMin(nn.von)-r.bett);
+    if(Math.abs(d)>=10) teile.push(`<span>${Math.abs(d)} min ${d>0?"später":"früher"} ins Bett als sonst</span>`);
+  }
+  return `<b class="rb-dt">Nacht auf ${tagLang(nn.k)}</b>${nn.pause?`<span class="tag">Pause</span>`:""}
+    ${teile.length?teile.join(""):`<span class="rb-hinweis">Für diese Nacht ist nichts eingetragen.</span>`}`;
 }
 
 R.schlaf=function(){
   const el=document.getElementById("v-schlaf");
   const g=G(), k=today(), m=S.metrics[k]||{};
-  const nae=schlafNaechte(slTage).filter(n=>!n.pause);
+  const alleN=schlafNaechte(slTage);
+  const nae=alleN.filter(n=>!n.pause);
   const h=nae.map(n=>n.h).filter(v=>v!==null);
   const sc=nae.map(n=>n.sc).filter(v=>v!==null);
   const w7=schlafNaechte(7).filter(n=>!n.pause).map(n=>n.h).filter(v=>v!==null);
   const ziel=h.filter(v=>v>=g.sleep).length;
-  const bett=nae.filter(n=>n.von).map(n=>nachtMin(n.von));
-  const auf=nae.filter(n=>n.bis).map(n=>nachtMin(n.bis));
-  const sBett=streuung(bett);
-  /* Letzte erfasste Nacht — nicht zwingend heute. */
+  const r=schlafRhythmus(nae);
   const letzte=[...schlafNaechte(14)].reverse().find(n=>n.h!==null);
-  const alleN=schlafNaechte(slTage);
+  const serie=buildGoals().find(x=>x.key==="sleep");
+  const regel= r.sBett===null?null : r.sBett<30?"sehr regelmäßig" : r.sBett<60?"recht regelmäßig" : "unregelmäßig";
 
   el.innerHTML=`
   <div class="p-head" style="margin-bottom:14px">
     <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Schlaf</div>
-    <div class="p-note">Ziel ${f(g.sleep)} h · ${slTage} Tage${nae.length<slTage?`, Pausen ausgenommen`:""}</div></div>
+    <div class="p-note">Ziel ${f(g.sleep)} h · ${slTage} Nächte${nae.length<alleN.length?`, Pausen ausgenommen`:""}</div></div>
     <div class="seg" id="slSeg">${[14,30,90].map(n=>`<button class="${slTage===n?"on":""}" data-slt="${n}">${n} T</button>`).join("")}</div>
+  </div>
+
+  <div class="p sl-wann">
+    <div class="p-head"><div class="p-title">${ico("clock")}Wann du schläfst</div>
+      <span class="p-note">je Nacht vom Einschlafen bis zum Aufwachen · Wochenende hinterlegt</span></div>
+    <div class="sl-rhythmus">
+      <div><span>Ø ins Bett</span><b>${r.bett!==null?nachtUhr(Math.round(r.bett)):"–"}</b>
+        <em>${r.sBett!==null?`± ${Math.round(r.sBett)} min`:""}</em></div>
+      <div><span>Ø aufgewacht</span><b>${r.auf!==null?nachtUhr(Math.round(r.auf)):"–"}</b>
+        <em>${r.sAuf!==null?`± ${Math.round(r.sAuf)} min`:""}</em></div>
+      <div><span>Rhythmus</span><b>${regel||"–"}</b>
+        <em>${r.sBett!==null?"nach der Einschlafzeit":""}</em></div>
+      <div title="Verschiebung der Schlafmitte am Wochenende gegenüber unter der Woche"><span>Wochenende</span>
+        <b>${r.jetlag===null?"–":Math.abs(r.jetlag)<15?"wie unter der Woche":`${Math.round(Math.abs(r.jetlag))} min ${r.jetlag>0?"später":"früher"}`}</b>
+        <em>${r.jetlag===null?"zu wenig Nächte":"Schlafmitte"}</em></div>
+    </div>
+    ${schlafZeitenChart(alleN,g.sleep,r)}
+    ${r.n>=2?`<div class="rb-detail" id="slDetail">${schlafNachtDetail(alleN,r,g.sleep)}</div>`:""}
+    ${r.n<alleN.filter(n=>n.h!==null).length?`<div class="sl-fuss">○ Nächte nur mit Dauer, ohne Uhrzeiten · ${r.n} von ${alleN.filter(n=>n.h!==null).length} Nächten mit Zeiten</div>`:""}
   </div>
 
   <div class="sl-oben">
     <div class="p sl-nacht">
-      <div class="sl-nacht-t">${letzte?(letzte.k===k?"Letzte Nacht":tagLang(letzte.k)):"Letzte Nacht"}</div>
+      <div class="sl-nacht-t">${letzte?(letzte.k===k?"Letzte Nacht":"Nacht auf "+tagLang(letzte.k)):"Letzte Nacht"}</div>
       <div class="sl-nacht-v">${letzte?`${f(letzte.h)}<span>h</span>`:"–"}</div>
-      <div class="sl-nacht-s">${letzte&&letzte.sc!==null?`Score ${letzte.sc}`:""}${letzte&&letzte.von?` · ${letzte.von} – ${letzte.bis}`:""}</div>
+      <div class="sl-nacht-s">${letzte&&letzte.von?`${letzte.von} – ${letzte.bis}`:""}${letzte&&letzte.sc!==null?`${letzte.von?" · ":""}Score ${letzte.sc}`:""}</div>
       ${letzte?`<div class="bar" style="margin-top:12px"><i style="width:${clamp(letzte.h/g.sleep*100,0,100)}%;background:var(--m-sleep)"></i></div>`:""}
+      <div class="sl-serie"><span>${ico("moon")}</span><b>${serie.serie}</b> ${serie.serie===1?"Nacht":"Nächte"} in Folge über ${f(g.sleep)} h
+        <em>${serie.best>0?(serie.serie>=serie.best&&serie.serie>0?"Bestwert":"Rekord "+serie.best):""}</em></div>
     </div>
     <div class="p sl-eintrag">
       <div class="p-head" style="margin-bottom:10px"><div class="p-title">${ico("moon")}Schlaf eintragen</div>
@@ -4562,29 +4695,17 @@ R.schlaf=function(){
     </div>
   </div>
 
-  <div class="rb-kacheln" style="margin-bottom:14px">
-    ${rbKachel("Ø 7 Tage", w7.length?f(avg(w7))+" h":"–", null,null,null,"var(--m-sleep)")}
-    ${rbKachel(`Ø ${slTage} Tage`, h.length?f(avg(h))+" h":"–", null,null,null,"var(--m-sleep)")}
+  <div class="rb-kacheln sl-kacheln">
+    ${rbKachel("Ø 7 Nächte", w7.length?f(avg(w7))+" h":"–", null,null,null,"var(--m-sleep)")}
+    ${rbKachel(`Ø ${slTage} Nächte`, h.length?f(avg(h))+" h":"–", null,null,null,"var(--m-sleep)")}
     ${rbKachel("Ø Score", sc.length?Math.round(avg(sc)):"–", null,null,null,"var(--m-sleep)")}
     ${rbKachel("Ziel erreicht", h.length?`${ziel}<small> / ${h.length}</small>`:"–", null,null,null,"var(--m-sleep)")}
-    ${rbKachel("Ø ins Bett", bett.length?nachtUhr(avg(bett)):"–", null,null,null,"var(--m-sleep)")}
-    ${rbKachel("Ø aufgestanden", auf.length?nachtUhr(avg(auf)):"–", null,null,null,"var(--m-sleep)")}
-  </div>
-
-  <div class="grid c2">
-    <div class="p">
-      <div class="p-head"><div class="p-title">${ico("moon")}Dauer</div><span class="p-note">Band: ${f(g.sleep-1)}–${f(g.sleep+1)} h</span></div>
-      ${lineChart(alleN.map(n=>fmtShort(parsedk(n.k))),[{data:alleN.map(n=>n.pause?null:n.h),color:"var(--m-sleep)"}],
-        {min:0,max:11,h:200,band:[g.sleep-1,g.sleep+1]})}
-    </div>
-    <div class="p">
-      <div class="p-head"><div class="p-title">${ico("clock")}Wann</div>
-        <span class="p-note">${sBett!==null?`Einschlafen schwankt um ±${Math.round(sBett)} min`:"je Nacht vom Einschlafen bis Aufwachen"}</span></div>
-      ${schlafZeitenChart(alleN)}
-    </div>
   </div>`;
 
   el.querySelectorAll("[data-slt]").forEach(b=>b.onclick=()=>{ slTage=+b.dataset.slt; R.schlaf(); });
+  el.querySelectorAll("[data-sln]").forEach(b=>b.onclick=()=>{
+    slNacht = slNacht===b.dataset.sln ? null : b.dataset.sln;
+    const top=document.getElementById("views").scrollTop; R.schlaf(); document.getElementById("views").scrollTop=top; });
   el.querySelector("#slOk").onclick=()=>{
     let hv=parseFloat(el.querySelector("#slH").value.replace(",","."));
     const sv=parseFloat(el.querySelector("#slS").value);
@@ -4601,6 +4722,230 @@ R.schlaf=function(){
     toast("Schlaf eingetragen"); R.schlaf(); paintOrb();
   };
 };
+
+/* ============================================================
+   15 — UNI
+   Alles fürs Studium an einer Stelle, gespeist aus dem, was schon da
+   ist: die Uni-Blöcke im Planer werden zu Modulen (die Notiz am
+   Block ist der Modulname — „TM3 Vorlesung", „TM 3" und „tm3"
+   landen im selben Modul), die Lernzeit aus den Tageswerten, die
+   Semesterwoche aus dem Ende der letzten Pause. Neu einzutragen sind
+   nur Termine: Klausuren und Abgaben mit Countdown.
+   ============================================================ */
+const UNI_FARBEN=["#3683db","#4fb3e8","#8ea4f5","#56c2c9","#a08ff0","#6a9be0","#9dd5f2"];
+const UNI_ARTEN=[["klausur","Klausur"],["abgabe","Abgabe"],["termin","Termin"]];
+const uniTermine=()=>(S.uniTermine||[]).slice().sort((a,b)=>a.datum.localeCompare(b.datum));
+
+function modulName(note){
+  const w=String(note||"").trim().split(/\s+/).filter(Boolean);
+  if(!w.length) return null;
+  return w[1]&&/^\d+$/.test(w[1]) ? w[0]+w[1] : w[0];
+}
+const modulKey=n=>String(n||"").toLowerCase().replace(/[^a-z0-9äöüß]/g,"");
+function uniArt(b){
+  const n=(b.note||"").toLowerCase();
+  if(/übung|uebung|tutorium/.test(n)) return "Übung";
+  return blockById(b.type).label;
+}
+/* Uni-Blöcke einer Woche, ohne reine Lernblöcke */
+function uniBloecke(mk){
+  const out=[];
+  for(let i=0;i<7;i++) wocheTag(mk,i).forEach(b=>{
+    const t=blockById(b.type);
+    if(katVon(t)!=="uni"||b.type==="lernen") return;
+    out.push({...b,tag:i});
+  });
+  return out;
+}
+function uniModule(){
+  const map=new Map();
+  uniBloecke(wochenSchluessel(new Date())).forEach(b=>{
+    const n=modulName(b.note)||blockById(b.type).label, key=modulKey(n);
+    if(!map.has(key)) map.set(key,{key,namen:{},slots:[],min:0});
+    const m=map.get(key);
+    m.namen[n]=(m.namen[n]||0)+1;
+    m.slots.push({tag:b.tag,start:b.start,end:b.end,art:uniArt(b)});
+    m.min+=(hm2min(b.end)-hm2min(b.start)+1440)%1440;
+  });
+  return [...map.values()].map(m=>{
+    /* Häufigste Schreibweise, bei Gleichstand die mit Großbuchstaben */
+    m.name=Object.entries(m.namen).sort((a,b)=>b[1]-a[1]||(/[A-ZÄÖÜ]/.test(b[0][0])-/[A-ZÄÖÜ]/.test(a[0][0])))[0][0];
+    if(m.name===m.name.toLowerCase()) m.name=m.name[0].toUpperCase()+m.name.slice(1);
+    m.slots.sort((a,b)=>a.tag-b.tag||a.start.localeCompare(b.start));
+    return m;
+  }).sort((a,b)=>b.min-a.min).map((m,i)=>({...m,farbe:UNI_FARBEN[i%UNI_FARBEN.length]}));
+}
+/* Nächster Uni-Termin im Plan ab jetzt (diese und nächste Woche) */
+function uniNaechster(){
+  const jetzt=new Date(), nowMin=jetzt.getHours()*60+jetzt.getMinutes();
+  const mo=sow(jetzt);
+  for(let w=0;w<2;w++){
+    const mk=dk(addD(mo,w*7));
+    const l=uniBloecke(mk).map(b=>({...b,datum:dk(addD(mo,w*7+b.tag))}))
+      .filter(b=>b.datum>today()||(b.datum===today()&&hm2min(b.end)>nowMin))
+      .sort((a,b)=>a.datum.localeCompare(b.datum)||a.start.localeCompare(b.start));
+    if(l.length) return l[0];
+  }
+  return null;
+}
+/* Semesterwoche: gezählt ab dem Tag nach den letzten Semesterferien —
+   nur Pausen mit „Semester" im Namen, ein Urlaub mittendrin zählt nicht. */
+function semesterWoche(){
+  const vorbei=pausenAlle().filter(p=>p.bis<today()&&/semester/i.test(p.name||""));
+  if(!vorbei.length) return null;
+  const start=addD(parsedk(vorbei[vorbei.length-1].bis),1);
+  const w=Math.floor((sow(parsedk(today()))-sow(start))/(7*86400000))+1;
+  return w>=1&&w<=26 ? {w,start} : null;
+}
+const tageBis=k=>Math.round((parsedk(k)-parsedk(today()))/86400000);
+function countdownText(n){
+  if(n===0) return "heute"; if(n===1) return "morgen";
+  if(n<0) return n===-1?"gestern":`vor ${-n} Tagen`;
+  if(n<14) return `in ${n} Tagen`;
+  return `in ${Math.round(n/7)} Wochen`;
+}
+const wannText=b=>{
+  const n=tageBis(b.datum);
+  return `${n===0?"heute":n===1?"morgen":TWD[b.tag]} ${b.start}`;
+};
+
+R.uni=function(){
+  const el=document.getElementById("v-uni");
+  const g=G(), mk=wochenSchluessel(new Date()), mo=sow(new Date());
+  const mods=uniModule(), modFarbe=k=>(mods.find(m=>m.key===k)||{}).farbe||"var(--m-study)";
+  const sem=semesterWoche(), naechst=uniNaechster();
+  const heuteIdx=wtagIdx(new Date());
+  const heuteUni=uniBloecke(mk).filter(b=>b.tag===heuteIdx).sort((a,b)=>a.start.localeCompare(b.start));
+  const nowMin=new Date().getHours()*60+new Date().getMinutes();
+
+  /* Lernzeit diese Woche */
+  const woche=[...Array(7)].map((_,i)=>{ const k=dk(addD(mo,i)), v=(S.metrics[k]||{}).study;
+    return {k,v:nv(v)?v:null,i}; });
+  const summe=woche.reduce((a,x)=>a+(x.v||0),0);
+  const maxV=Math.max(g.study*1.5,...woche.map(x=>x.v||0));
+  const gelernt=buildGoals().find(x=>x.key==="study");
+
+  /* Lernzeit je Woche seit Semesterbeginn, mindestens acht Wochen */
+  const nW=clamp(sem?sem.w:8,8,20);
+  const wochen=[...Array(nW)].map((_,i)=>{ const s0=addD(mo,-(nW-1-i)*7);
+    let h=0; for(let t=0;t<7;t++){ const v=(S.metrics[dk(addD(s0,t))]||{}).study; if(nv(v)) h+=v; }
+    return {label:fmtShort(s0),h,pause:wocheIstPause(dk(s0))}; });
+
+  const ter=uniTermine(), kommend=ter.filter(t=>t.datum>=today()), vorbei=ter.filter(t=>t.datum<today());
+  const terZeile=(t,alt)=>{ const n=tageBis(t.datum);
+    const stufe= alt?"alt": n<=7?"nah": n<=21?"mittel":"fern";
+    const mod=t.modul?mods.find(m=>m.key===t.modul):null;
+    return `<div class="un-t ${stufe}">
+      <div class="un-t-cd"><b>${n<0?"✓":n}</b><span>${n<0?"":n===1?"Tag":"Tage"}</span></div>
+      <div class="un-t-n"><b>${esc(t.titel)}</b>
+        <span>${(UNI_ARTEN.find(a=>a[0]===t.art)||UNI_ARTEN[2])[1]} · ${tagLang(t.datum)}${t.zeit?` · ${t.zeit}`:""}${mod?` · <i style="color:${mod.farbe}">${esc(mod.name)}</i>`:""}</span></div>
+      <span class="un-t-w">${countdownText(n)}</span>
+      <button class="b b-i b-sm" data-unweg="${t.id}" aria-label="Termin löschen" title="Löschen">${ico("x")}</button>
+    </div>`; };
+
+  el.innerHTML=`
+  <div class="p-head" style="margin-bottom:14px">
+    <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Uni</div>
+      <div class="p-note">${sem?`Semesterwoche ${sem.w} · seit ${fmtShort(sem.start)}`:"Semesterwoche erscheint, sobald die Semesterferien als Pause eingetragen sind"}</div></div>
+    <button class="b b-1" id="unNeu">${ico("plus")}Termin</button>
+  </div>
+
+  <div class="un-oben">
+    <div class="p un-jetzt">
+      <div class="un-label">Als Nächstes</div>
+      ${naechst?`<div class="un-next" style="--uf:${modFarbe(modulKey(modulName(naechst.note)||""))}">
+          <b>${esc(naechst.note||blockById(naechst.type).label)}</b>
+          <span>${wannText(naechst)}–${naechst.end} · ${uniArt(naechst)}</span></div>`
+        :`<div class="un-leer">Diese und nächste Woche steht nichts mehr an.</div>`}
+      <div class="un-label" style="margin-top:16px">Heute</div>
+      ${heuteUni.length?`<div class="un-heute">${heuteUni.map(b=>{
+          const vorbeiB=hm2min(b.end)<=nowMin, live=hm2min(b.start)<=nowMin&&!vorbeiB;
+          return `<div class="un-h${vorbeiB?" vorbei":""}${live?" live":""}" style="--uf:${modFarbe(modulKey(modulName(b.note)||""))}">
+            <span class="un-h-z">${b.start}</span><span class="un-h-n">${esc(b.note||blockById(b.type).label)}</span>
+            ${live?`<span class="un-live">läuft</span>`:""}</div>`;}).join("")}</div>`
+        :`<div class="un-leer">Heute keine Veranstaltung.</div>`}
+    </div>
+
+    <div class="p">
+      <div class="p-head"><div class="p-title">${ico("book")}Lernzeit diese Woche</div>
+        <span class="p-note">${f(summe)} h · Ziel ${f(g.study)} h am Tag</span></div>
+      <div class="un-balken">${woche.map(x=>`<div class="un-b${x.k===today()?" heute":""}" title="${tagLang(x.k)}${x.v!==null?` · ${f(x.v)} h`:""}">
+          <span class="un-b-v">${x.v!==null?f(x.v):""}</span>
+          <div class="un-b-s"><i style="height:${x.v?clamp(x.v/maxV*100,3,100):0}%" class="${x.v!==null&&x.v>=g.study?"voll":""}"></i>
+            <em style="bottom:${g.study/maxV*100}%"></em></div>
+          <span class="un-b-t">${TWD[x.i]}</span></div>`).join("")}</div>
+      <div class="sl-serie"><span style="color:var(--m-study)">${ico("book")}</span><b>${gelernt.serie}</b>
+        ${gelernt.serie===1?"Tag":"Tage"} in Folge über ${f(g.study)} h
+        <em>${gelernt.best>0?(gelernt.serie>=gelernt.best&&gelernt.serie>0?"Bestwert":"Rekord "+gelernt.best):""}</em></div>
+    </div>
+  </div>
+
+  <div class="p" style="margin-bottom:14px">
+    <div class="p-head"><div class="p-title">${ico("clock")}Klausuren und Abgaben</div>
+      <span class="p-note">${kommend.length?`${kommend.length} anstehend`:""}</span></div>
+    ${kommend.length?`<div class="un-tliste">${kommend.map(t=>terZeile(t,false)).join("")}</div>`
+      :`<div class="un-leer">Noch keine Termine. Trag deine Klausuren ein — der Countdown hilft beim Planen.</div>`}
+    ${vorbei.length?`<details class="un-alt"><summary>${vorbei.length} vorbei</summary>
+      <div class="un-tliste">${vorbei.slice(-6).reverse().map(t=>terZeile(t,true)).join("")}</div></details>`:""}
+  </div>
+
+  <div class="p" style="margin-bottom:14px">
+    <div class="p-head"><div class="p-title">${ico("cap")}Module</div>
+      <span class="p-note">aus deinen Uni-Blöcken im Planer, diese Woche</span></div>
+    ${mods.length?`<div class="un-mods">${mods.map(m=>{
+      const t=kommend.find(x=>x.modul===m.key);
+      return `<div class="un-m" style="--uf:${m.farbe}">
+        <div class="un-m-k"><b>${esc(m.name)}</b><span>${stdDe(m.min)} / Woche</span></div>
+        <div class="un-m-s">${m.slots.map(s=>`<span>${TWD[s.tag]} ${s.start} · ${esc(s.art)}</span>`).join("")}</div>
+        ${t?`<div class="un-m-t">${ico("clock")}${esc((UNI_ARTEN.find(a=>a[0]===t.art)||UNI_ARTEN[2])[1])} ${countdownText(tageBis(t.datum))}</div>`:""}
+      </div>`;}).join("")}</div>`
+      :`<div class="un-leer">Leg im Planer Uni-Blöcke an (Vorlesung, Übung …). Die Notiz am Block wird zum Modulnamen.</div>`}
+  </div>
+
+  <div class="p">
+    <div class="p-head"><div class="p-title">${ico("chart")}Lernzeit pro Woche</div>
+      <span class="p-note">Stunden${sem?" · seit Semesterbeginn":""}</span></div>
+    ${stackBar(wochen.map(w=>w.label),[{color:"var(--m-study)",data:wochen.map(w=>w.h)}],
+      {unit:1,emptyText:"Noch keine Lernzeit erfasst.",h:190,
+       tip:wochen.map(w=>`<b>Woche ab ${esc(w.label)}</b><div class="sb-tip-r">${w.h?f(w.h)+" h gelernt":"nichts erfasst"}${w.pause?" · Pause":""}</div>`)})}
+  </div>`;
+
+  el.querySelector("#unNeu").onclick=()=>terminModal(mods);
+  el.querySelectorAll("[data-unweg]").forEach(b=>b.onclick=()=>{
+    S.uniTermine=(S.uniTermine||[]).filter(t=>t.id!==b.dataset.unweg);
+    save(); toast("Termin gelöscht"); R.uni(); });
+};
+
+function terminModal(mods){
+  let art="klausur";
+  modal(`<h3>Klausur oder Abgabe</h3>
+    <label>Art</label>
+    <div class="chips" id="unArt">${UNI_ARTEN.map(([id,l])=>`<button class="chip${id===art?" on":""}" data-ua="${id}">${l}</button>`).join("")}</div>
+    <label>Titel</label><input id="unTitel" placeholder="z. B. TM3 Klausur">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label>Datum</label><input type="date" id="unDatum" value="${today()}"></div>
+      <div style="flex:1"><label>Uhrzeit (optional)</label><input type="time" id="unZeit"></div></div>
+    ${mods.length?`<label>Modul (optional)</label>
+      <div class="chips" id="unMod">${mods.map(m=>`<button class="chip" data-um="${m.key}">${esc(m.name)}</button>`).join("")}</div>`:""}
+    <div class="mo-act"><button class="b" onclick="closeModal()">Abbrechen</button>
+      <button class="b b-1" id="unOk">Eintragen</button></div>`);
+  let modul=null;
+  document.querySelectorAll("[data-ua]").forEach(b=>b.onclick=()=>{ art=b.dataset.ua;
+    document.querySelectorAll("[data-ua]").forEach(x=>x.classList.toggle("on",x===b)); });
+  document.querySelectorAll("[data-um]").forEach(b=>b.onclick=()=>{
+    modul = modul===b.dataset.um ? null : b.dataset.um;
+    document.querySelectorAll("[data-um]").forEach(x=>x.classList.toggle("on",x.dataset.um===modul));
+    const ti=document.getElementById("unTitel");
+    if(modul&&!ti.value.trim()) ti.value=`${b.textContent.trim()} ${(UNI_ARTEN.find(a=>a[0]===art)||UNI_ARTEN[0])[1]}`; });
+  document.getElementById("unOk").onclick=()=>{
+    const titel=document.getElementById("unTitel").value.trim();
+    const datum=document.getElementById("unDatum").value;
+    if(!titel||!datum){ toast("Titel und Datum angeben","x"); return; }
+    S.uniTermine=S.uniTermine||[];
+    S.uniTermine.push({id:uid(),titel,datum,art,modul,zeit:document.getElementById("unZeit").value||null});
+    save(); closeModal(); toast("Termin eingetragen"); R.uni();
+  };
+}
 
 /* ============================================================
    14 — PLANER
@@ -4705,9 +5050,7 @@ function wochenRaster(mk,H0,H1){
     return `<div class="tp-sp${tag===today()?" heute":""}">
       <div class="tp-kopf">
         <span>${TWD[i]} <i>${addD(mo,i).getDate()}.</i></span>
-        <button class="tp-hak${isChecked(tag)?" an":""}" data-chk="${tag}"
-          title="${isChecked(tag)?"Tag gilt als solide — antippen zum Zurücknehmen":"Tag als solide abhaken"}"
-          aria-pressed="${isChecked(tag)}">${isChecked(tag)?ico("check"):""}</button>
+        ${tag<=today()&&solideTag(tag)?`<span class="tp-solid" title="Solider Tag — alle vier Ziele erfüllt">${ico("star")}</span>`:""}
       </div>
       <div class="tp-spalte">${rows}${bl}</div>
     </div>`;
@@ -5013,8 +5356,6 @@ R.planer=function(){
     katOffen = katOffen===b.dataset.pk ? null : b.dataset.pk; R.planer(); });
   V.querySelectorAll("[data-neuart]").forEach(b=>b.onclick=()=>neueArt(b.dataset.neuart));
   V.querySelectorAll("[data-ausz]").forEach(b=>b.onclick=()=>ausgesetztModal(b.dataset.ausz));
-  V.querySelectorAll("[data-chk]").forEach(b=>b.onclick=e=>{
-    e.stopPropagation(); toggleCheck(b.dataset.chk); R.planer(); paintOrb(); });
   tplanWiring(V);
   V.querySelectorAll("[data-todo]").forEach(t=>{
     t.ondragstart=()=>{ plDragTodo=t.dataset.todo; plDragType=null; };
@@ -5150,7 +5491,6 @@ function openBlock(k,type,start,end,note,id){
      #haken=<kennung>     Gewohnheit für heute umschalten
      #wert=schlaf:7.5     Schlaf, lernen, handy oder score setzen
      #aufgabe=Milch       neue Aufgabe anlegen
-     #solide              heutigen Tag als solide abhaken
    ──────────────────────────────────────────────────────── */
 const URL_WERTE={schlaf:"sleepHours", lernen:"study", handy:"phone", score:"sleepScore"};
 
@@ -5181,10 +5521,6 @@ function ausUrl(){
         priority:"mid",date:today(),createdAt:Date.now()});
       save(); meldung=["Aufgabe angelegt"];
     }
-    else if(feld==="solide"){
-      toggleCheck(today());
-      meldung=[isChecked(today())?"Tag als solide markiert":"Markierung zurückgenommen"];
-    }
   }catch(e){ meldung=["Konnte den Aufruf nicht lesen","x"]; }
   if(meldung) setTimeout(()=>toast(meldung[0],meldung[1]||"check"),700);
 }
@@ -5206,7 +5542,6 @@ function kurzbefehlModal(){
       hat ihn auf diesem Gerät ohnehin.</p>
     <div style="display:flex;flex-direction:column;gap:7px;max-height:46vh;overflow-y:auto">
       ${activeHabits().map(h=>zeile(h.name, `${basis}#haken=${h.id}`)).join("")}
-      ${zeile("Tag als solide abhaken", basis+"#solide")}
       ${zeile("Schlaf eintragen (Zahl anpassen)", basis+"#wert=schlaf:7.5")}
       ${zeile("Lernzeit eintragen", basis+"#wert=lernen:3")}
       ${zeile("Aufgabe anlegen", basis+"#aufgabe=Text%20hier")}

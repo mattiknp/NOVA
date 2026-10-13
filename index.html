@@ -232,7 +232,7 @@ button.un-m{ text-align:left; color:inherit; font:inherit; cursor:pointer; }
 .sp-kopf{ display:flex; align-items:center; gap:18px; margin-bottom:16px; flex-wrap:wrap; }
 .sp-cp{ display:flex; flex-direction:column; line-height:1; }
 .sp-cp b{ font-family:var(--f-disp); font-size:2.6rem; font-weight:700; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
-.sp-cp span{ font-size:var(--t-sm); color:var(--text-faint); margin-top:4px; }
+.sp-cp span{ font-size:var(--t-xs); color:var(--text-faint); margin-top:5px; line-height:1.35; }
 .sp-fort{ flex:1; min-width:220px; display:flex; flex-direction:column; gap:9px; }
 .sp-bar{ display:flex; height:10px; border-radius:var(--r-pill); background:var(--track); overflow:hidden; }
 .sp-bar i{ display:block; height:100%; }
@@ -280,6 +280,13 @@ button.un-m{ text-align:left; color:inherit; font:inherit; cursor:pointer; }
 .sp-semwahl{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; font-size:var(--t-xs); color:var(--text-faint); }
 .sp-semwahl .chip{ padding:3px 9px; }
 .sp-note{ font-size:10.5px; color:var(--text-faint); margin-top:8px; }
+.un-titel{ display:flex; align-items:center; gap:10px; font-family:var(--f-disp); font-size:var(--t-xl); font-weight:600; }
+.un-sem{ font-family:var(--f-body,inherit); font-size:var(--t-xs); font-weight:600; padding:3px 10px; border-radius:var(--r-pill);
+  color:var(--c1); background:color-mix(in srgb, var(--c1) 12%, transparent); border:1px solid color-mix(in srgb, var(--c1) 30%, transparent); }
+.sp-lauf-z{ display:flex; flex-wrap:wrap; align-items:center; gap:5px; font-size:var(--t-xs); color:var(--text-faint); }
+.sp-lauf-z span{ padding:2px 8px; border-radius:var(--r-pill); color:var(--text-dim);
+  background:color-mix(in srgb, var(--kc) 12%, transparent); border:1px solid color-mix(in srgb, var(--kc) 35%, transparent); }
+.sp-lauf-z em{ font-style:normal; margin-left:2px; }
 @media(max-width:520px){ .sl-kacheln{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .sl-felder label{ display:flex; flex-direction:column; gap:5px; font-size:var(--t-xs); color:var(--text-faint); }
 
@@ -2563,9 +2570,9 @@ const NAV=[
   {id:"planer",  t:"Planer",       i:"cal",    g:0},
   {id:"uni",     t:"Uni",          i:"cap",    g:1},
   {id:"schlaf",  t:"Schlaf",       i:"moon",   g:1},
+  {id:"sport",   t:"Training",     i:"run",    g:1},
+  {id:"habits",  t:"Gewohnheiten", i:"list",   g:2},
   {id:"rueckblick",t:"Rückblick",  i:"grid",   g:2},
-  {id:"sport",   t:"Training",     i:"run",    g:2},
-  {id:"habits",  t:"Gewohnheiten", i:"list",   g:4},
 ];
 let VIEW="heute";
 
@@ -4813,21 +4820,26 @@ function schlafZeitenChart(nae,ziel,r){
   /* Schmal (Handy): eigenes, höheres Seitenverhältnis — sonst wird die
      Grafik flach und die Schrift winzig. */
   const eng=window.innerWidth<640;
-  const W=eng?390:760,H=eng?380:350,pL=eng?40:46,pR=eng?48:58,pT=14,pB=30, pw=W-pL-pR, ph=H-pT-pB;
-  const n=nae.length, slot=pw/n, bw=clamp(slot*.62,2.5,22);
-  /* Beschriftung über jedem Balken: Stunden und Score. Bei breiten
-     Spalten zweizeilig, bei schmalen hochkant, bei ganz schmalen
-     (90 Nächte auf dem Handy) passt nichts mehr — dann per Antippen. */
+  const n=nae.length, slot=(( eng?390:760)-(eng?40:46)-(eng?48:58))/n, bw=clamp(slot*.62,2.5,22);
+  /* Stunden und Score stehen in einer festen Zeile oben, für alle Nächte
+     auf gleicher Höhe — nicht mehr direkt über dem Balken, das wirkte
+     unruhig. Breite Spalten: zwei Zeilen; schmale: hochkant; ganz
+     schmale (90 Nächte auf dem Handy): nur per Antippen. */
   const art= slot>=19?"zwei" : slot>=5.5?"hoch" : "keine";
-  const kopf= art==="zwei"?28 : art==="hoch"?50 : 0;          /* Platz über dem frühesten Balken, in px */
+  const kopf= art==="zwei"?34 : art==="hoch"?52 : 0;
+  const W=eng?390:760,H=(eng?380:350)+kopf,pL=eng?40:46,pR=eng?48:58,pT=(kopf?26:14)+kopf,pB=30, pw=W-pL-pR, ph=H-pT-pB;
   const zb=nachtMin(ZG().bettZiel), za=nachtMin(ZG().aufZiel);
   const lo=Math.min(zb,...mit.map(n=>nachtMin(n.von))), hi=Math.max(za,...mit.map(n=>nachtMin(n.bis)));
-  const span0=Math.max(240,hi-lo+60);
-  const vorlauf=Math.round(kopf/ph*span0)+30;
-  const a0=Math.max(0,Math.floor((lo-vorlauf)/60)*60), a1=Math.min(1440,Math.ceil((hi+30)/60)*60);
+  const a0=Math.max(0,Math.floor((lo-30)/60)*60), a1=Math.min(1440,Math.ceil((hi+30)/60)*60);
   const y=v=>pT+(clamp(v,a0,a1)-a0)/(a1-a0)*ph;
   const x=i=>pL+slot*(i+.5);
   let g="";
+  if(art==="zwei")
+    g+=`<text x="${pL-8}" y="${pT-kopf-12+10}" text-anchor="end" font-size="9" fill="var(--text-faint)">Std.</text>
+      <text x="${pL-8}" y="${pT-kopf-12+24}" text-anchor="end" font-size="9" fill="var(--m-sleep)">Score</text>
+      <line x1="${pL}" y1="${pT-12}" x2="${W-pR}" y2="${pT-12}" stroke="var(--line)"/>`;
+  else if(art==="hoch")
+    g+=`<line x1="${pL}" y1="${pT-12}" x2="${W-pR}" y2="${pT-12}" stroke="var(--line)"/>`;
   /* Wochenende hinterlegen */
   nae.forEach((nn,i)=>{ if(istWeNacht(nn.k))
     g+=`<rect x="${(pL+slot*i).toFixed(1)}" y="${pT}" width="${slot.toFixed(1)}" height="${ph}" fill="rgba(255,255,255,.028)"/>`; });
@@ -4878,11 +4890,11 @@ function schlafZeitenChart(nae,ziel,r){
       const hTxt=nn.h!==null?f(nn.h):"–", sTxt=nn.sc!==null?String(nn.sc):"–";
       const sFarbe=nn.sc!==null&&nn.sc>ZG().scoreMin?"var(--m-sleep)":"var(--text-faint)";
       if(art==="zwei")
-        b+=`<text x="${x(i).toFixed(1)}" y="${(y1-17).toFixed(1)}" text-anchor="middle" font-family="var(--f-mono)" font-size="9.5"
-            fill="${nn.h!==null&&nn.h>=ziel?"var(--text)":"var(--text-faint)"}">${hTxt}</text>
-          <text x="${x(i).toFixed(1)}" y="${(y1-6).toFixed(1)}" text-anchor="middle" font-family="var(--f-mono)" font-size="8.5" fill="${sFarbe}">${sTxt}</text>`;
+        b+=`<text x="${x(i).toFixed(1)}" y="${(pT-kopf-12+10).toFixed(1)}" text-anchor="middle" font-family="var(--f-mono)" font-size="10"
+            font-weight="600" fill="${nn.h!==null&&nn.h>=ziel?"var(--text)":"var(--text-faint)"}">${hTxt}</text>
+          <text x="${x(i).toFixed(1)}" y="${(pT-kopf-12+24).toFixed(1)}" text-anchor="middle" font-family="var(--f-mono)" font-size="9.5" fill="${sFarbe}">${sTxt}</text>`;
       else if(art==="hoch")
-        b+=`<text transform="translate(${(x(i)+(slot>=12?3:2.5)).toFixed(1)} ${(y1-5).toFixed(1)}) rotate(-90)" font-family="var(--f-mono)" font-size="${slot>=12?9:slot>=8?8:7}">
+        b+=`<text transform="translate(${(x(i)+(slot>=12?3:2.5)).toFixed(1)} ${(pT-16).toFixed(1)}) rotate(-90)" font-family="var(--f-mono)" font-size="${slot>=12?9:slot>=8?8:7}">
             <tspan fill="${nn.h!==null&&nn.h>=ziel?"var(--text)":"var(--text-faint)"}">${hTxt}</tspan><tspan fill="${sFarbe}"> · ${sTxt}</tspan></text>`;
     } else if(nn.h!==null){
       /* Nur die Dauer bekannt: kleiner Ring unten, damit die Nacht nicht verschwindet */
@@ -4940,7 +4952,7 @@ R.schlaf=function(){
 
   <div class="p sl-wann">
     <div class="p-head"><div class="p-title">${ico("clock")}Wann du schläfst</div>
-      <span class="p-note">über jedem Balken: Stunden, darunter Score · grün: dein Zielfenster · Wochenende hinterlegt</span></div>
+      <span class="p-note">oben je Nacht Stunden und Score · grün: dein Zielfenster · Wochenende hinterlegt</span></div>
     <div class="sl-rhythmus">
       <div><span>Ø ins Bett</span><b>${r.bett!==null?nachtUhr(Math.round(r.bett)):"–"}</b>
         <em>${r.sBett!==null?`± ${Math.round(r.sBett)} min`:""}</em></div>
@@ -5144,18 +5156,42 @@ const STUDIENPLAN=[
   {id:"ba",  sem:6,kat:"thesis", n:"Bachelorthesis",               z:"am FB Rechts- und Wirtschaftswissenschaften oder Maschinenbau", cp:12, a:["thesis","bachelorarbeit","ba"]},
   {id:"sg",  sem:0,kat:"generale",n:"Studium Generale",            z:"Gesamtkatalog aller Module der TU Darmstadt", cp:3, cpTxt:"3–6", a:["studiumgenerale","sg"]},
 ];
-const studium=()=>Object.assign({semester:3,status:{}},S.studium||{});
+const studium=()=>Object.assign({status:{}},S.studium||{});
 const STATUS_TXT={offen:"offen",laeuft:"läuft",bestanden:"bestanden"};
-function modStatus(m){
-  const st=studium(), e=st.status[m.id];
-  if(e&&e.s) return e.s;
-  return m.sem===st.semester?"laeuft":"offen";
-}
-/* Planer-Modul („tm3") → Modul im Studienplan, nur im laufenden Semester */
+/* Planer-Kürzel („tm3", „mathe") → Modul im Studienplan. Passen mehrere
+   (Mathe I, II, III), ist das erste gemeint, das noch nicht bestanden ist. */
 function planModul(key){
   if(!key) return null;
-  const sem=studium().semester;
-  return STUDIENPLAN.find(m=>m.sem===sem&&(m.a.includes(key)||modulKey(m.n)===key))||null;
+  const st=studium().status;
+  return STUDIENPLAN.filter(m=>m.a.includes(key)||modulKey(m.n)===key)
+    .sort((a,b)=>a.sem-b.sem).find(m=>(st[m.id]||{}).s!=="bestanden")||null;
+}
+/* „Läuft" heißt: Für das Modul steht ein Uni-Block im Planer — angeheftet,
+   diese oder nächste Woche. Nicht mehr das ganze Semester; was du schon
+   hast (etwa Werkstoffkunde) läuft nicht. Antippen überstimmt das. */
+function laufendeIds(){
+  const mo=sow(new Date()), keys=new Set();
+  const dazu=b=>{ const t=blockById(b.type);
+    if(katVon(t)!=="uni"||b.type==="lernen") return;
+    const n=modulName(b.note); if(n) keys.add(modulKey(n)); };
+  for(let i=0;i<7;i++){
+    tplanTag(i).forEach(dazu);
+    [0,1].forEach(w=>((((S.tplanWoche||{})[dk(addD(mo,w*7))])||{})[i]||[]).forEach(dazu));
+  }
+  return new Set([...keys].map(planModul).filter(Boolean).map(m=>m.id));
+}
+let laufMerk={t:0,v:null};
+const laufend=()=>{ if(Date.now()-laufMerk.t>400) laufMerk={t:Date.now(),v:laufendeIds()}; return laufMerk.v; };
+function modStatus(m){
+  const e=studium().status[m.id];
+  if(e&&e.s) return e.s;
+  return laufend().has(m.id)?"laeuft":"offen";
+}
+/* Semester: das, aus dem die meisten laufenden Module stammen */
+function aktSemester(){
+  const z={}; STUDIENPLAN.forEach(m=>{ if(m.sem&&modStatus(m)==="laeuft") z[m.sem]=(z[m.sem]||0)+1; });
+  const best=Object.entries(z).sort((a,b)=>b[1]-a[1])[0];
+  return best?+best[0]:null;
 }
 function studiumZahlen(){
   let cp=0, cpLauf=0, n=0, noteSum=0, noteCp=0;
@@ -5191,7 +5227,7 @@ function modulModal(id){
     const st=studium(); st.status=Object.assign({},st.status);
     const note=parseFloat(String(document.getElementById("mmNote").value).replace(",","."));
     st.status[id]={s, t:Date.now(), ...(s==="bestanden"&&!isNaN(note)?{note:clamp(note,1,5)}:{})};
-    S.studium=st; save(); closeModal();
+    S.studium=st; laufMerk.t=0; save(); closeModal();
     toast(s==="bestanden"?`${m.n} bestanden — ${m.cpTxt||m.cp} CP`:"Gespeichert", "check"); R.uni();
   };
 }
@@ -5206,37 +5242,34 @@ function studienplanHtml(){
         ${s==="bestanden"?`<span class="sp-ok">${nv(e.note)?f(e.note):""}${ico("check")}</span>`
           :s==="laeuft"?`<span class="sp-lauf">läuft</span>`:""}</span>
     </button>`; };
-  const balken=Object.keys(STUDIUM_KAT).map(kk=>z.proKat[kk]?`<i style="width:${z.proKat[kk]/STUDIUM_CP*100}%;background:${STUDIUM_KAT[kk].c}"></i>`:"").join("")
-    + (z.cpLauf?`<i class="lauf" style="width:${z.cpLauf/STUDIUM_CP*100}%"></i>`:"");
-  const nichtsGesetzt=!Object.keys(st.status).length && st.semester>1;
+  const balken=Object.keys(STUDIUM_KAT).map(kk=>z.proKat[kk]?`<i style="width:${z.proKat[kk]/STUDIUM_CP*100}%;background:${STUDIUM_KAT[kk].c}"></i>`:"").join("");
+  const lauf=STUDIENPLAN.filter(m=>modStatus(m)==="laeuft");
   return `<div class="p">
     <div class="p-head"><div class="p-title">${ico("cap")}Studienplan</div>
       <span class="p-note">Wirtschaftsingenieurwesen · Maschinenbau · antippen zum Abhaken</span></div>
     <div class="sp-kopf">
-      <div class="sp-cp"><b>${z.cp}</b><span>von ${STUDIUM_CP} CP</span></div>
+      <div class="sp-cp"><b>${z.cp}</b><span>CP bestanden<br>von ${STUDIUM_CP}</span></div>
       <div class="sp-fort">
         <div class="sp-bar">${balken}</div>
         <div class="sp-stat">
           <span><b>${z.n}</b> von ${STUDIENPLAN.length} Modulen bestanden</span>
-          ${z.cpLauf?`<span><b>${z.cpLauf}</b> CP laufen</span>`:""}
           ${z.note!==null?`<span>Ø Note <b>${f(z.note)}</b></span>`:""}
           <span><b>${Math.round(z.cp/STUDIUM_CP*100)} %</b> geschafft</span>
         </div>
+        ${lauf.length?`<div class="sp-lauf-z">Läuft gerade: ${lauf.map(m=>`<span style="--kc:${STUDIUM_KAT[m.kat].c}">${esc(m.n)}</span>`).join("")}
+          <em>${lauf.reduce((a,m)=>a+m.cp,0)} CP</em></div>`:""}
       </div>
     </div>
-    ${nichtsGesetzt?`<div class="td-hinweis" style="margin-bottom:12px"><span>Noch nichts abgehakt. Alles aus Semester 1${st.semester>2?`–${st.semester-1}`:""} auf einmal als bestanden markieren? Einzelnes kannst du danach zurücknehmen.</span>
-      <button class="b b-sm" id="spAlle">Markieren</button></div>`:""}
     <div class="sp-raster">${[1,2,3,4,5,6].map(sem=>{
       const ms=STUDIENPLAN.filter(m=>m.sem===sem), cp=ms.reduce((a,m)=>a+m.cp,0);
       const fertig=ms.filter(m=>modStatus(m)==="bestanden").length;
-      return `<div class="sp-sem${sem===st.semester?" jetzt":""}${fertig===ms.length?" voll":""}">
-        <div class="sp-sem-k"><b>${sem}. Semester</b><span>${fertig===ms.length?`${ico("check")}geschafft`:sem===st.semester?"jetzt":`${fertig}/${ms.length}`}</span></div>
+      return `<div class="sp-sem${fertig===ms.length?" voll":""}">
+        <div class="sp-sem-k"><b>${sem}. Semester</b><span>${fertig===ms.length?`${ico("check")}geschafft`:`${fertig}/${ms.length}`}</span></div>
         <div class="sp-sem-m">${ms.map(kachel).join("")}</div>
       </div>`;}).join("")}</div>
     <div class="sp-gen">${kachel(STUDIENPLAN.find(m=>m.id==="sg"))}</div>
     <div class="sp-fuss">
       <div class="sp-leg">${Object.values(STUDIUM_KAT).map(k=>`<span><i style="background:${k.c}"></i>${k.l}</span>`).join("")}</div>
-      <div class="sp-semwahl"><span>Ich bin im</span>${[1,2,3,4,5,6].map(n=>`<button class="chip${n===st.semester?" on":""}" data-spsem="${n}">${n}.</button>`).join("")}<span>Semester</span></div>
     </div>
     <div class="sp-note">* Product Design Project; Rechnergestütztes Konstruieren</div>
   </div>`;
@@ -5245,7 +5278,7 @@ function studienplanHtml(){
 R.uni=function(){
   const el=document.getElementById("v-uni");
   const g=G(), mk=wochenSchluessel(new Date()), mo=sow(new Date());
-  const st=studium();
+  const akt=aktSemester();
   const mods=uniModule();
   /* Farbe eines Planer-Moduls: die Kategorie aus dem Studienplan */
   const modFarbe=key=>{ const pm=planModul(key); return pm?STUDIUM_KAT[pm.kat].c:"var(--m-study)"; };
@@ -5268,14 +5301,6 @@ R.uni=function(){
     let h=0; for(let t=0;t<7;t++){ const v=(S.metrics[dk(addD(s0,t))]||{}).study; if(nv(v)) h+=v; }
     return {label:`W${i+1}`,ab:fmtShort(s0),h,zukunft:i>jetztW}; });
 
-  /* Module dieses Semesters: Studienplan + was der Planer dazu weiß */
-  const dieses=STUDIENPLAN.filter(m=>m.sem===st.semester).map(m=>{
-    const pl=mods.filter(x=>planModul(x.key)===m);
-    return {m, slots:pl.flatMap(x=>x.slots).sort((a,b)=>a.tag-b.tag||a.start.localeCompare(b.start)),
-            min:pl.reduce((a,x)=>a+x.min,0), keys:pl.map(x=>x.key)};
-  });
-  const ohne=mods.filter(x=>!planModul(x.key));
-
   const ter=uniTermine(), kommend=ter.filter(t=>t.datum>=today()), vorbei=ter.filter(t=>t.datum<today());
   const terModul=t=>STUDIENPLAN.find(m=>m.id===t.modul)||planModul(t.modul);
   const terZeile=(t,alt)=>{ const n=tageBis(t.datum);
@@ -5291,8 +5316,8 @@ R.uni=function(){
 
   el.innerHTML=`
   <div class="p-head" style="margin-bottom:14px">
-    <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Uni</div>
-      <div class="p-note">${st.semester}. Semester${sem?` · Semesterwoche ${sem.w}, seit ${fmtShort(sem.start)}`:" · Semesterwoche erscheint, sobald die Semesterferien als Pause eingetragen sind"}</div></div>
+    <div><div class="un-titel">Uni${akt?`<span class="un-sem">${akt}. Semester</span>`:""}</div>
+      <div class="p-note">${sem?`Semesterwoche ${sem.w} · seit ${fmtShort(sem.start)}`:"Semesterwoche erscheint, sobald die Semesterferien als Pause eingetragen sind"}</div></div>
     <button class="b b-1" id="unNeu">${ico("plus")}Termin</button>
   </div>
 
@@ -5343,26 +5368,6 @@ R.uni=function(){
        tip:wochen.map(w=>`<b>Semesterwoche ${w.label.slice(1)}<span class="sb-tip-z">ab ${esc(w.ab)}</span></b><div class="sb-tip-r">${w.zukunft?"kommt noch":w.h?f(w.h)+" h gelernt":"nichts erfasst"}</div>`)})}
   </div>
 
-  <div class="p" style="margin-bottom:14px">
-    <div class="p-head"><div class="p-title">${ico("cap")}Module in diesem Semester</div>
-      <span class="p-note">${dieses.reduce((a,x)=>a+x.m.cp,0)} CP · Zeiten aus deinen Uni-Blöcken im Planer</span></div>
-    <div class="un-mods">${dieses.map(({m,slots,min})=>{
-      const k=STUDIUM_KAT[m.kat], s=modStatus(m);
-      const t=kommend.find(x=>x.modul===m.id||planModul(x.modul)===m);
-      return `<button class="un-m${s==="bestanden"?" fertig":""}" style="--uf:${k.c}" data-spm="${m.id}">
-        <div class="un-m-k"><b>${esc(m.n)}</b><span>${m.cp} CP</span></div>
-        ${slots.length?`<div class="un-m-s">${slots.map(x=>`<span>${TWD[x.tag]} ${x.start} · ${esc(x.art)}</span>`).join("")}</div>
-          <div class="un-m-h">${stdDe(min)} pro Woche im Plan</div>`
-          :`<div class="un-m-h">nicht im Planer</div>`}
-        ${s==="bestanden"?`<div class="un-m-t" style="color:${k.c}">${ico("check")}bestanden</div>`
-          :t?`<div class="un-m-t">${ico("clock")}${esc((UNI_ARTEN.find(a=>a[0]===t.art)||UNI_ARTEN[2])[1])} ${countdownText(tageBis(t.datum))}</div>`:""}
-      </button>`;}).join("")}
-      ${ohne.map(x=>`<div class="un-m" style="--uf:var(--text-faint)">
-        <div class="un-m-k"><b>${esc(x.name)}</b><span>ohne Zuordnung</span></div>
-        <div class="un-m-s">${x.slots.map(s=>`<span>${TWD[s.tag]} ${s.start} · ${esc(s.art)}</span>`).join("")}</div></div>`).join("")}
-    </div>
-  </div>
-
   ${studienplanHtml()}`;
 
   el.querySelector("#unNeu").onclick=()=>terminModal();
@@ -5370,17 +5375,11 @@ R.uni=function(){
     S.uniTermine=(S.uniTermine||[]).filter(t=>t.id!==b.dataset.unweg);
     save(); toast("Termin gelöscht"); R.uni(); });
   el.querySelectorAll("[data-spm]").forEach(b=>b.onclick=()=>modulModal(b.dataset.spm));
-  el.querySelectorAll("[data-spsem]").forEach(b=>b.onclick=()=>{
-    S.studium=Object.assign(studium(),{semester:+b.dataset.spsem}); save(); R.uni(); });
-  el.querySelector("#spAlle")?.addEventListener("click",()=>{
-    const s2=studium(); s2.status=Object.assign({},s2.status);
-    STUDIENPLAN.filter(m=>m.sem>0&&m.sem<s2.semester).forEach(m=>{ s2.status[m.id]={s:"bestanden",t:Date.now()}; });
-    S.studium=s2; save(); toast("Frühere Semester als bestanden markiert","check"); R.uni(); });
 };
 
 function terminModal(){
   let art="klausur";
-  const mods=STUDIENPLAN.filter(m=>m.sem===studium().semester);
+  const mods=STUDIENPLAN.filter(m=>modStatus(m)==="laeuft");
   modal(`<h3>Klausur oder Abgabe</h3>
     <label>Art</label>
     <div class="chips" id="unArt">${UNI_ARTEN.map(([id,l])=>`<button class="chip${id===art?" on":""}" data-ua="${id}">${l}</button>`).join("")}</div>

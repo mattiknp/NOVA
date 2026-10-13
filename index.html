@@ -3329,6 +3329,49 @@ R.heute=function(){
   const sp=sportOn(k);
 
   document.getElementById("v-heute").innerHTML=`
+  <!-- Ziele: das Wichtigste, deshalb groß und mit Fortschritt zum nächsten Rekord.
+       Sind alle vier erfüllt, ist der Tag solide — dann bekommt der
+       ganze Block einen goldenen Rahmen. -->
+  <div class="hd-ziele${SO.voll?" voll":""}">
+  <div class="hz-ol" aria-label="One Life"><span class="ol-1">ONE</span><span class="ol-2">LIFE</span></div>
+  <div class="hz-kopf">
+    <span class="hz-ico">${ico("star")}</span>
+    <div class="hz-t"><b>Solider Tag</b>
+      <span>${SO.voll?"Heute geschafft — alle vier Ziele erfüllt"
+        :`Heute ${SO.heute} von 4 Zielen${SO.heute===3?" — eins fehlt noch":""}`}</span></div>
+    <span class="hz-pips">${[0,1,2,3].map(i=>`<i class="${i<SO.heute?"an":""}"></i>`).join("")}</span>
+    <span class="hz-serie" title="${SO.schutz?`${SO.schutz} Schutztag${SO.schutz===1?"":"e"} auf Vorrat`:"kein Schutztag auf Vorrat"}">
+      <b>${SO.serie}</b> ${SO.serie===1?"Tag":"Tage"} in Folge
+      <em>${SO.best>0?(SO.serie>=SO.best&&SO.serie>0?"Bestwert":"Rekord "+SO.best):"noch kein Rekord"}</em></span>
+  </div>
+  <div class="grid c4 hd-goals">
+    ${GOALS.map(G2=>{
+      const heute=G2.todayOk;
+      const pct=G2.best>0?clamp(G2.serie/G2.best*100,0,100):(G2.serie?100:0);
+      return `<div class="p goal${heute?" hit":""}" style="--gc:${G2.color}">
+        <div class="goal-top">
+          <span class="goal-ico">${ico(G2.icon)}</span>
+          <span class="goal-name">${G2.label}</span>
+          ${heute?`<span class="goal-badge">heute erfüllt</span>`:""}
+        </div>
+        <div class="goal-num"><b>${G2.serie}</b><span>${G2.serie===1?"Tag":"Tage"} in Folge</span>
+          <span class="goal-schutz${G2.schutz?" hat":""}"
+            title="${G2.schutz?`${G2.schutz} Tag${G2.schutz===1?"":"e"} darfst du auslassen, ohne dass die Serie reißt.`
+                            :"Kein Puffer — der nächste ausgelassene Tag beendet die Serie."}${
+              G2.bisSchutz!==null?` Der nächste kommt nach ${G2.bisSchutz} weiteren erfüllten Tag${G2.bisSchutz===1?"":"en"}.`:" Vorrat voll."}">
+            ${ico("schild")}${G2.schutz}</span></div>
+        <div class="goal-bar"><i style="width:${pct}%"></i></div>
+        <div class="goal-foot">
+          <span>${G2.regel}</span>
+          <span>${G2.best>0?(G2.serie>=G2.best?"Bestwert":"Rekord "+G2.best):"noch kein Rekord"}</span>
+        </div>
+        ${G2.gerettet.length?`<div class="goal-rettung">
+          ${ico("schild")}<span>${gerettetText(G2.gerettet)}</span></div>`:""}
+        ${G2.key==="eintrag"?checkinKnoepfe():""}
+      </div>`;}).join("")}
+  </div>
+  </div>
+
   <div class="grid hd-top">
     <div class="p hd-nexus">
       <div class="hd-nx-head">
@@ -3378,49 +3421,6 @@ R.heute=function(){
           </div>`}
       </div>
     </div>
-  </div>
-
-  <!-- Ziele: das Wichtigste, deshalb groß und mit Fortschritt zum nächsten Rekord.
-       Sind alle vier erfüllt, ist der Tag solide — dann bekommt der
-       ganze Block einen goldenen Rahmen. -->
-  <div class="hd-ziele${SO.voll?" voll":""}">
-  <div class="hz-ol" aria-label="One Life"><span class="ol-1">ONE</span><span class="ol-2">LIFE</span></div>
-  <div class="hz-kopf">
-    <span class="hz-ico">${ico("star")}</span>
-    <div class="hz-t"><b>Solider Tag</b>
-      <span>${SO.voll?"Heute geschafft — alle vier Ziele erfüllt"
-        :`Heute ${SO.heute} von 4 Zielen${SO.heute===3?" — eins fehlt noch":""}`}</span></div>
-    <span class="hz-pips">${[0,1,2,3].map(i=>`<i class="${i<SO.heute?"an":""}"></i>`).join("")}</span>
-    <span class="hz-serie" title="${SO.schutz?`${SO.schutz} Schutztag${SO.schutz===1?"":"e"} auf Vorrat`:"kein Schutztag auf Vorrat"}">
-      <b>${SO.serie}</b> ${SO.serie===1?"Tag":"Tage"} in Folge
-      <em>${SO.best>0?(SO.serie>=SO.best&&SO.serie>0?"Bestwert":"Rekord "+SO.best):"noch kein Rekord"}</em></span>
-  </div>
-  <div class="grid c4 hd-goals">
-    ${GOALS.map(G2=>{
-      const heute=G2.todayOk;
-      const pct=G2.best>0?clamp(G2.serie/G2.best*100,0,100):(G2.serie?100:0);
-      return `<div class="p goal${heute?" hit":""}" style="--gc:${G2.color}">
-        <div class="goal-top">
-          <span class="goal-ico">${ico(G2.icon)}</span>
-          <span class="goal-name">${G2.label}</span>
-          ${heute?`<span class="goal-badge">heute erfüllt</span>`:""}
-        </div>
-        <div class="goal-num"><b>${G2.serie}</b><span>${G2.serie===1?"Tag":"Tage"} in Folge</span>
-          <span class="goal-schutz${G2.schutz?" hat":""}"
-            title="${G2.schutz?`${G2.schutz} Tag${G2.schutz===1?"":"e"} darfst du auslassen, ohne dass die Serie reißt.`
-                            :"Kein Puffer — der nächste ausgelassene Tag beendet die Serie."}${
-              G2.bisSchutz!==null?` Der nächste kommt nach ${G2.bisSchutz} weiteren erfüllten Tag${G2.bisSchutz===1?"":"en"}.`:" Vorrat voll."}">
-            ${ico("schild")}${G2.schutz}</span></div>
-        <div class="goal-bar"><i style="width:${pct}%"></i></div>
-        <div class="goal-foot">
-          <span>${G2.regel}</span>
-          <span>${G2.best>0?(G2.serie>=G2.best?"Bestwert":"Rekord "+G2.best):"noch kein Rekord"}</span>
-        </div>
-        ${G2.gerettet.length?`<div class="goal-rettung">
-          ${ico("schild")}<span>${gerettetText(G2.gerettet)}</span></div>`:""}
-        ${G2.key==="eintrag"?checkinKnoepfe():""}
-      </div>`;}).join("")}
-  </div>
   </div>
 
   <div class="grid hd-main">

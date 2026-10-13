@@ -289,6 +289,62 @@ button.un-m{ text-align:left; color:inherit; font:inherit; cursor:pointer; }
 .sp-semwahl{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; font-size:var(--t-xs); color:var(--text-faint); }
 .sp-semwahl .chip{ padding:3px 9px; }
 .sp-note{ font-size:10.5px; color:var(--text-faint); margin-top:8px; }
+/* Geschenke */
+.hd-geb{ display:flex; align-items:center; gap:9px; width:100%; text-align:left; margin-bottom:6px; padding:8px 11px;
+  border-radius:var(--r); font:inherit; font-size:var(--t-sm); color:var(--text-dim); cursor:pointer;
+  background:color-mix(in srgb, var(--gift) 9%, transparent); border:1px solid color-mix(in srgb, var(--gift) 25%, transparent); }
+.hd-geb svg{ width:15px; height:15px; color:var(--gift); flex:0 0 auto; }
+.hd-geb b{ color:var(--text); }
+.hd-geb em{ margin-left:auto; font-style:normal; font-size:var(--t-xs); color:var(--warn); white-space:nowrap; }
+.hd-geb.nah{ border-color:color-mix(in srgb, var(--gift) 55%, transparent); }
+.gs-bald{ display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; scrollbar-width:none; }
+.gs-bald::-webkit-scrollbar{ display:none; }
+.gs-b{ flex:0 0 auto; display:flex; align-items:center; gap:10px; padding:10px 14px 10px 10px; border-radius:var(--r);
+  font:inherit; color:var(--text-dim); text-align:left; cursor:pointer;
+  background:var(--panel); border:1px solid var(--line); }
+.gs-b-n{ display:grid; place-items:center; min-width:38px; height:38px; border-radius:10px; font-family:var(--f-disp);
+  font-size:var(--t-lg); font-weight:700; color:var(--gift); background:color-mix(in srgb, var(--gift) 12%, transparent); font-variant-numeric:tabular-nums; }
+.gs-b-n svg{ width:18px; height:18px; }
+.gs-b-t{ display:flex; flex-direction:column; line-height:1.25; }
+.gs-b-t b{ color:var(--text); font-size:var(--t-sm); }
+.gs-b-t span{ font-size:var(--t-xs); color:var(--text-faint); }
+.gs-b.nah{ border-color:color-mix(in srgb, var(--gift) 50%, transparent); background:color-mix(in srgb, var(--gift) 8%, transparent); }
+.gs-b.nah .gs-b-n{ background:var(--gift); color:#1a0d12; }
+.gs-b.warn .gs-b-t span{ color:var(--warn); }
+.gs-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; align-items:start; }
+@media(max-width:520px){ .gs-grid{ grid-template-columns:1fr; } }
+.gs-p{ display:flex; flex-direction:column; gap:10px; transition:box-shadow .4s var(--ez); }
+.gs-p.nah{ border-color:color-mix(in srgb, var(--gift) 40%, transparent); }
+.gs-p.blink{ box-shadow:0 0 0 2px var(--gift); }
+.gs-kopf{ display:flex; align-items:center; gap:11px; }
+.gs-av{ width:38px; height:38px; flex:0 0 auto; border-radius:50%; display:grid; place-items:center;
+  font-family:var(--f-disp); font-weight:700; color:var(--gift); background:color-mix(in srgb, var(--gift) 13%, transparent);
+  border:1px solid color-mix(in srgb, var(--gift) 30%, transparent); }
+.gs-name{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+.gs-name b{ font-size:var(--t-base); }
+.gs-name span{ font-size:var(--t-xs); color:var(--text-faint); }
+.gs-name i{ font-style:normal; color:var(--text-dim); }
+.gs-name i.bald{ color:var(--gift); font-weight:600; }
+.gs-warn{ display:flex; align-items:center; gap:7px; font-size:var(--t-xs); color:var(--warn); padding:6px 9px; border-radius:var(--r-xs);
+  background:color-mix(in srgb, var(--warn) 10%, transparent); }
+.gs-warn svg{ width:13px; height:13px; }
+.gs-notiz{ width:100%; resize:vertical; min-height:52px; font-size:var(--t-sm); line-height:1.5; }
+.gs-ideen{ display:flex; flex-direction:column; gap:4px; }
+.gs-i{ display:flex; align-items:center; gap:9px; padding:6px 6px 6px 8px; border-radius:var(--r-xs); background:rgba(255,255,255,.03); }
+.gs-st{ width:26px; height:26px; flex:0 0 auto; border-radius:8px; display:grid; place-items:center; cursor:pointer;
+  border:1px solid var(--line-2); background:transparent; color:var(--text-faint); }
+.gs-st svg{ width:13px; height:13px; }
+.gs-i.gekauft .gs-st{ background:var(--good); border-color:var(--good); color:#08131a; }
+.gs-i.verschenkt .gs-st{ background:color-mix(in srgb, var(--gift) 25%, transparent); border-color:color-mix(in srgb, var(--gift) 50%, transparent); color:var(--gift); }
+.gs-i-t{ flex:1; min-width:0; font-size:var(--t-sm); line-height:1.4; overflow-wrap:anywhere; }
+.gs-i-t em{ font-style:normal; margin-left:7px; font-size:var(--t-xs); color:var(--text-faint); font-variant-numeric:tabular-nums; }
+.gs-i-s{ font-size:10.5px; color:var(--text-faint); white-space:nowrap; }
+.gs-i.gekauft .gs-i-s{ color:var(--good); }
+.gs-i.verschenkt{ opacity:.7; }
+.gs-neu{ display:flex; gap:6px; margin-top:4px; }
+.gs-neu input{ flex:1; min-width:0; }
+.gs-alt summary{ cursor:pointer; font-size:var(--t-xs); color:var(--text-faint); margin-bottom:6px; }
+.gs-geb{ display:grid; grid-template-columns:70px minmax(0,1fr) 120px; gap:8px; }
 .un-titel{ display:flex; align-items:center; gap:10px; font-family:var(--f-disp); font-size:var(--t-xl); font-weight:600; }
 .un-sem{ font-family:var(--f-body,inherit); font-size:var(--t-xs); font-weight:600; padding:3px 10px; border-radius:var(--r-pill);
   color:var(--c1); background:color-mix(in srgb, var(--c1) 12%, transparent); border:1px solid color-mix(in srgb, var(--c1) 30%, transparent); }
@@ -355,6 +411,7 @@ button,a,[role="button"],.chip,.rl,[data-go],[data-bt],[data-pk],[data-pf]{
   --good:      #52c98a;
   --warn:      #d9a441;
   --gold:      #f0c04e;
+  --gift:      #e8799d;
   --bad:       #e0697c;
 
   /* Messreihen */
@@ -1407,10 +1464,11 @@ select option{ background:#141a26; }
   font-variant-numeric:tabular-nums; white-space:nowrap; }
 .nx-wert em{ font-style:normal; font-size:10px; color:var(--text-faint);
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.hd-nx-stage::after{
-  content:""; position:absolute; inset:0; pointer-events:none;
-  background:radial-gradient(80% 70% at 50% 50%, transparent 55%, rgba(5,7,12,.55) 100%);
-}
+/* Keine Kante: Die Kugel läuft zu allen Seiten weich in den Block aus,
+   statt als dunkles Rechteck darin zu stehen. */
+.hd-nx-stage canvas{
+  -webkit-mask-image:radial-gradient(ellipse 72% 68% at 50% 50%, #000 52%, rgba(0,0,0,.6) 70%, transparent 100%);
+          mask-image:radial-gradient(ellipse 72% 68% at 50% 50%, #000 52%, rgba(0,0,0,.6) 70%, transparent 100%); }
 
 /* ── Mobil ────────────────────────────────────────────── */
 @media(max-width:860px){
@@ -2546,6 +2604,7 @@ const I=(()=>{
     schild: w('<path d="M12 3l7.5 3v5.4c0 4.4-3 8.2-7.5 9.6-4.5-1.4-7.5-5.2-7.5-9.6V6z"/>'),
     bulb:   w('<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/>'),
     sun:    w('<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>'),
+    gift:   w('<rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8.5h14V12"/><path d="M12 8v12.5"/><path d="M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zM12 8c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z"/>'),
     star:   w('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'),
     cap:    w('<path d="M2.5 9L12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c0 1.4 2.5 3 5.5 3s5.5-1.6 5.5-3V11"/><path d="M21.5 9v5"/>'),
   };
@@ -2614,6 +2673,7 @@ const NAV=[
   {id:"sport",   t:"Training",     i:"run",    g:1},
   {id:"habits",  t:"Gewohnheiten", i:"list",   g:2},
   {id:"rueckblick",t:"Rückblick",  i:"grid",   g:2},
+  {id:"geschenke",t:"Geschenke",   i:"gift",   g:2},
 ];
 let VIEW="heute";
 
@@ -3391,6 +3451,9 @@ R.heute=function(){
       <div class="p-head" style="margin-bottom:10px">
         <div class="p-title">${ico("cal")}Plan für heute</div>
         <button class="b b-sm" onclick="go('planer')">Öffnen</button></div>
+      ${gsBald(14).map(({p,n})=>`<button class="hd-geb${n.tage<=3?" nah":""}" onclick="go('geschenke')">
+          ${ico("gift")}<span><b>${esc(p.name)}</b> ${n.tage===0?"hat heute Geburtstag":`hat ${gsCountdown(n.tage)} Geburtstag`}${n.alter?` (${n.alter})`:""}</span>
+          ${gsOffenBald(p)?`<em>noch nichts gekauft</em>`:""}</button>`).join("")}
       ${plan.length?`<div class="hd-plan-list">${plan.map(g=>{
         const t=blockById(g.b.type), len=g.to-g.from;
         const now=new Date().getHours()*60+new Date().getMinutes();
@@ -3562,7 +3625,9 @@ R.heute=function(){
   /* Kleiner Nexus auf der Startseite */
   const mini=V.querySelector("#nxMini");
   if(mini){
-    NEXUS_MINI=makeNexus(mini,{mini:true,ratio:.78,maxH:380});
+    /* Handy: etwas flacher, damit die Kugel ruhig im Block sitzt */
+    const schmal=window.innerWidth<700;
+    NEXUS_MINI=makeNexus(mini,{mini:true,ratio:schmal?.6:.78,maxH:schmal?250:380,minH:schmal?200:230});
     NEXUS_MINI.start();
     const wl=V.querySelector("#nxWerte");
     if(wl) wl.innerHTML=NEXUS_MINI.nodes.map(n=>
@@ -4145,7 +4210,7 @@ function makeNexus(cv,opt={}){
   const X={cv,ctx:cv.getContext("2d"),w:0,h:0,dpr:1,eng:false,
     yaw:.6,pitch:-.36,vy:0,vp:0,drag:false,lx:0,ly:0,
     stars:[],dust:[],hover:-1,mx:-1,my:-1,run:false,t0:performance.now(),
-    mini:!!opt.mini, ratio:opt.ratio||.62, maxH:opt.maxH||660,
+    mini:!!opt.mini, ratio:opt.ratio||.62, maxH:opt.maxH||660, minH:opt.minH||null,
     onHover:opt.onHover||null, P:[] };
   const D=nexusData();
   X.nodes=D.nodes; X.sats=D.sats; X.score=D.score;
@@ -4155,7 +4220,7 @@ function makeNexus(cv,opt={}){
     const r=wrap.getBoundingClientRect();
     const dpr=Math.min(2,devicePixelRatio||1);
     const w=Math.max(200,r.width);
-    const h=Math.max(X.mini?230:340,Math.min(X.maxH,w*X.ratio));
+    const h=Math.max(X.minH||(X.mini?230:340),Math.min(X.maxH,w*X.ratio));
     if(w===X.w&&h===X.h&&dpr===X.dpr) return;
     X.w=w; X.h=h; X.dpr=dpr;
     /* Auf schmalen Schirmen ist kein Platz für Trabantennamen und
@@ -4926,8 +4991,10 @@ function schlafZeitenChart(nae,ziel,r){
     if(nn.von&&nn.bis){
       const y1=y(nachtMin(nn.von)), y2=y(nachtMin(nn.bis)), hoch=Math.max(3,y2-y1);
       const gut=schlafOk(nn.k);
+      /* Ganz im Zielfenster (10 min Spielraum): grün wie das Fenster */
+      const imZiel=nachtMin(nn.von)>=zb-10&&nachtMin(nn.bis)<=za+10;
       b+=`<rect x="${(x(i)-bw/2).toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${hoch.toFixed(1)}"
-        rx="${Math.min(5,bw/2).toFixed(1)}" fill="var(--m-sleep)" opacity="${nn.pause?.28:gut?.95:.5}"
+        rx="${Math.min(5,bw/2).toFixed(1)}" fill="${imZiel?"var(--good)":"var(--m-sleep)"}" opacity="${nn.pause?.28:gut?.95:.55}"
         ${sel?`stroke="var(--text)" stroke-width="1.6"`:""}/>`;
       const hTxt=nn.h!==null?f(nn.h):"–", sTxt=nn.sc!==null?String(nn.sc):"–";
       const sFarbe=nn.sc!==null&&nn.sc>ZG().scoreMin?"var(--m-sleep)":"var(--text-faint)";
@@ -4994,7 +5061,7 @@ R.schlaf=function(){
 
   <div class="p sl-wann">
     <div class="p-head"><div class="p-title">${ico("clock")}Wann du schläfst</div>
-      <span class="p-note">oben je Nacht Stunden und Score · grün: dein Zielfenster · Wochenende hinterlegt</span></div>
+      <span class="p-note">oben je Nacht Stunden und Score · grün: Zielfenster und Nächte darin · Wochenende hinterlegt</span></div>
     <div class="sl-rhythmus">
       <div><span>Ø ins Bett</span><b>${r.bett!==null?nachtUhr(Math.round(r.bett)):"–"}</b>
         <em>${r.sBett!==null?`± ${Math.round(r.sBett)} min`:""}</em></div>
@@ -5452,6 +5519,163 @@ function terminModal(){
 }
 
 /* ============================================================
+   16 — GESCHENKE
+   Für jeden Menschen: Geburtstag, Notizen (was mag sie, Größen,
+   Wünsche, die nebenbei fallen) und Geschenkideen mit Stand —
+   Idee, gekauft, verschenkt. Was verschenkt ist, bleibt mit Jahr
+   stehen, damit nichts doppelt kommt.
+   Ablage: S.geschenke = [{id, name, tag, monat, jahr|null, notiz,
+                           ideen:[{id, text, status, preis|null, jahr|null, t}]}]
+   ============================================================ */
+const GS_STATUS=[["idee","Idee"],["gekauft","gekauft"],["verschenkt","verschenkt"]];
+const MONATE=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const gsPersonen=()=>(S.geschenke||[]);
+
+/* Nächster Geburtstag ab heute: Datum, Tage bis dahin, welches Alter */
+function gsNaechster(p){
+  if(!p.tag||!p.monat) return null;
+  const h=parsedk(today());
+  let d=new Date(h.getFullYear(),p.monat-1,p.tag);
+  if(d<h) d=new Date(h.getFullYear()+1,p.monat-1,p.tag);
+  const tage=Math.round((d-h)/86400000);
+  return {d, tage, alter:p.jahr?d.getFullYear()-p.jahr:null};
+}
+const gsCountdown=n=> n===0?"heute": n===1?"morgen": n<14?`in ${n} Tagen`: n<60?`in ${Math.round(n/7)} Wochen`:`in ${Math.round(n/30)} Monaten`;
+const gsDatum=p=>p.tag&&p.monat?`${p.tag}. ${MONATE[p.monat-1]}${p.jahr?" "+p.jahr:""}`:"kein Geburtstag eingetragen";
+/* Bald Geburtstag, aber nichts gekauft? */
+const gsOffenBald=p=>{ const n=gsNaechster(p);
+  const vor21=Date.now()-21*86400000;
+  return n&&n.tage<=21&&!(p.ideen||[]).some(i=>i.status==="gekauft"||(i.status==="verschenkt"&&(i.st||0)>vor21)); };
+
+/* Für „Heute": wer hat in den nächsten 14 Tagen Geburtstag */
+function gsBald(tage=14){
+  return gsPersonen().map(p=>({p,n:gsNaechster(p)})).filter(x=>x.n&&x.n.tage<=tage)
+    .sort((a,b)=>a.n.tage-b.n.tage);
+}
+
+R.geschenke=function(){
+  const el=document.getElementById("v-geschenke");
+  const ps=gsPersonen().map(p=>({p,n:gsNaechster(p)}))
+    .sort((a,b)=>(a.n?a.n.tage:9999)-(b.n?b.n.tage:9999)||a.p.name.localeCompare(b.p.name));
+  const bald=ps.filter(x=>x.n&&x.n.tage<=60).slice(0,6);
+  const ideenOffen=ps.reduce((a,x)=>a+(x.p.ideen||[]).filter(i=>i.status==="idee").length,0);
+  const gekauft=ps.reduce((a,x)=>a+(x.p.ideen||[]).filter(i=>i.status==="gekauft").length,0);
+
+  const ideeZeile=(p,i)=>`<div class="gs-i ${i.status}">
+      <button class="gs-st" data-gsst="${p.id}|${i.id}" title="Stand wechseln: Idee → gekauft → verschenkt">
+        ${i.status==="idee"?ico("bulb"):i.status==="gekauft"?ico("check"):ico("gift")}</button>
+      <span class="gs-i-t">${esc(i.text)}${i.preis?`<em>${esc(i.preis)}</em>`:""}</span>
+      <span class="gs-i-s">${i.status==="verschenkt"&&i.jahr?`verschenkt ${i.jahr}`:(GS_STATUS.find(x=>x[0]===i.status)||[])[1]}</span>
+      <button class="b b-i b-xs" data-gsweg="${p.id}|${i.id}" aria-label="Idee löschen" title="Löschen">${ico("x")}</button>
+    </div>`;
+
+  const karte=({p,n})=>{
+    const ideen=(p.ideen||[]), aktiv=ideen.filter(i=>i.status!=="verschenkt"), alt=ideen.filter(i=>i.status==="verschenkt");
+    const warn=gsOffenBald(p);
+    return `<div class="p gs-p${n&&n.tage<=7?" nah":""}">
+      <div class="gs-kopf">
+        <div class="gs-av">${esc((p.name||"?").trim().slice(0,1).toUpperCase())}</div>
+        <div class="gs-name"><b>${esc(p.name)}</b>
+          <span>${gsDatum(p)}${n?` · <i class="${n.tage<=7?"bald":""}">${gsCountdown(n.tage)}${n.alter?`, wird ${n.alter}`:""}</i>`:""}</span></div>
+        <button class="b b-i b-sm" data-gsedit="${p.id}" aria-label="${esc(p.name)} bearbeiten" title="Bearbeiten">${ico("edit")}</button>
+      </div>
+      ${warn?`<div class="gs-warn">${ico("clock")}Geburtstag ${gsCountdown(n.tage)} — noch nichts gekauft</div>`:""}
+      <textarea class="gs-notiz" data-gsnotiz="${p.id}" rows="2" placeholder="Notizen: was mag ${esc(p.name.split(" ")[0])}, Größen, Wünsche, die nebenbei fallen …">${esc(p.notiz||"")}</textarea>
+      <div class="gs-ideen">
+        ${aktiv.map(i=>ideeZeile(p,i)).join("")}
+        <div class="gs-neu">
+          <input data-gsneu="${p.id}" placeholder="Neue Geschenkidee …" autocomplete="off">
+          <button class="b b-sm" data-gsadd="${p.id}">${ico("plus")}</button>
+        </div>
+      </div>
+      ${alt.length?`<details class="gs-alt"><summary>${alt.length} schon verschenkt</summary>
+        <div class="gs-ideen">${alt.map(i=>ideeZeile(p,i)).join("")}</div></details>`:""}
+    </div>`;
+  };
+
+  el.innerHTML=`
+  <div class="p-head" style="margin-bottom:14px">
+    <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Geschenke</div>
+      <div class="p-note">${ps.length} ${ps.length===1?"Person":"Personen"} · ${ideenOffen} ${ideenOffen===1?"Idee":"Ideen"} offen${gekauft?` · ${gekauft} gekauft, noch nicht verschenkt`:""}</div></div>
+    <button class="b b-1" id="gsNeu">${ico("plus")}Person</button>
+  </div>
+
+  ${bald.length?`<div class="gs-bald">${bald.map(({p,n})=>`
+    <button class="gs-b${n.tage<=7?" nah":""}${gsOffenBald(p)?" warn":""}" data-gsgo="${p.id}">
+      <span class="gs-b-n">${n.tage===0?ico("gift"):n.tage}</span>
+      <span class="gs-b-t"><b>${esc(p.name)}</b><span>${n.tage===0?"hat heute Geburtstag":`${n.tage===1?"Tag":"Tage"} · ${n.d.getDate()}. ${MS[n.d.getMonth()]}`}${n.alter?` · wird ${n.alter}`:""}</span></span>
+    </button>`).join("")}</div>`:""}
+
+  ${ps.length?`<div class="gs-grid">${ps.map(karte).join("")}</div>`
+    :`<div class="p"><div class="empty">${ico("gift")}<div>Noch niemand eingetragen.<br>Leg die Menschen an, die dir wichtig sind — mit Geburtstag und allem, was dir zu Geschenken einfällt.</div></div></div>`}`;
+
+  const finde=id=>gsPersonen().find(x=>x.id===id);
+  el.querySelector("#gsNeu").onclick=()=>gsPersonModal(null);
+  el.querySelectorAll("[data-gsedit]").forEach(b=>b.onclick=()=>gsPersonModal(b.dataset.gsedit));
+  el.querySelectorAll("[data-gsgo]").forEach(b=>b.onclick=()=>{
+    const k=el.querySelector(`[data-gsnotiz="${b.dataset.gsgo}"]`)?.closest(".gs-p");
+    if(k){ k.scrollIntoView({behavior:"smooth",block:"center"}); k.classList.add("blink"); setTimeout(()=>k.classList.remove("blink"),1200); } });
+  el.querySelectorAll("[data-gsnotiz]").forEach(t=>t.onchange=()=>{
+    const p=finde(t.dataset.gsnotiz); if(!p) return; p.notiz=t.value.trim(); save(); toast("Notiz gespeichert"); });
+  const neu=id=>{
+    const inp=el.querySelector(`[data-gsneu="${id}"]`), v=inp.value.trim(); if(!v) return;
+    const p=finde(id); if(!p) return;
+    /* „Buch 25€" → Preis abtrennen */
+    const m=v.match(/^(.*?)[\s,]+(\d+(?:[.,]\d+)?\s*(?:€|eur|euro))$/i);
+    p.ideen=p.ideen||[];
+    p.ideen.push({id:uid(), text:m?m[1]:v, preis:m?m[2].replace(/\s*(eur|euro)$/i,"€"):null, status:"idee", jahr:null, t:Date.now()});
+    save(); R.geschenke();
+    el.querySelector(`[data-gsneu="${id}"]`)?.focus();
+  };
+  el.querySelectorAll("[data-gsadd]").forEach(b=>b.onclick=()=>neu(b.dataset.gsadd));
+  el.querySelectorAll("[data-gsneu]").forEach(i=>i.onkeydown=e=>{ if(e.key==="Enter") neu(i.dataset.gsneu); });
+  el.querySelectorAll("[data-gsst]").forEach(b=>b.onclick=()=>{
+    const [pid,iid]=b.dataset.gsst.split("|"), p=finde(pid); if(!p) return;
+    const i=(p.ideen||[]).find(x=>x.id===iid); if(!i) return;
+    i.status=({idee:"gekauft",gekauft:"verschenkt",verschenkt:"idee"})[i.status]||"idee";
+    i.jahr= i.status==="verschenkt" ? new Date().getFullYear() : null;
+    i.st=Date.now();                                  /* wann der Stand zuletzt wechselte */
+    save(); toast(i.status==="gekauft"?"Gekauft":i.status==="verschenkt"?"Verschenkt — bleibt als Erinnerung stehen":"Wieder Idee"); R.geschenke(); });
+  el.querySelectorAll("[data-gsweg]").forEach(b=>b.onclick=()=>{
+    const [pid,iid]=b.dataset.gsweg.split("|"), p=finde(pid); if(!p) return;
+    p.ideen=(p.ideen||[]).filter(x=>x.id!==iid); save(); R.geschenke(); });
+};
+
+function gsPersonModal(id){
+  const p=id?gsPersonen().find(x=>x.id===id):null;
+  modal(`<h3>${p?"Person bearbeiten":"Neue Person"}</h3>
+    <label>Name</label><input id="gpName" value="${p?esc(p.name):""}" placeholder="z. B. Mama" autocomplete="off">
+    <label>Geburtstag</label>
+    <div class="gs-geb">
+      <input id="gpTag" type="text" inputmode="numeric" maxlength="2" placeholder="Tag" value="${p&&p.tag?p.tag:""}">
+      <select id="gpMonat"><option value="">Monat</option>${MONATE.map((m,i)=>`<option value="${i+1}"${p&&p.monat===i+1?" selected":""}>${m}</option>`).join("")}</select>
+      <input id="gpJahr" type="text" inputmode="numeric" maxlength="4" placeholder="Jahr (optional)" value="${p&&p.jahr?p.jahr:""}">
+    </div>
+    <div class="mo-act">
+      ${p?`<button class="b" id="gpDel" style="margin-right:auto;color:var(--bad)">Löschen</button>`:""}
+      <button class="b" onclick="closeModal()">Abbrechen</button>
+      <button class="b b-1" id="gpOk">${p?"Speichern":"Anlegen"}</button></div>`);
+  document.getElementById("gpOk").onclick=()=>{
+    const name=document.getElementById("gpName").value.trim();
+    if(!name){ toast("Name fehlt","x"); return; }
+    const tag=parseInt(document.getElementById("gpTag").value,10)||null;
+    const monat=parseInt(document.getElementById("gpMonat").value,10)||null;
+    const jahr=parseInt(document.getElementById("gpJahr").value,10)||null;
+    if((tag&&!monat)||(!tag&&monat)){ toast("Tag und Monat angeben — oder beides leer lassen","x"); return; }
+    if(tag&&monat&&(tag<1||tag>new Date(2024,monat,0).getDate())){ toast("Diesen Tag gibt es im "+MONATE[monat-1]+" nicht","x"); return; }
+    S.geschenke=S.geschenke||[];
+    if(p) Object.assign(p,{name,tag,monat,jahr:jahr&&jahr>1900?jahr:null});
+    else S.geschenke.push({id:uid(),name,tag,monat,jahr:jahr&&jahr>1900?jahr:null,notiz:"",ideen:[]});
+    save(); closeModal(); toast(p?"Gespeichert":`${name} angelegt`); R.geschenke();
+  };
+  document.getElementById("gpDel")?.addEventListener("click",()=>{
+    if(!confirm(`${p.name} mit allen Notizen und Ideen löschen?`)) return;
+    S.geschenke=(S.geschenke||[]).filter(x=>x.id!==id); save(); closeModal(); toast("Gelöscht"); R.geschenke();
+  });
+  setTimeout(()=>document.getElementById("gpName")?.focus(),50);
+}
+
+/* ============================================================
    14 — PLANER
    ============================================================ */
 let plDate=today(), plSel=0, plDragType=null, plDragTodo=null, todoPrio="mid";
@@ -5597,10 +5821,24 @@ function tplanWiring(V){
       toast(blockById(plDragType).label+" gewählt, jetzt eine Stunde antippen"); };
     b.ondragstart=()=>{ plDragType=b.dataset.bt; };
   });
-  V.querySelectorAll("[data-wslot]").forEach(s=>s.onclick=()=>{
+  /* Ein Feld im Raster nimmt entweder einen gewählten Baustein oder eine
+     gewählte Aufgabe auf — per Antippen oder per Ziehen. Die Aufgabe
+     wurde früher nur gemerkt, aber hier nie abgefragt. */
+  const slotNimmt=s=>{
     const [mk,i,h]=s.dataset.wslot.split("|");
-    if(!plDragType){ toast("Erst einen Baustein wählen","x"); return; }
-    openTBlock(mk,+i,plDragType,p2(+h)+":00",p2(Math.min(23,+h+1))+":00",null,null,false);
+    const von=p2(+h)+":00", bis=p2(Math.min(23,+h+1))+":00";
+    if(plDragTodo){
+      const t=(S.todos||[]).find(x=>x.id===plDragTodo);
+      plDragTodo=null;
+      if(t){ openTBlock(mk,+i,"todo",von,bis,t.text,null,false); return; }
+    }
+    if(!plDragType){ toast("Erst einen Baustein oder eine Aufgabe wählen","x"); return; }
+    openTBlock(mk,+i,plDragType,von,bis,null,null,false);
+  };
+  V.querySelectorAll("[data-wslot]").forEach(s=>{
+    s.onclick=()=>slotNimmt(s);
+    s.ondragover=e=>{ if(plDragTodo||plDragType) e.preventDefault(); };
+    s.ondrop=e=>{ e.preventDefault(); slotNimmt(s); };
   });
   V.querySelectorAll("[data-wblk]").forEach(b=>b.onclick=e=>{
     e.stopPropagation();
@@ -5702,7 +5940,7 @@ function neueArt(kat){
 }
 
 function openTBlock(mk,i,type,start,end,note,id,fix){
-  modal(`<h3>${id?"Training bearbeiten":"Training einplanen"}</h3>
+  modal(`<h3>${id?"Block bearbeiten":"Einplanen"}</h3>
     <label>Art</label>
     <select id="tbType">${KATEGORIEN.map(([kid,kl])=>{
       const l=blockTypes().filter(t=>katVon(t)===kid);
@@ -5869,7 +6107,7 @@ R.planer=function(){
       plDragTodo = plDragTodo===id ? null : id;
       if(plDragTodo){ plDragType=null;
         const auf=(S.todos||[]).find(x=>x.id===plDragTodo);
-        toast(`„${auf?auf.text.slice(0,22):""}“ gewählt, jetzt Uhrzeit antippen`); }
+        toast(`„${auf?auf.text.slice(0,22):""}“ gewählt — jetzt oben im Plan eine Stunde antippen`); }
       R.planer();
     };
   });

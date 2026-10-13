@@ -225,6 +225,61 @@
   background:color-mix(in srgb, var(--uf) 12%, transparent); font-variant-numeric:tabular-nums; }
 .un-m-t{ display:flex; align-items:center; gap:6px; font-size:var(--t-xs); color:var(--warn); }
 .un-m-t svg{ width:12px; height:12px; }
+button.un-m{ text-align:left; color:inherit; font:inherit; cursor:pointer; }
+.un-m.fertig{ background:color-mix(in srgb, var(--uf) 9%, transparent); }
+.un-m-h{ font-size:var(--t-xs); color:var(--text-faint); }
+/* Studienplan */
+.sp-kopf{ display:flex; align-items:center; gap:18px; margin-bottom:16px; flex-wrap:wrap; }
+.sp-cp{ display:flex; flex-direction:column; line-height:1; }
+.sp-cp b{ font-family:var(--f-disp); font-size:2.6rem; font-weight:700; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+.sp-cp span{ font-size:var(--t-sm); color:var(--text-faint); margin-top:4px; }
+.sp-fort{ flex:1; min-width:220px; display:flex; flex-direction:column; gap:9px; }
+.sp-bar{ display:flex; height:10px; border-radius:var(--r-pill); background:var(--track); overflow:hidden; }
+.sp-bar i{ display:block; height:100%; }
+.sp-bar i.lauf{ background:repeating-linear-gradient(45deg, rgba(255,255,255,.28) 0 3px, rgba(255,255,255,.08) 3px 6px); }
+.sp-stat{ display:flex; flex-wrap:wrap; gap:4px 18px; font-size:var(--t-sm); color:var(--text-dim); }
+.sp-stat b{ color:var(--text); font-variant-numeric:tabular-nums; }
+.sp-raster{ display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:8px; }
+@media(max-width:1100px){ .sp-raster{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:640px){ .sp-raster{ grid-template-columns:1fr; } }
+.sp-sem{ display:flex; flex-direction:column; gap:6px; padding:8px; border-radius:var(--r); border:1px solid transparent; }
+.sp-sem.jetzt{ border-color:color-mix(in srgb, var(--c1) 40%, transparent); background:color-mix(in srgb, var(--c1) 5%, transparent); }
+.sp-sem-k{ display:flex; justify-content:space-between; align-items:baseline; gap:6px; padding:0 2px 2px; }
+.sp-sem-k b{ font-size:var(--t-sm); }
+.sp-sem-k span{ display:flex; align-items:center; gap:4px; font-size:var(--t-xs); color:var(--text-faint); }
+.sp-sem.jetzt .sp-sem-k span{ color:var(--c1); font-weight:600; }
+.sp-sem.voll .sp-sem-k span{ color:var(--good); }
+.sp-sem-k svg{ width:11px; height:11px; stroke-width:3; }
+.sp-sem-m{ display:flex; flex-direction:column; gap:6px; }
+@media(max-width:640px){ .sp-sem-m{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.sp-m{ display:flex; flex-direction:column; gap:3px; text-align:left; padding:9px 10px 8px; border-radius:var(--r-xs);
+  font:inherit; color:var(--text-dim); cursor:pointer; min-height:66px; position:relative;
+  background:rgba(255,255,255,.025); border:1px solid var(--line); border-left:3px solid color-mix(in srgb, var(--kc) 55%, transparent);
+  transition:background-color var(--d1) var(--ez), border-color var(--d1) var(--ez); }
+.sp-m-n{ font-size:var(--t-xs); font-weight:600; line-height:1.3; color:var(--text); hyphens:auto; -webkit-hyphens:auto; overflow-wrap:anywhere; }
+.sp-m-z{ font-size:10.5px; color:var(--text-faint); line-height:1.25; }
+.sp-m-f{ margin-top:auto; padding-top:4px; display:flex; justify-content:space-between; align-items:center; gap:6px;
+  font-size:10.5px; color:var(--text-faint); font-variant-numeric:tabular-nums; }
+.sp-ok{ display:flex; align-items:center; gap:4px; color:var(--kc); font-weight:700; }
+.sp-ok svg{ width:12px; height:12px; stroke-width:3; }
+.sp-lauf{ color:var(--c1); font-weight:600; }
+.sp-m.offen{ opacity:.78; }
+.sp-m.laeuft{ border-color:color-mix(in srgb, var(--kc) 45%, transparent); border-left-color:var(--kc);
+  background:color-mix(in srgb, var(--kc) 7%, transparent); opacity:1; }
+.sp-m.bestanden{ background:color-mix(in srgb, var(--kc) 20%, transparent); border-color:color-mix(in srgb, var(--kc) 40%, transparent);
+  border-left-color:var(--kc); }
+@media (hover:hover) and (pointer:fine){ .sp-m:hover{ opacity:1; border-color:color-mix(in srgb, var(--kc) 60%, transparent); } }
+.sp-gen{ margin-top:8px; }
+.sp-gen .sp-m{ min-height:0; width:100%; flex-direction:row; align-items:center; gap:14px; }
+.sp-gen .sp-m-f{ margin:0 0 0 auto; padding:0; }
+.sp-fuss{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:14px;
+  padding-top:12px; border-top:1px solid var(--line); }
+.sp-leg{ display:flex; flex-wrap:wrap; gap:6px 14px; font-size:var(--t-xs); color:var(--text-faint); }
+.sp-leg span{ display:flex; align-items:center; gap:6px; }
+.sp-leg i{ width:9px; height:9px; border-radius:3px; }
+.sp-semwahl{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; font-size:var(--t-xs); color:var(--text-faint); }
+.sp-semwahl .chip{ padding:3px 9px; }
+.sp-note{ font-size:10.5px; color:var(--text-faint); margin-top:8px; }
 @media(max-width:520px){ .sl-kacheln{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .sl-felder label{ display:flex; flex-direction:column; gap:5px; font-size:var(--t-xs); color:var(--text-faint); }
 
@@ -465,6 +520,11 @@ select option{ background:#141a26; }
 .views{ flex:1; overflow-y:auto; overflow-x:hidden; padding:22px; }
 .view{ display:none; max-width:1240px; margin:0 auto; }
 .view.on{ display:block; animation:vin .32s var(--ez) both; }
+/* Handy: Ziele und Check-in zuerst — das ist, wofür man morgens und abends reinschaut */
+@media(max-width:700px){
+  #v-heute.on{ display:flex; flex-direction:column; }
+  #v-heute .hd-ziele{ order:-1; }
+}
 @keyframes vin{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
 
 /* ── Panels ────────────────────────────────────────────── */
@@ -727,6 +787,7 @@ select option{ background:#141a26; }
 .mo h3{ font-family:var(--f-disp); font-size:var(--t-lg); font-weight:600; margin-bottom:15px; }
 .mo label{ display:block; font-size:var(--t-sm); color:var(--text-dim); margin:13px 0 5px; font-weight:500; }
 .mo label:first-of-type{ margin-top:0; }
+.mo .sl-felder label{ display:flex; margin:0; font-size:var(--t-xs); color:var(--text-faint); }
 .mo-act{ display:flex; gap:8px; justify-content:flex-end; margin-top:20px; }
 
 /* ── Diverses ─────────────────────────────────────────── */
@@ -917,6 +978,40 @@ select option{ background:#141a26; }
 .goal-bar > i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--gc);
   transition:width .7s var(--ez); }
 .goal-foot{ display:flex; justify-content:space-between; gap:10px; font-size:var(--t-xs); color:var(--text-faint); }
+/* Check-in morgens/abends */
+.ck-row{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:11px; }
+.ck{ display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:var(--r); text-align:left;
+  border:1px solid var(--line); background:rgba(255,255,255,.03); color:var(--text-dim); min-width:0; }
+.ck-i{ display:grid; place-items:center; flex:0 0 auto; }
+.ck-i svg{ width:14px; height:14px; }
+.ck-t{ display:flex; flex-direction:column; min-width:0; line-height:1.2; }
+.ck-t b{ font-size:var(--t-xs); font-weight:650; white-space:nowrap; }
+.ck-t span{ font-size:10.5px; color:var(--text-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ck.offen{ cursor:pointer; color:var(--gc); border-color:color-mix(in srgb, var(--gc) 55%, transparent);
+  background:color-mix(in srgb, var(--gc) 13%, transparent); animation:ckPuls 2.4s ease-in-out infinite; }
+.ck.offen b{ color:var(--text); }
+.ck.fertig{ color:var(--gc); border-color:color-mix(in srgb, var(--gc) 30%, transparent); background:color-mix(in srgb, var(--gc) 8%, transparent); }
+.ck.verpasst{ opacity:.55; } .ck.verpasst .ck-t span{ color:var(--bad); }
+.ck.spaeter{ opacity:.7; }
+@keyframes ckPuls{ 0%,100%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--gc) 0%, transparent); }
+  50%{ box-shadow:0 0 0 4px color-mix(in srgb, var(--gc) 16%, transparent); } }
+@media (prefers-reduced-motion:reduce){ .ck.offen{ animation:none; } }
+.ck-hinweis{ font-size:10.5px; color:var(--text-faint); margin-top:6px; }
+.ck-sek{ font-size:var(--t-xs); color:var(--text-faint); text-transform:uppercase; letter-spacing:.07em; margin:16px 0 7px;
+  display:flex; justify-content:space-between; }
+.mo h3 + .ck-sek{ margin-top:0; }
+.ck-liste{ display:flex; flex-direction:column; gap:3px; }
+.ck-z{ display:flex; align-items:center; gap:9px; font-size:var(--t-sm); padding:5px 8px; border-radius:var(--r-xs); background:rgba(255,255,255,.03); }
+.ck-z i{ width:7px; height:7px; border-radius:2px; flex:0 0 auto; }
+.ck-zt{ font-family:var(--f-mono); color:var(--text-faint); font-size:var(--t-xs); min-width:38px; }
+.ck-leer{ font-size:var(--t-sm); color:var(--text-faint); line-height:1.5; }
+.ck-todos{ display:flex; flex-direction:column; gap:4px; max-height:240px; overflow-y:auto; }
+.ck-todo{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:var(--r); text-align:left;
+  background:rgba(255,255,255,.03); border:1px solid var(--line); color:var(--text-dim); font-size:var(--t-sm); }
+.ck-box{ width:17px; height:17px; flex:0 0 auto; border-radius:5px; border:1.5px solid var(--line-2); display:grid; place-items:center; color:transparent; }
+.ck-box svg{ width:11px; height:11px; stroke-width:3; }
+.ck-todo.an{ border-color:color-mix(in srgb, var(--warn) 50%, transparent); background:color-mix(in srgb, var(--warn) 10%, transparent); color:var(--text); }
+.ck-todo.an .ck-box{ background:var(--warn); border-color:var(--warn); color:#141008; }
 
 /* ── Wochenzeilen mit Kurve ───────────────────────────── */
 .wk-grid{ display:flex; flex-direction:column; }
@@ -1354,6 +1449,7 @@ select option{ background:#141a26; }
   .goal-foot span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .goal-act{ grid-column:1/-1; width:100%; margin-top:10px; padding:9px; font-size:var(--t-sm); }
   .goal-rettung{ grid-column:1/-1; margin-top:8px; }
+  .ck-row,.ck-hinweis{ grid-column:1/-1; }
   /* Das Schild rutscht in die Zahlenzeile, sonst sprengt es die Spalte. */
   .goal-schutz{ padding:2px 7px 2px 5px; }
 }
@@ -1945,7 +2041,8 @@ function bestRun(ok){
    Jetzt hat jedes Ziel eine Schwelle UND ein Wochenziel, dazu dieselbe
    zerfallende Stärke wie die Gewohnheiten. Beides ist einstellbar.
    ──────────────────────────────────────────────────────── */
-const ZIEL_STD={ sleepTage:4, studyTage:5, phoneTage:3, phoneMax:1 };
+const ZIEL_STD={ sleepTage:4, studyTage:5, phoneTage:3, phoneMax:1,
+                  scoreMin:70, bettZiel:"23:00", aufZiel:"07:00" };
 const ZG=()=>Object.assign({},ZIEL_STD,S.zielTage||{});
 
 /* Scroll-Bewertung. Vorher wurde durch das Ziel geteilt. Stand das Ziel
@@ -2002,13 +2099,44 @@ function gerettetText(tage){
        : `${tage.length} Tage gerettet — zuletzt ${wann.toLowerCase()==="heute"||wann.toLowerCase()==="gestern"?wann.toLowerCase():wann}`;
 }
 
+/* ── Check-in morgens und abends ────────────────────────
+   „Eingetragen" hieß bisher: irgendwann am Tag irgendetwas erfasst.
+   Jetzt zählt ein Tag erst, wenn du zweimal reingeschaut hast:
+     morgens  04:00–12:59  Schlaf eintragen, sehen was heute ansteht
+     abends   ab 18:00     Lernzeit/Scrolling, Plan und Aufgaben für morgen
+   Ein Abend-Check nach Mitternacht (bis 03:59) zählt noch für den
+   Vortag. Außerhalb der Fenster geht es nicht — genau das ist der
+   Zweck: zweimal am Tag bewusst hinschauen.
+   Tage vor CHECKIN_AB werden nach der alten Regel bewertet, damit die
+   bisherige Serie nicht rückwirkend verfällt.
+   ──────────────────────────────────────────────────────── */
+const CHECKIN_AB="2026-10-14";
+const MORGEN_AB=4*60, MORGEN_BIS=13*60, ABEND_AB=18*60;
+const checkinAm=k=>(S.checkin||{})[k]||{};
+function checkinJetzt(){
+  const d=new Date(), min=d.getHours()*60+d.getMinutes();
+  if(min<MORGEN_AB)  return {k:dk(addD(d,-1)),teil:"a"};
+  if(min<MORGEN_BIS) return {k:dk(d),teil:"m"};
+  if(min>=ABEND_AB)  return {k:dk(d),teil:"a"};
+  return {k:dk(d),teil:null};
+}
+function checkinSetzen(k,teil){
+  S.checkin=S.checkin||{};
+  S.checkin[k]=Object.assign({},S.checkin[k],{[teil]:Date.now()});
+  save();
+}
+const eintragOk=k=> k<CHECKIN_AB ? tagGenutzt(k) : !!(checkinAm(k).m&&checkinAm(k).a);
+/* Schlaf zählt nur mit genug Stunden UND einem Score über der Schwelle */
+const schlafOk=k=>{ const m=S.metrics[k]||{}, z=ZG();
+  return nv(m.sleepHours)&&m.sleepHours>=G().sleep&&nv(m.sleepScore)&&m.sleepScore>z.scoreMin; };
+
 /* Die vier Tagesziele als reine Prüfungen — gebraucht von den Karten
    auf Heute, vom Rückblick und vom Planer. */
 function zielPruefer(){
   const g=G(), z=ZG(), m=k=>S.metrics[k]||{};
   return {
-    eintrag: tagGenutzt,
-    sleep:   k=>nv(m(k).sleepHours)&&m(k).sleepHours>=g.sleep,
+    eintrag: eintragOk,
+    sleep:   schlafOk,
     study:   k=>nv(m(k).study)&&m(k).study>=g.study,
     scroll:  k=>nv(m(k).phone)&&m(k).phone<=z.phoneMax
   };
@@ -2041,9 +2169,9 @@ function buildGoals(){
      NOVA jeden Tag benutzen. Deshalb rettet hier auch eine Pause
      nichts: wer nichts einträgt, beginnt von vorn. */
   return [
-    bau("eintrag","Eingetragen","flame","var(--warn)",P.eintrag,"etwas in NOVA erfasst",false),
+    bau("eintrag","Eingetragen","flame","var(--warn)",P.eintrag,"morgens und abends eingecheckt",false),
     bau("sleep","Geschlafen","moon","var(--m-sleep)",P.sleep,
-        `mindestens ${f(g.sleep)} h geschlafen`),
+        `${f(g.sleep)} h und Score über ${z.scoreMin}`),
     bau("study","Gelernt","book","var(--m-study)",P.study,
         `mindestens ${f(g.study)} h gelernt`),
     bau("scroll","Scroll-Ziel","phone","var(--m-phone)",P.scroll,
@@ -2143,7 +2271,9 @@ function todoZusammenlegen(){
 /* Die Auswahl für heute. Gilt nur für den heutigen Tag und wird
    morgen von selbst leer — sonst wäre es bloß eine zweite Liste. */
 function fokusIds(){
-  const f=S.todoFocus;
+  let f=S.todoFocus;
+  /* Am Vorabend für heute Vorgemerktes greift, solange heute noch nichts gewählt wurde */
+  if((!f||f.d!==today())&&S.todoFocusNext&&S.todoFocusNext.d===today()) f=S.todoFocusNext;
   if(!f||f.d!==today()) return [];
   const da=new Set(todoOffen().map(t=>t.id));
   return (f.ids||[]).filter(id=>da.has(id));
@@ -2367,6 +2497,7 @@ const I=(()=>{
     face3:  w('<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01"/>'),
     schild: w('<path d="M12 3l7.5 3v5.4c0 4.4-3 8.2-7.5 9.6-4.5-1.4-7.5-5.2-7.5-9.6V6z"/>'),
     bulb:   w('<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/>'),
+    sun:    w('<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>'),
     star:   w('<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>'),
     cap:    w('<path d="M2.5 9L12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c0 1.4 2.5 3 5.5 3s5.5-1.6 5.5-3V11"/><path d="M21.5 9v5"/>'),
   };
@@ -2700,6 +2831,10 @@ function settingsModal(){
   const g=G(), z=ZG();
   modal(`<h3>Einstellungen</h3>
     <label>Schlafziel (Std.)</label><input type="number" step=".5" id="gSleep" value="${g.sleep}">
+    <label>Sleep-Score muss über … liegen</label><input type="number" step="1" min="0" max="100" id="gScore" value="${z.scoreMin}">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1"><label>Ziel: ins Bett um</label><input type="time" id="gBett" value="${z.bettZiel}"></div>
+      <div style="flex:1"><label>Ziel: aufstehen um</label><input type="time" id="gAuf" value="${z.aufZiel}"></div></div>
     <label>Lernziel (Std.)</label><input type="number" step=".5" id="gStudy" value="${g.study}">
     <label>Scrolling-Obergrenze (Std.)</label><input type="number" step=".25" id="gPhone" value="${z.phoneMax}">
     <label>Trainingsziel pro Woche (Min.)</label><input type="number" step="15" id="gSport" value="${g.sport}">
@@ -2734,6 +2869,9 @@ function settingsModal(){
              phone:parseFloat(document.getElementById("gPhone").value)||0,
              sport:+document.getElementById("gSport").value||300};
     S.zielTage={ sleepTage:nz("zSleep"), studyTage:nz("zStudy"), phoneTage:nz("zPhone"),
+                 scoreMin:clamp(parseInt(document.getElementById("gScore").value,10)||70,0,100),
+                 bettZiel:document.getElementById("gBett").value||"23:00",
+                 aufZiel:document.getElementById("gAuf").value||"07:00",
                  phoneMax:Math.max(0,parseFloat(document.getElementById("gPhone").value)||0) };
     save(); closeModal(); toast("Ziele gespeichert"); go(VIEW);
   };
@@ -3014,6 +3152,113 @@ function trendBadge(cur,prev,invert=false){
    ============================================================ */
 let dayView=today();
 
+/* ── Check-in: Knöpfe auf der Eingetragen-Karte und die zwei Dialoge ── */
+const uhrVon=ms=>{ const d=new Date(ms); return `${p2(d.getHours())}:${p2(d.getMinutes())}`; };
+function checkinKnoepfe(){
+  const t=today(), c=checkinAm(t), j=checkinJetzt();
+  const jetzt=new Date(), min=jetzt.getHours()*60+jetzt.getMinutes();
+  let m, a;
+  if(c.m) m={cls:"fertig", txt:"Morgens", sub:"um "+uhrVon(c.m)};
+  else if(j.teil==="m") m={cls:"offen", txt:"Morgen-Check", sub:"bis 13 Uhr", act:"m"};
+  else if(min>=MORGEN_BIS) m={cls:"verpasst", txt:"Morgens", sub:"verpasst"};
+  else m={cls:"spaeter", txt:"Morgens", sub:"ab 4 Uhr"};
+  if(j.teil==="a"&&j.k!==t){
+    const cy=checkinAm(j.k);
+    a= cy.a ? {cls:"fertig", txt:"Abends", sub:"gestern "+uhrVon(cy.a)}
+            : {cls:"offen", txt:"Abend-Check", sub:"für gestern, bis 4 Uhr", act:"a"};
+  }
+  else if(c.a) a={cls:"fertig", txt:"Abends", sub:"um "+uhrVon(c.a)};
+  else if(j.teil==="a") a={cls:"offen", txt:"Abend-Check", sub:"bis 4 Uhr nachts", act:"a"};
+  else a={cls:"spaeter", txt:"Abends", sub:"ab 18 Uhr"};
+  const knopf=(x,icon)=>`<button class="ck ${x.cls}" ${x.act?`data-ck="${x.act}"`:"disabled"}>
+      <span class="ck-i">${x.cls==="fertig"?ico("check"):ico(icon)}</span>
+      <span class="ck-t"><b>${x.txt}</b><span>${x.sub}</span></span></button>`;
+  return `<div class="ck-row">${knopf(m,"sun")}${knopf(a,"moon")}</div>
+    ${t<CHECKIN_AB?`<div class="ck-hinweis">Zählt ab morgen — heute gilt noch die alte Regel.</div>`:""}`;
+}
+function checkinOeffnen(teil){
+  const j=checkinJetzt();
+  if(j.teil!==teil){ toast(teil==="m"?"Der Morgen-Check geht bis 13 Uhr":"Der Abend-Check geht ab 18 Uhr","x"); return; }
+  (teil==="m"?morgenModal:abendModal)(j.k);
+}
+const planListe=k=>{
+  const l=planDay(k).slice().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+  if(!l.length) return `<div class="ck-leer">Nichts geplant.</div>`;
+  return `<div class="ck-liste">${l.map(b=>{ const t=blockById(b.type);
+    return `<div class="ck-z"><i style="background:${t.bg}"></i><span class="ck-zt">${b.start||""}</span>${esc(b.note||t.label)}</div>`;}).join("")}</div>`;
+};
+function morgenModal(k){
+  const m=S.metrics[k]||{};
+  const fok=fokusIds().map(id=>todoOffen().find(t=>t.id===id)).filter(Boolean);
+  modal(`<h3>Guten Morgen</h3>
+    <div class="ck-sek">Wie war die Nacht?</div>
+    <div class="sl-felder">
+      <label>Ins Bett<input type="time" id="mkVon" value="${m.sleepFrom||""}"></label>
+      <label>Aufgewacht<input type="time" id="mkBis" value="${m.sleepTo||""}"></label>
+      <label>Stunden<input type="text" inputmode="decimal" autocomplete="off" id="mkH" value="${nv(m.sleepHours)?m.sleepHours:""}" placeholder="aus den Zeiten"></label>
+      <label>Score<input type="number" inputmode="numeric" min="0" max="100" id="mkS" value="${nv(m.sleepScore)?m.sleepScore:""}" placeholder="von der Uhr"></label>
+    </div>
+    <div class="ck-sek">Heute im Plan</div>
+    ${planListe(k)}
+    <div class="ck-sek">Heute dran</div>
+    ${fok.length?`<div class="ck-liste">${fok.map(t=>`<div class="ck-z"><i style="background:var(--warn)"></i>${esc(t.text)}</div>`).join("")}</div>`
+      :`<div class="ck-leer">Nichts vorgemerkt. Im Planer kannst du bis zu ${TODO_FOKUS} Aufgaben für heute wählen.</div>`}
+    <div class="mo-act"><button class="b" onclick="closeModal()">Später</button>
+      <button class="b b-1" id="ckOk">${ico("check")}Morgen-Check</button></div>`);
+  document.getElementById("ckOk").onclick=()=>{
+    const v=id=>document.getElementById(id).value;
+    let hv=parseFloat(String(v("mkH")).replace(",",".")); const sv=parseFloat(v("mkS"));
+    const von=v("mkVon"), bis=v("mkBis"), e={};
+    if(von&&bis){ e.sleepFrom=von; e.sleepTo=bis;
+      if(isNaN(hv)) hv=Math.round(((hm2min(bis)-hm2min(von)+1440)%1440)/15)/4; }
+    if(!isNaN(hv)) e.sleepHours=clamp(hv,0,16);
+    if(!isNaN(sv)) e.sleepScore=clamp(Math.round(sv),0,100);
+    if(Object.keys(e).length) S.metrics[k]=Object.assign({},S.metrics[k],e);
+    checkinSetzen(k,"m"); closeModal();
+    toast(eintragOk(k)?"Check-in komplett":"Morgen-Check erledigt — bis heute Abend","check");
+    go(VIEW); paintOrb();
+  };
+}
+function abendModal(k){
+  const m=S.metrics[k]||{}, morgen=dk(addD(parsedk(k),1));
+  const RANG={high:0,mid:1,low:2};
+  const offen=todoOffen().slice().sort((a,b)=>(RANG[a.priority]??1)-(RANG[b.priority]??1)||todoStart(a)-todoStart(b)).slice(0,10);
+  let ids=(S.todoFocusNext&&S.todoFocusNext.d===morgen?S.todoFocusNext.ids:[]).filter(id=>offen.some(t=>t.id===id));
+  modal(`<h3>Tag abschließen</h3>
+    <div class="ck-sek">Wie war der Tag?</div>
+    <div class="sl-felder">
+      <label>Gelernt (Std.)<input type="text" inputmode="decimal" autocomplete="off" id="akSt" value="${nv(m.study)?m.study:""}" placeholder="0"></label>
+      <label>Scrolling (Std.)<input type="text" inputmode="decimal" autocomplete="off" id="akPh" value="${nv(m.phone)?m.phone:""}" placeholder="0"></label>
+    </div>
+    <div class="ck-sek">Morgen im Plan · ${tagLang(morgen)}</div>
+    ${planListe(morgen)}
+    <div class="ck-sek">Für morgen vormerken <span id="akN">${ids.length}/${TODO_FOKUS}</span></div>
+    ${offen.length?`<div class="ck-todos">${offen.map(t=>`<button class="ck-todo${ids.includes(t.id)?" an":""}" data-akt="${t.id}">
+        <span class="ck-box">${ico("check")}</span><span>${esc(t.text)}</span></button>`).join("")}</div>`
+      :`<div class="ck-leer">Keine offenen Aufgaben.</div>`}
+    <div class="mo-act"><button class="b" onclick="closeModal()">Später</button>
+      <button class="b b-1" id="ckOk">${ico("check")}Abend-Check</button></div>`);
+  document.querySelectorAll("[data-akt]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.akt, i=ids.indexOf(id);
+    if(i>=0) ids.splice(i,1);
+    else if(ids.length>=TODO_FOKUS){ toast("Drei reichen. Erst eine abwählen.","x"); return; }
+    else ids.push(id);
+    b.classList.toggle("an",ids.includes(id));
+    document.getElementById("akN").textContent=`${ids.length}/${TODO_FOKUS}`;
+  });
+  document.getElementById("ckOk").onclick=()=>{
+    const num=id=>parseFloat(String(document.getElementById(id).value).replace(",","."));
+    const st=num("akSt"), ph=num("akPh"), e={};
+    if(!isNaN(st)) e.study=clamp(st,0,24);
+    if(!isNaN(ph)) e.phone=clamp(ph,0,24);
+    if(Object.keys(e).length) S.metrics[k]=Object.assign({},S.metrics[k],e);
+    S.todoFocusNext={d:morgen,ids:ids.slice()};
+    checkinSetzen(k,"a"); closeModal();
+    toast(eintragOk(k)?"Tag abgeschlossen — Check-in komplett":"Abend-Check erledigt","check");
+    go(VIEW); paintOrb();
+  };
+}
+
 R.heute=function(){
   const k=dayView, isT=k===today();
   const m=S.metrics[k]||{}, g=G();
@@ -3124,6 +3369,7 @@ R.heute=function(){
         </div>
         ${G2.gerettet.length?`<div class="goal-rettung">
           ${ico("schild")}<span>${gerettetText(G2.gerettet)}</span></div>`:""}
+        ${G2.key==="eintrag"?checkinKnoepfe():""}
       </div>`;}).join("")}
   </div>
   </div>
@@ -3240,6 +3486,7 @@ R.heute=function(){
   </div>`;
 
   const V=document.getElementById("v-heute");
+  V.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>checkinOeffnen(b.dataset.ck));
   V.querySelectorAll("[data-fdone]").forEach(r=>r.onclick=()=>{
     todoErledigt(r.dataset.fdone);
     const n=todoWocheFertig();
@@ -3338,10 +3585,10 @@ function zielSchemaVorschlag(){
   const g=G(), z=ZG(), m=k=>S.metrics[k]||{};
   const raus=[];
 
-  const sleepIst=istProWoche(k=>nv(m(k).sleepHours)&&m(k).sleepHours>=g.sleep);
+  const sleepIst=istProWoche(schlafOk);
   raus.push({id:"sleepTage", label:"Geschlafen", ist:sleepIst,
     alt:z.sleepTage, neu:clamp(Math.round(sleepIst)+1,1,7),
-    text:t=>`an ${t} Tagen mindestens ${f(g.sleep)} h`});
+    text:t=>`an ${t} Tagen ${f(g.sleep)} h und Score über ${z.scoreMin}`});
 
   const studyIst=istProWoche(k=>nv(m(k).study)&&m(k).study>=g.study);
   raus.push({id:"studyTage", label:"Gelernt", ist:studyIst,
@@ -4563,14 +4810,22 @@ function schlafZeitenChart(nae,ziel,r){
       ab zwei Nächten entsteht hier dein Rhythmus.</div>
       ${aelter>=2&&slTage<90?`<button class="b b-sm" data-slt="90" style="margin-top:10px">${aelter} ältere Nächte mit Uhrzeit zeigen</button>`:""}</div>`;
   }
-  const lo=Math.min(...mit.map(n=>nachtMin(n.von))), hi=Math.max(...mit.map(n=>nachtMin(n.bis)));
-  const a0=Math.max(0,Math.floor((lo-40)/60)*60), a1=Math.min(1440,Math.ceil((hi+40)/60)*60);
   /* Schmal (Handy): eigenes, höheres Seitenverhältnis — sonst wird die
      Grafik flach und die Schrift winzig. */
   const eng=window.innerWidth<640;
-  const W=eng?390:760,H=eng?360:330,pL=eng?40:46,pR=eng?48:58,pT=24,pB=30, pw=W-pL-pR, ph=H-pT-pB;
-  const y=v=>pT+(clamp(v,a0,a1)-a0)/(a1-a0)*ph;
+  const W=eng?390:760,H=eng?380:350,pL=eng?40:46,pR=eng?48:58,pT=14,pB=30, pw=W-pL-pR, ph=H-pT-pB;
   const n=nae.length, slot=pw/n, bw=clamp(slot*.62,2.5,22);
+  /* Beschriftung über jedem Balken: Stunden und Score. Bei breiten
+     Spalten zweizeilig, bei schmalen hochkant, bei ganz schmalen
+     (90 Nächte auf dem Handy) passt nichts mehr — dann per Antippen. */
+  const art= slot>=19?"zwei" : slot>=5.5?"hoch" : "keine";
+  const kopf= art==="zwei"?28 : art==="hoch"?50 : 0;          /* Platz über dem frühesten Balken, in px */
+  const zb=nachtMin(ZG().bettZiel), za=nachtMin(ZG().aufZiel);
+  const lo=Math.min(zb,...mit.map(n=>nachtMin(n.von))), hi=Math.max(za,...mit.map(n=>nachtMin(n.bis)));
+  const span0=Math.max(240,hi-lo+60);
+  const vorlauf=Math.round(kopf/ph*span0)+30;
+  const a0=Math.max(0,Math.floor((lo-vorlauf)/60)*60), a1=Math.min(1440,Math.ceil((hi+30)/60)*60);
+  const y=v=>pT+(clamp(v,a0,a1)-a0)/(a1-a0)*ph;
   const x=i=>pL+slot*(i+.5);
   let g="";
   /* Wochenende hinterlegen */
@@ -4582,36 +4837,64 @@ function schlafZeitenChart(nae,ziel,r){
     g+=`<line x1="${pL}" y1="${y(v)}" x2="${W-pR}" y2="${y(v)}" stroke="var(--track)" stroke-dasharray="2 6"/>
       <text x="${pL-8}" y="${y(v)+3.5}" text-anchor="end" font-family="var(--f-mono)" font-size="10" fill="var(--text-faint)">${nachtUhr(v)}</text>`;
   }
-  /* Übliche Zeiten als Band (Schnitt ± Streuung) mit Beschriftung rechts */
+  /* Rechte Randbeschriftung sammeln und danach entzerren, damit sich
+     „Ø auf 07:28" und „Ziel 07:00" nie überdecken. */
+  const marken=[];
+  /* Übliche Zeiten als Band (Schnitt ± Streuung) */
   const band=(m,sd,txt)=>{ if(m===null) return "";
     const s=Math.max(sd||0,8);
+    marken.push({y:y(m),h:24,html:yy=>`<text x="${W-pR+6}" y="${yy-2}" font-family="var(--f-mono)" font-size="10.5" font-weight="600" fill="var(--m-sleep)">${nachtUhr(Math.round(m))}</text>
+      <text x="${W-pR+6}" y="${yy+10}" font-size="9" fill="var(--text-faint)">${txt}</text>`});
     return `<rect x="${pL}" y="${y(m-s)}" width="${pw}" height="${Math.max(2,y(m+s)-y(m-s))}" fill="var(--m-sleep)" opacity=".07"/>
-      <line x1="${pL}" y1="${y(m)}" x2="${W-pR}" y2="${y(m)}" stroke="var(--m-sleep)" stroke-opacity=".55" stroke-dasharray="5 4"/>
-      <text x="${W-pR+6}" y="${y(m)-2}" font-family="var(--f-mono)" font-size="10.5" font-weight="600" fill="var(--m-sleep)">${nachtUhr(Math.round(m))}</text>
-      <text x="${W-pR+6}" y="${y(m)+10}" font-size="9" fill="var(--text-faint)">${txt}</text>`; };
+      <line x1="${pL}" y1="${y(m)}" x2="${W-pR}" y2="${y(m)}" stroke="var(--m-sleep)" stroke-opacity=".55" stroke-dasharray="5 4"/>`; };
   g+=band(r.bett,r.sBett,"Ø Bett")+band(r.auf,r.sAuf,"Ø auf");
+  /* Zielfenster: grüne Linien und ein Hauch Grün dazwischen */
+  g+=`<rect x="${pL}" y="${y(zb)}" width="${pw}" height="${Math.max(0,y(za)-y(zb))}" fill="var(--good)" opacity=".035"/>`;
+  [[zb,ZG().bettZiel],[za,ZG().aufZiel]].forEach(([v,t])=>{
+    g+=`<line x1="${pL}" y1="${y(v)}" x2="${W-pR}" y2="${y(v)}" stroke="var(--good)" stroke-opacity=".7" stroke-width="1.2"/>`;
+    marken.push({y:y(v),h:24,html:yy=>`<text x="${W-pR+6}" y="${yy-2}" font-family="var(--f-mono)" font-size="10.5" font-weight="600" fill="var(--good)">${t}</text>
+      <text x="${W-pR+6}" y="${yy+10}" font-size="9" fill="var(--text-faint)">Ziel</text>`}); });
+  marken.sort((a,b)=>a.y-b.y);
+  for(let i=1;i<marken.length;i++){
+    const min=marken[i-1].y+marken[i-1].h;
+    if(marken[i].y<min) marken[i].y=min;
+  }
+  /* Was unten über den Rand geschoben wurde, wieder nach oben schieben */
+  for(let i=marken.length-1;i>=0;i--){
+    const max= i===marken.length-1 ? H-pB-4 : marken[i+1].y-marken[i].h;
+    if(marken[i].y>max) marken[i].y=max;
+  }
+  g+=marken.map(mk=>mk.html(mk.y)).join("");
   /* Balken */
   let b="";
   nae.forEach((nn,i)=>{
     const sel=nn.k===slNacht;
     if(nn.von&&nn.bis){
       const y1=y(nachtMin(nn.von)), y2=y(nachtMin(nn.bis)), hoch=Math.max(3,y2-y1);
-      const gut=nn.h!==null&&nn.h>=ziel;
+      const gut=schlafOk(nn.k);
       b+=`<rect x="${(x(i)-bw/2).toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${hoch.toFixed(1)}"
         rx="${Math.min(5,bw/2).toFixed(1)}" fill="var(--m-sleep)" opacity="${nn.pause?.28:gut?.95:.5}"
         ${sel?`stroke="var(--text)" stroke-width="1.6"`:""}/>`;
-      if(slot>=17&&nn.h!==null)
-        b+=`<text x="${x(i).toFixed(1)}" y="${(y1-6).toFixed(1)}" text-anchor="middle" font-family="var(--f-mono)" font-size="9.5"
-          fill="${gut?"var(--text-dim)":"var(--text-faint)"}">${f(nn.h)}</text>`;
+      const hTxt=nn.h!==null?f(nn.h):"–", sTxt=nn.sc!==null?String(nn.sc):"–";
+      const sFarbe=nn.sc!==null&&nn.sc>ZG().scoreMin?"var(--m-sleep)":"var(--text-faint)";
+      if(art==="zwei")
+        b+=`<text x="${x(i).toFixed(1)}" y="${(y1-17).toFixed(1)}" text-anchor="middle" font-family="var(--f-mono)" font-size="9.5"
+            fill="${nn.h!==null&&nn.h>=ziel?"var(--text)":"var(--text-faint)"}">${hTxt}</text>
+          <text x="${x(i).toFixed(1)}" y="${(y1-6).toFixed(1)}" text-anchor="middle" font-family="var(--f-mono)" font-size="8.5" fill="${sFarbe}">${sTxt}</text>`;
+      else if(art==="hoch")
+        b+=`<text transform="translate(${(x(i)+(slot>=12?3:2.5)).toFixed(1)} ${(y1-5).toFixed(1)}) rotate(-90)" font-family="var(--f-mono)" font-size="${slot>=12?9:slot>=8?8:7}">
+            <tspan fill="${nn.h!==null&&nn.h>=ziel?"var(--text)":"var(--text-faint)"}">${hTxt}</tspan><tspan fill="${sFarbe}"> · ${sTxt}</tspan></text>`;
     } else if(nn.h!==null){
       /* Nur die Dauer bekannt: kleiner Ring unten, damit die Nacht nicht verschwindet */
       b+=`<circle cx="${x(i).toFixed(1)}" cy="${H-pB-5}" r="${slot>=10?2.6:1.8}" fill="none" stroke="var(--m-sleep)" stroke-opacity=".4"/>`;
     }
     /* Datumsachse: bei wenigen Nächten jede, sonst jeder Montag */
     const d=parsedk(nn.k);
-    if(n<=16||d.getDay()===1)
+    /* Datum je nach Spaltenbreite: „Mi 30.", „30." oder nur montags */
+    const dTxt= slot>=40 ? `${WD[wtagIdx(d)]} ${d.getDate()}.` : slot>=17 ? `${d.getDate()}.` : d.getDay()===1 ? `${d.getDate()}.` : "";
+    if(dTxt)
       b+=`<text x="${x(i).toFixed(1)}" y="${H-9}" text-anchor="middle" font-family="var(--f-mono)" font-size="9.5"
-        fill="${nn.k===today()?"var(--text)":"var(--text-faint)"}">${n<=16?WD[wtagIdx(d)]+" ":""}${d.getDate()}.</text>`;
+        fill="${nn.k===today()?"var(--text)":istWeNacht(nn.k)?"var(--text-dim)":"var(--text-faint)"}">${dTxt}</text>`;
     /* Trefferfläche über die volle Höhe — schmale Balken sind sonst kaum zu treffen */
     b+=`<rect data-sln="${nn.k}" x="${(pL+slot*i).toFixed(1)}" y="${pT}" width="${slot.toFixed(1)}" height="${ph}" fill="transparent" style="cursor:pointer">
       <title>${tagLang(nn.k)}${nn.von?`: ${nn.von}–${nn.bis}`:""}${nn.h!==null?` · ${f(nn.h)} h`:""}</title></rect>`;
@@ -4623,7 +4906,8 @@ function schlafNachtDetail(nae,r,ziel){
   if(!nn) return `<span class="rb-hinweis">Tippe auf eine Nacht, um sie im Detail zu sehen.</span>`;
   const teile=[];
   if(nn.von) teile.push(`<span><b>${nn.von} – ${nn.bis}</b></span>`);
-  if(nn.h!==null) teile.push(`<span><b>${f(nn.h)} h</b>${nn.h>=ziel?" · Ziel erreicht":` · ${f(ziel-nn.h)} h unter dem Ziel`}</span>`);
+  if(nn.h!==null) teile.push(`<span><b>${f(nn.h)} h</b>${nn.h>=ziel?"":` · ${f(ziel-nn.h)} h unter dem Ziel`}</span>`);
+  if(nn.h!==null) teile.push(`<span>${schlafOk(nn.k)?"<b>Ziel erreicht</b>":"Ziel nicht erreicht"}</span>`);
   if(nn.sc!==null) teile.push(`<span>Score <b>${nn.sc}</b></span>`);
   if(nn.von&&r.bett!==null){
     const d=Math.round(nachtMin(nn.von)-r.bett);
@@ -4641,7 +4925,7 @@ R.schlaf=function(){
   const h=nae.map(n=>n.h).filter(v=>v!==null);
   const sc=nae.map(n=>n.sc).filter(v=>v!==null);
   const w7=schlafNaechte(7).filter(n=>!n.pause).map(n=>n.h).filter(v=>v!==null);
-  const ziel=h.filter(v=>v>=g.sleep).length;
+  const ziel=nae.filter(n=>schlafOk(n.k)).length;
   const r=schlafRhythmus(nae);
   const letzte=[...schlafNaechte(14)].reverse().find(n=>n.h!==null);
   const serie=buildGoals().find(x=>x.key==="sleep");
@@ -4656,7 +4940,7 @@ R.schlaf=function(){
 
   <div class="p sl-wann">
     <div class="p-head"><div class="p-title">${ico("clock")}Wann du schläfst</div>
-      <span class="p-note">je Nacht vom Einschlafen bis zum Aufwachen · Wochenende hinterlegt</span></div>
+      <span class="p-note">über jedem Balken: Stunden, darunter Score · grün: dein Zielfenster · Wochenende hinterlegt</span></div>
     <div class="sl-rhythmus">
       <div><span>Ø ins Bett</span><b>${r.bett!==null?nachtUhr(Math.round(r.bett)):"–"}</b>
         <em>${r.sBett!==null?`± ${Math.round(r.sBett)} min`:""}</em></div>
@@ -4679,7 +4963,7 @@ R.schlaf=function(){
       <div class="sl-nacht-v">${letzte?`${f(letzte.h)}<span>h</span>`:"–"}</div>
       <div class="sl-nacht-s">${letzte&&letzte.von?`${letzte.von} – ${letzte.bis}`:""}${letzte&&letzte.sc!==null?`${letzte.von?" · ":""}Score ${letzte.sc}`:""}</div>
       ${letzte?`<div class="bar" style="margin-top:12px"><i style="width:${clamp(letzte.h/g.sleep*100,0,100)}%;background:var(--m-sleep)"></i></div>`:""}
-      <div class="sl-serie"><span>${ico("moon")}</span><b>${serie.serie}</b> ${serie.serie===1?"Nacht":"Nächte"} in Folge über ${f(g.sleep)} h
+      <div class="sl-serie"><span>${ico("moon")}</span><b>${serie.serie}</b> ${serie.serie===1?"Nacht":"Nächte"} in Folge mit ${f(g.sleep)} h und Score über ${ZG().scoreMin}
         <em>${serie.best>0?(serie.serie>=serie.best&&serie.serie>0?"Bestwert":"Rekord "+serie.best):""}</em></div>
     </div>
     <div class="p sl-eintrag">
@@ -4688,7 +4972,7 @@ R.schlaf=function(){
       <div class="sl-felder">
         <label>Ins Bett<input type="time" id="slVon" value="${m.sleepFrom||""}"></label>
         <label>Aufgewacht<input type="time" id="slBis" value="${m.sleepTo||""}"></label>
-        <label>Stunden<input type="number" inputmode="decimal" step="0.25" min="0" max="16" id="slH" value="${nv(m.sleepHours)?m.sleepHours:""}" placeholder="aus den Zeiten"></label>
+        <label>Stunden<input type="text" inputmode="decimal" autocomplete="off" id="slH" value="${nv(m.sleepHours)?m.sleepHours:""}" placeholder="aus den Zeiten"></label>
         <label>Score<input type="number" inputmode="numeric" min="0" max="100" id="slS" value="${nv(m.sleepScore)?m.sleepScore:""}" placeholder="optional"></label>
       </div>
       <button class="b b-1" id="slOk" style="width:100%;margin-top:10px">${nv(m.sleepHours)?"Ändern":"Eintragen"}</button>
@@ -4809,10 +5093,162 @@ const wannText=b=>{
   return `${n===0?"heute":n===1?"morgen":TWD[b.tag]} ${b.start}`;
 };
 
+/* ── Studienplan ────────────────────────────────────────
+   Wirtschaftsingenieurwesen, technische Fachrichtung Maschinenbau,
+   TU Darmstadt — Musterstudienplan, sechs Semester, 180 CP.
+   Farben wie im Plan: Mathematik rot, Wirtschaft & Recht blau,
+   Technik grün, Abschluss orange, Studium Generale lila.
+   a: Kürzel, unter denen das Modul im Planer auftaucht („TM3",
+   „MM1", „Mathe" …) — nur innerhalb des laufenden Semesters
+   zugeordnet, damit „Mathe" im 3. Semester Mathematik III ist.
+   ──────────────────────────────────────────────────────── */
+const STUDIUM_KAT={
+  mathe:   {l:"Mathematik",         c:"#f0757a"},
+  wiwi:    {l:"Wirtschaft & Recht", c:"#5aaee8"},
+  technik: {l:"Technik",            c:"#6fcf7f"},
+  thesis:  {l:"Abschluss",          c:"#f08a4b"},
+  generale:{l:"Studium Generale",   c:"#c4a3f5"},
+};
+const STUDIUM_CP=180;
+const STUDIENPLAN=[
+  {id:"ma1", sem:1,kat:"mathe",  n:"Mathematik I",                 z:"für Maschinenbau", cp:8, a:["mathe","mathe1","ma1","mathei"]},
+  {id:"bub", sem:1,kat:"wiwi",   n:"Buchführung und Bilanzierung",                       cp:5, a:["buchführung","bub","bilanzierung","rewe"]},
+  {id:"vr",  sem:1,kat:"wiwi",   n:"Vertragsrecht",                                      cp:5, a:["vertragsrecht","recht","vr"]},
+  {id:"tm1", sem:1,kat:"technik",n:"Technische Mechanik I",        z:"Statik",           cp:6, a:["tm1","tmi","tm","statik"]},
+  {id:"tfv", sem:1,kat:"technik",n:"Technologie der Fertigungsverfahren",                cp:6, a:["tfv","fertigung","fertigungsverfahren"]},
+  {id:"ma2", sem:2,kat:"mathe",  n:"Mathematik II",                z:"für Maschinenbau", cp:8, a:["mathe","mathe2","ma2","matheii"]},
+  {id:"mwn", sem:2,kat:"wiwi",   n:"Management von Wertschöpfungsnetzwerken",            cp:4, a:["mwn","management","wertschöpfung"]},
+  {id:"swe", sem:2,kat:"wiwi",   n:"Grundlagen von Softwareentwicklung und -Management", cp:5, a:["swe","software","softwareentwicklung"]},
+  {id:"tm2", sem:2,kat:"technik",n:"Technische Mechanik II",       z:"Elastostatik",     cp:6, a:["tm2","tmii","tm","elastostatik"]},
+  {id:"et",  sem:2,kat:"technik",n:"Einführung in die Elektrotechnik",                   cp:6, a:["et","etechnik","elektrotechnik"]},
+  {id:"ma3", sem:3,kat:"mathe",  n:"Mathematik III",               z:"für Maschinenbau", cp:4, a:["mathe","mathe3","ma3","matheiii","mathematik"]},
+  {id:"mik", sem:3,kat:"wiwi",   n:"Mikroökonomie",                                      cp:5, a:["mikro","mikroökonomie","vwl"]},
+  {id:"sta", sem:3,kat:"wiwi",   n:"Statistik für Wirtschaftswissenschaften",            cp:4, a:["statistik","stat","sta"]},
+  {id:"tm3", sem:3,kat:"technik",n:"Technische Mechanik III",      z:"Dynamik",          cp:6, a:["tm3","tmiii","tm","dynamik"]},
+  {id:"mm1", sem:3,kat:"technik",n:"Maschinenelemente und Mechatronik I",                cp:8, a:["mm1","mmi","mm","maschinenelemente","mem"]},
+  {id:"wk1", sem:3,kat:"technik",n:"Werkstoffkunde I",                                   cp:4, a:["wk","wk1","werkstoffkunde","werkstoff","wkd"]},
+  {id:"klr", sem:4,kat:"wiwi",   n:"Kosten- und Leistungsrechnung",                      cp:4, a:["klr","kostenrechnung"]},
+  {id:"mkt", sem:4,kat:"wiwi",   n:"Marketing",                                          cp:4, a:["marketing","mkt"]},
+  {id:"scm", sem:4,kat:"wiwi",   n:"Produktion und Supply Chain Management",             cp:4, a:["scm","produktion","supplychain"]},
+  {id:"bs",  sem:4,kat:"wiwi",   n:"Bachelorseminar",                                    cp:6, a:["seminar","bachelorseminar","bs"]},
+  {id:"mm2", sem:4,kat:"technik",n:"Maschinenelemente und Mechatronik II",               cp:8, a:["mm2","mmii","mm","maschinenelemente"]},
+  {id:"wb1", sem:4,kat:"technik",n:"Wahlbereich: Projekte*, weitere Module",             cp:10,a:["projekt","pdp","wahlbereich","rk"]},
+  {id:"iuf", sem:5,kat:"wiwi",   n:"Investition und Finanzierung",                       cp:4, a:["iuf","investition","finanzierung"]},
+  {id:"mak", sem:5,kat:"wiwi",   n:"Makroökonomie",                                      cp:5, a:["makro","makroökonomie"]},
+  {id:"ur",  sem:5,kat:"wiwi",   n:"Deutsches und Internationales Unternehmensrecht",    cp:4, a:["unternehmensrecht","ur","recht"]},
+  {id:"or",  sem:5,kat:"wiwi",   n:"Operations Research",                                cp:4, a:["or","operationsresearch"]},
+  {id:"td1", sem:5,kat:"technik",n:"Technische Thermodynamik I",                         cp:6, a:["thermo","td","td1","thermodynamik"]},
+  {id:"srt", sem:5,kat:"technik",n:"Systemtheorie und Regelungstechnik",                 cp:6, a:["srt","regelungstechnik","rt","systemtheorie"]},
+  {id:"ewf", sem:6,kat:"wiwi",   n:"Empirische Wirtschaftsforschung",                    cp:4, a:["ewf","empirische","empirie"]},
+  {id:"wb2", sem:6,kat:"wiwi",   n:"Wahlbereich Rechts- und Wirtschaftswissenschaften",  cp:3, cpTxt:"3–6", a:["wahlbereich"]},
+  {id:"ba",  sem:6,kat:"thesis", n:"Bachelorthesis",               z:"am FB Rechts- und Wirtschaftswissenschaften oder Maschinenbau", cp:12, a:["thesis","bachelorarbeit","ba"]},
+  {id:"sg",  sem:0,kat:"generale",n:"Studium Generale",            z:"Gesamtkatalog aller Module der TU Darmstadt", cp:3, cpTxt:"3–6", a:["studiumgenerale","sg"]},
+];
+const studium=()=>Object.assign({semester:3,status:{}},S.studium||{});
+const STATUS_TXT={offen:"offen",laeuft:"läuft",bestanden:"bestanden"};
+function modStatus(m){
+  const st=studium(), e=st.status[m.id];
+  if(e&&e.s) return e.s;
+  return m.sem===st.semester?"laeuft":"offen";
+}
+/* Planer-Modul („tm3") → Modul im Studienplan, nur im laufenden Semester */
+function planModul(key){
+  if(!key) return null;
+  const sem=studium().semester;
+  return STUDIENPLAN.find(m=>m.sem===sem&&(m.a.includes(key)||modulKey(m.n)===key))||null;
+}
+function studiumZahlen(){
+  let cp=0, cpLauf=0, n=0, noteSum=0, noteCp=0;
+  const proKat={};
+  STUDIENPLAN.forEach(m=>{
+    const s=modStatus(m);
+    if(s==="bestanden"){ cp+=m.cp; n++; proKat[m.kat]=(proKat[m.kat]||0)+m.cp;
+      const note=(studium().status[m.id]||{}).note;
+      if(nv(note)){ noteSum+=note*m.cp; noteCp+=m.cp; } }
+    if(s==="laeuft") cpLauf+=m.cp;
+  });
+  return {cp, cpLauf, n, proKat, note: noteCp?noteSum/noteCp:null};
+}
+function modulModal(id){
+  const m=STUDIENPLAN.find(x=>x.id===id); if(!m) return;
+  const e=studium().status[id]||{};
+  let s=modStatus(m);
+  const k=STUDIUM_KAT[m.kat];
+  modal(`<h3 style="margin-bottom:4px">${esc(m.n)}</h3>
+    <div class="p-note" style="margin-bottom:14px">${m.sem?m.sem+". Semester":"begleitend"} · ${m.cpTxt||m.cp} CP ·
+      <span style="color:${k.c}">${k.l}</span>${m.z?` · ${esc(m.z)}`:""}</div>
+    <label>Stand</label>
+    <div class="seg" id="mmSt">${["offen","laeuft","bestanden"].map(x=>`<button data-mst="${x}" class="${x===s?"on":""}">${STATUS_TXT[x]}</button>`).join("")}</div>
+    <div id="mmNoteBox" style="${s==="bestanden"?"":"display:none"}">
+      <label>Note (optional)</label>
+      <input type="text" inputmode="decimal" autocomplete="off" id="mmNote" value="${nv(e.note)?e.note:""}" placeholder="z. B. 2,3"></div>
+    <div class="mo-act"><button class="b" onclick="closeModal()">Abbrechen</button>
+      <button class="b b-1" id="mmOk">Speichern</button></div>`);
+  document.querySelectorAll("[data-mst]").forEach(b=>b.onclick=()=>{ s=b.dataset.mst;
+    document.querySelectorAll("[data-mst]").forEach(x=>x.classList.toggle("on",x===b));
+    document.getElementById("mmNoteBox").style.display=s==="bestanden"?"":"none"; });
+  document.getElementById("mmOk").onclick=()=>{
+    const st=studium(); st.status=Object.assign({},st.status);
+    const note=parseFloat(String(document.getElementById("mmNote").value).replace(",","."));
+    st.status[id]={s, t:Date.now(), ...(s==="bestanden"&&!isNaN(note)?{note:clamp(note,1,5)}:{})};
+    S.studium=st; save(); closeModal();
+    toast(s==="bestanden"?`${m.n} bestanden — ${m.cpTxt||m.cp} CP`:"Gespeichert", "check"); R.uni();
+  };
+}
+function studienplanHtml(){
+  const st=studium(), z=studiumZahlen();
+  const kachel=m=>{
+    const s=modStatus(m), e=st.status[m.id]||{}, k=STUDIUM_KAT[m.kat];
+    return `<button class="sp-m ${s}" data-spm="${m.id}" style="--kc:${k.c}" title="${esc(m.n)} · ${m.cpTxt||m.cp} CP · ${STATUS_TXT[s]}">
+      <span class="sp-m-n">${esc(m.n)}</span>
+      ${m.z&&m.kat!=="thesis"&&m.kat!=="generale"?`<span class="sp-m-z">${esc(m.z)}</span>`:""}
+      <span class="sp-m-f"><span>${m.cpTxt||m.cp} CP</span>
+        ${s==="bestanden"?`<span class="sp-ok">${nv(e.note)?f(e.note):""}${ico("check")}</span>`
+          :s==="laeuft"?`<span class="sp-lauf">läuft</span>`:""}</span>
+    </button>`; };
+  const balken=Object.keys(STUDIUM_KAT).map(kk=>z.proKat[kk]?`<i style="width:${z.proKat[kk]/STUDIUM_CP*100}%;background:${STUDIUM_KAT[kk].c}"></i>`:"").join("")
+    + (z.cpLauf?`<i class="lauf" style="width:${z.cpLauf/STUDIUM_CP*100}%"></i>`:"");
+  const nichtsGesetzt=!Object.keys(st.status).length && st.semester>1;
+  return `<div class="p">
+    <div class="p-head"><div class="p-title">${ico("cap")}Studienplan</div>
+      <span class="p-note">Wirtschaftsingenieurwesen · Maschinenbau · antippen zum Abhaken</span></div>
+    <div class="sp-kopf">
+      <div class="sp-cp"><b>${z.cp}</b><span>von ${STUDIUM_CP} CP</span></div>
+      <div class="sp-fort">
+        <div class="sp-bar">${balken}</div>
+        <div class="sp-stat">
+          <span><b>${z.n}</b> von ${STUDIENPLAN.length} Modulen bestanden</span>
+          ${z.cpLauf?`<span><b>${z.cpLauf}</b> CP laufen</span>`:""}
+          ${z.note!==null?`<span>Ø Note <b>${f(z.note)}</b></span>`:""}
+          <span><b>${Math.round(z.cp/STUDIUM_CP*100)} %</b> geschafft</span>
+        </div>
+      </div>
+    </div>
+    ${nichtsGesetzt?`<div class="td-hinweis" style="margin-bottom:12px"><span>Noch nichts abgehakt. Alles aus Semester 1${st.semester>2?`–${st.semester-1}`:""} auf einmal als bestanden markieren? Einzelnes kannst du danach zurücknehmen.</span>
+      <button class="b b-sm" id="spAlle">Markieren</button></div>`:""}
+    <div class="sp-raster">${[1,2,3,4,5,6].map(sem=>{
+      const ms=STUDIENPLAN.filter(m=>m.sem===sem), cp=ms.reduce((a,m)=>a+m.cp,0);
+      const fertig=ms.filter(m=>modStatus(m)==="bestanden").length;
+      return `<div class="sp-sem${sem===st.semester?" jetzt":""}${fertig===ms.length?" voll":""}">
+        <div class="sp-sem-k"><b>${sem}. Semester</b><span>${fertig===ms.length?`${ico("check")}geschafft`:sem===st.semester?"jetzt":`${fertig}/${ms.length}`}</span></div>
+        <div class="sp-sem-m">${ms.map(kachel).join("")}</div>
+      </div>`;}).join("")}</div>
+    <div class="sp-gen">${kachel(STUDIENPLAN.find(m=>m.id==="sg"))}</div>
+    <div class="sp-fuss">
+      <div class="sp-leg">${Object.values(STUDIUM_KAT).map(k=>`<span><i style="background:${k.c}"></i>${k.l}</span>`).join("")}</div>
+      <div class="sp-semwahl"><span>Ich bin im</span>${[1,2,3,4,5,6].map(n=>`<button class="chip${n===st.semester?" on":""}" data-spsem="${n}">${n}.</button>`).join("")}<span>Semester</span></div>
+    </div>
+    <div class="sp-note">* Product Design Project; Rechnergestütztes Konstruieren</div>
+  </div>`;
+}
+
 R.uni=function(){
   const el=document.getElementById("v-uni");
   const g=G(), mk=wochenSchluessel(new Date()), mo=sow(new Date());
-  const mods=uniModule(), modFarbe=k=>(mods.find(m=>m.key===k)||{}).farbe||"var(--m-study)";
+  const st=studium();
+  const mods=uniModule();
+  /* Farbe eines Planer-Moduls: die Kategorie aus dem Studienplan */
+  const modFarbe=key=>{ const pm=planModul(key); return pm?STUDIUM_KAT[pm.kat].c:"var(--m-study)"; };
   const sem=semesterWoche(), naechst=uniNaechster();
   const heuteIdx=wtagIdx(new Date());
   const heuteUni=uniBloecke(mk).filter(b=>b.tag===heuteIdx).sort((a,b)=>a.start.localeCompare(b.start));
@@ -4825,20 +5261,30 @@ R.uni=function(){
   const maxV=Math.max(g.study*1.5,...woche.map(x=>x.v||0));
   const gelernt=buildGoals().find(x=>x.key==="study");
 
-  /* Lernzeit je Woche seit Semesterbeginn, mindestens acht Wochen */
-  const nW=clamp(sem?sem.w:8,8,20);
-  const wochen=[...Array(nW)].map((_,i)=>{ const s0=addD(mo,-(nW-1-i)*7);
+  /* Lernzeit je Woche: ab Semesterwoche 1 (oder dieser Woche) nach rechts,
+     sechzehn Wochen — die Ferien davor spielen keine Rolle. */
+  const w0=sem?sow(sem.start):mo, nW=16, jetztW=Math.round((mo-w0)/(7*86400000));
+  const wochen=[...Array(nW)].map((_,i)=>{ const s0=addD(w0,i*7);
     let h=0; for(let t=0;t<7;t++){ const v=(S.metrics[dk(addD(s0,t))]||{}).study; if(nv(v)) h+=v; }
-    return {label:fmtShort(s0),h,pause:wocheIstPause(dk(s0))}; });
+    return {label:`W${i+1}`,ab:fmtShort(s0),h,zukunft:i>jetztW}; });
+
+  /* Module dieses Semesters: Studienplan + was der Planer dazu weiß */
+  const dieses=STUDIENPLAN.filter(m=>m.sem===st.semester).map(m=>{
+    const pl=mods.filter(x=>planModul(x.key)===m);
+    return {m, slots:pl.flatMap(x=>x.slots).sort((a,b)=>a.tag-b.tag||a.start.localeCompare(b.start)),
+            min:pl.reduce((a,x)=>a+x.min,0), keys:pl.map(x=>x.key)};
+  });
+  const ohne=mods.filter(x=>!planModul(x.key));
 
   const ter=uniTermine(), kommend=ter.filter(t=>t.datum>=today()), vorbei=ter.filter(t=>t.datum<today());
+  const terModul=t=>STUDIENPLAN.find(m=>m.id===t.modul)||planModul(t.modul);
   const terZeile=(t,alt)=>{ const n=tageBis(t.datum);
     const stufe= alt?"alt": n<=7?"nah": n<=21?"mittel":"fern";
-    const mod=t.modul?mods.find(m=>m.key===t.modul):null;
+    const mod=t.modul?terModul(t):null;
     return `<div class="un-t ${stufe}">
       <div class="un-t-cd"><b>${n<0?"✓":n}</b><span>${n<0?"":n===1?"Tag":"Tage"}</span></div>
       <div class="un-t-n"><b>${esc(t.titel)}</b>
-        <span>${(UNI_ARTEN.find(a=>a[0]===t.art)||UNI_ARTEN[2])[1]} · ${tagLang(t.datum)}${t.zeit?` · ${t.zeit}`:""}${mod?` · <i style="color:${mod.farbe}">${esc(mod.name)}</i>`:""}</span></div>
+        <span>${(UNI_ARTEN.find(a=>a[0]===t.art)||UNI_ARTEN[2])[1]} · ${tagLang(t.datum)}${t.zeit?` · ${t.zeit}`:""}${mod?` · <i style="color:${STUDIUM_KAT[mod.kat].c}">${esc(mod.n)}</i>`:""}</span></div>
       <span class="un-t-w">${countdownText(n)}</span>
       <button class="b b-i b-sm" data-unweg="${t.id}" aria-label="Termin löschen" title="Löschen">${ico("x")}</button>
     </div>`; };
@@ -4846,7 +5292,7 @@ R.uni=function(){
   el.innerHTML=`
   <div class="p-head" style="margin-bottom:14px">
     <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Uni</div>
-      <div class="p-note">${sem?`Semesterwoche ${sem.w} · seit ${fmtShort(sem.start)}`:"Semesterwoche erscheint, sobald die Semesterferien als Pause eingetragen sind"}</div></div>
+      <div class="p-note">${st.semester}. Semester${sem?` · Semesterwoche ${sem.w}, seit ${fmtShort(sem.start)}`:" · Semesterwoche erscheint, sobald die Semesterferien als Pause eingetragen sind"}</div></div>
     <button class="b b-1" id="unNeu">${ico("plus")}Termin</button>
   </div>
 
@@ -4890,56 +5336,76 @@ R.uni=function(){
   </div>
 
   <div class="p" style="margin-bottom:14px">
-    <div class="p-head"><div class="p-title">${ico("cap")}Module</div>
-      <span class="p-note">aus deinen Uni-Blöcken im Planer, diese Woche</span></div>
-    ${mods.length?`<div class="un-mods">${mods.map(m=>{
-      const t=kommend.find(x=>x.modul===m.key);
-      return `<div class="un-m" style="--uf:${m.farbe}">
-        <div class="un-m-k"><b>${esc(m.name)}</b><span>${stdDe(m.min)} / Woche</span></div>
-        <div class="un-m-s">${m.slots.map(s=>`<span>${TWD[s.tag]} ${s.start} · ${esc(s.art)}</span>`).join("")}</div>
-        ${t?`<div class="un-m-t">${ico("clock")}${esc((UNI_ARTEN.find(a=>a[0]===t.art)||UNI_ARTEN[2])[1])} ${countdownText(tageBis(t.datum))}</div>`:""}
-      </div>`;}).join("")}</div>`
-      :`<div class="un-leer">Leg im Planer Uni-Blöcke an (Vorlesung, Übung …). Die Notiz am Block wird zum Modulnamen.</div>`}
+    <div class="p-head"><div class="p-title">${ico("chart")}Lernzeit pro Woche</div>
+      <span class="p-note">Stunden · ${sem?"ab Semesterwoche 1":"ab dieser Woche"}</span></div>
+    ${stackBar(wochen.map(w=>w.label),[{color:"var(--m-study)",data:wochen.map(w=>w.h)}],
+      {unit:1,emptyText:"Noch keine Lernzeit in diesem Semester.",h:190,
+       tip:wochen.map(w=>`<b>Semesterwoche ${w.label.slice(1)}<span class="sb-tip-z">ab ${esc(w.ab)}</span></b><div class="sb-tip-r">${w.zukunft?"kommt noch":w.h?f(w.h)+" h gelernt":"nichts erfasst"}</div>`)})}
   </div>
 
-  <div class="p">
-    <div class="p-head"><div class="p-title">${ico("chart")}Lernzeit pro Woche</div>
-      <span class="p-note">Stunden${sem?" · seit Semesterbeginn":""}</span></div>
-    ${stackBar(wochen.map(w=>w.label),[{color:"var(--m-study)",data:wochen.map(w=>w.h)}],
-      {unit:1,emptyText:"Noch keine Lernzeit erfasst.",h:190,
-       tip:wochen.map(w=>`<b>Woche ab ${esc(w.label)}</b><div class="sb-tip-r">${w.h?f(w.h)+" h gelernt":"nichts erfasst"}${w.pause?" · Pause":""}</div>`)})}
-  </div>`;
+  <div class="p" style="margin-bottom:14px">
+    <div class="p-head"><div class="p-title">${ico("cap")}Module in diesem Semester</div>
+      <span class="p-note">${dieses.reduce((a,x)=>a+x.m.cp,0)} CP · Zeiten aus deinen Uni-Blöcken im Planer</span></div>
+    <div class="un-mods">${dieses.map(({m,slots,min})=>{
+      const k=STUDIUM_KAT[m.kat], s=modStatus(m);
+      const t=kommend.find(x=>x.modul===m.id||planModul(x.modul)===m);
+      return `<button class="un-m${s==="bestanden"?" fertig":""}" style="--uf:${k.c}" data-spm="${m.id}">
+        <div class="un-m-k"><b>${esc(m.n)}</b><span>${m.cp} CP</span></div>
+        ${slots.length?`<div class="un-m-s">${slots.map(x=>`<span>${TWD[x.tag]} ${x.start} · ${esc(x.art)}</span>`).join("")}</div>
+          <div class="un-m-h">${stdDe(min)} pro Woche im Plan</div>`
+          :`<div class="un-m-h">nicht im Planer</div>`}
+        ${s==="bestanden"?`<div class="un-m-t" style="color:${k.c}">${ico("check")}bestanden</div>`
+          :t?`<div class="un-m-t">${ico("clock")}${esc((UNI_ARTEN.find(a=>a[0]===t.art)||UNI_ARTEN[2])[1])} ${countdownText(tageBis(t.datum))}</div>`:""}
+      </button>`;}).join("")}
+      ${ohne.map(x=>`<div class="un-m" style="--uf:var(--text-faint)">
+        <div class="un-m-k"><b>${esc(x.name)}</b><span>ohne Zuordnung</span></div>
+        <div class="un-m-s">${x.slots.map(s=>`<span>${TWD[s.tag]} ${s.start} · ${esc(s.art)}</span>`).join("")}</div></div>`).join("")}
+    </div>
+  </div>
 
-  el.querySelector("#unNeu").onclick=()=>terminModal(mods);
+  ${studienplanHtml()}`;
+
+  el.querySelector("#unNeu").onclick=()=>terminModal();
   el.querySelectorAll("[data-unweg]").forEach(b=>b.onclick=()=>{
     S.uniTermine=(S.uniTermine||[]).filter(t=>t.id!==b.dataset.unweg);
     save(); toast("Termin gelöscht"); R.uni(); });
+  el.querySelectorAll("[data-spm]").forEach(b=>b.onclick=()=>modulModal(b.dataset.spm));
+  el.querySelectorAll("[data-spsem]").forEach(b=>b.onclick=()=>{
+    S.studium=Object.assign(studium(),{semester:+b.dataset.spsem}); save(); R.uni(); });
+  el.querySelector("#spAlle")?.addEventListener("click",()=>{
+    const s2=studium(); s2.status=Object.assign({},s2.status);
+    STUDIENPLAN.filter(m=>m.sem>0&&m.sem<s2.semester).forEach(m=>{ s2.status[m.id]={s:"bestanden",t:Date.now()}; });
+    S.studium=s2; save(); toast("Frühere Semester als bestanden markiert","check"); R.uni(); });
 };
 
-function terminModal(mods){
+function terminModal(){
   let art="klausur";
+  const mods=STUDIENPLAN.filter(m=>m.sem===studium().semester);
   modal(`<h3>Klausur oder Abgabe</h3>
     <label>Art</label>
     <div class="chips" id="unArt">${UNI_ARTEN.map(([id,l])=>`<button class="chip${id===art?" on":""}" data-ua="${id}">${l}</button>`).join("")}</div>
-    <label>Titel</label><input id="unTitel" placeholder="z. B. TM3 Klausur">
+    <label>Modul (optional)</label>
+    <div class="chips" id="unMod">${mods.map(m=>`<button class="chip" data-um="${m.id}" style="--kc:${STUDIUM_KAT[m.kat].c}">${esc(m.n)}</button>`).join("")}</div>
+    <label>Titel</label><input id="unTitel" placeholder="z. B. Klausur Technische Mechanik III">
     <div style="display:flex;gap:10px">
       <div style="flex:1"><label>Datum</label><input type="date" id="unDatum" value="${today()}"></div>
       <div style="flex:1"><label>Uhrzeit (optional)</label><input type="time" id="unZeit"></div></div>
-    ${mods.length?`<label>Modul (optional)</label>
-      <div class="chips" id="unMod">${mods.map(m=>`<button class="chip" data-um="${m.key}">${esc(m.name)}</button>`).join("")}</div>`:""}
     <div class="mo-act"><button class="b" onclick="closeModal()">Abbrechen</button>
       <button class="b b-1" id="unOk">Eintragen</button></div>`);
-  let modul=null;
+  let modul=null, autoTitel=true;
+  const ti=document.getElementById("unTitel");
+  ti.oninput=()=>{ autoTitel=!ti.value.trim(); };
+  const titelSetzen=()=>{ if(!autoTitel) return;
+    const m=mods.find(x=>x.id===modul), a=(UNI_ARTEN.find(x=>x[0]===art)||UNI_ARTEN[0])[1];
+    ti.value=m?`${a} ${m.n}`:""; };
   document.querySelectorAll("[data-ua]").forEach(b=>b.onclick=()=>{ art=b.dataset.ua;
-    document.querySelectorAll("[data-ua]").forEach(x=>x.classList.toggle("on",x===b)); });
+    document.querySelectorAll("[data-ua]").forEach(x=>x.classList.toggle("on",x===b)); titelSetzen(); });
   document.querySelectorAll("[data-um]").forEach(b=>b.onclick=()=>{
     modul = modul===b.dataset.um ? null : b.dataset.um;
     document.querySelectorAll("[data-um]").forEach(x=>x.classList.toggle("on",x.dataset.um===modul));
-    const ti=document.getElementById("unTitel");
-    if(modul&&!ti.value.trim()) ti.value=`${b.textContent.trim()} ${(UNI_ARTEN.find(a=>a[0]===art)||UNI_ARTEN[0])[1]}`; });
+    titelSetzen(); });
   document.getElementById("unOk").onclick=()=>{
-    const titel=document.getElementById("unTitel").value.trim();
-    const datum=document.getElementById("unDatum").value;
+    const titel=ti.value.trim(), datum=document.getElementById("unDatum").value;
     if(!titel||!datum){ toast("Titel und Datum angeben","x"); return; }
     S.uniTermine=S.uniTermine||[];
     S.uniTermine.push({id:uid(),titel,datum,art,modul,zeit:document.getElementById("unZeit").value||null});

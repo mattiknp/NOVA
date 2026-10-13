@@ -2,7 +2,7 @@
 {
   "name": "NOVA",
   "schemaVersion": 1,
-  "description": "Persönliche Operationskonsole: Gewohnheiten, Schlaf, Lernzeit, Training, Planer, Nexus und Tagesrhythmus. Daten lokal im Browser.",
+  "description": "Persönliche Operationskonsole: Gewohnheiten, Schlaf, Lernzeit, Training und Planer. Daten lokal im Browser.",
   "mcpTools": [],
   "mcpServerNames": []
 }
@@ -2074,8 +2074,6 @@ function toast(msg,icon="check"){
 const NAV=[
   {id:"heute",   t:"Heute",        i:"home",   g:0},
   {id:"planer",  t:"Planer",       i:"cal",    g:0},
-  {id:"nexus",   t:"Nexus",        i:"orbit",  g:1},
-  {id:"rhythmus",t:"Rhythmus",     i:"pulse",  g:1},
   {id:"journal", t:"Journal",      i:"note",   g:1},
   {id:"woche",   t:"Woche",        i:"grid",   g:2},
   {id:"monat",   t:"Monat",        i:"cal",    g:2},
@@ -2147,6 +2145,10 @@ function wireShell(){
 
 const R={};   /* Renderer je Ansicht */
 function go(v){
+  /* Ein Ziel, das es nicht (mehr) gibt — etwa Nexus oder Rhythmus aus
+     einem alten Kurzbefehl — führt nach „Heute" statt auf eine leere
+     Seite. */
+  if(!NAV.some(n=>n.id===v)) v="heute";
   VIEW=v;
   document.querySelectorAll(".rl[data-go]").forEach(b=>b.classList.toggle("on",b.dataset.go===v));
   document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v));
@@ -2690,7 +2692,7 @@ R.heute=function(){
         </div>
         <div style="display:flex;gap:6px">
           <button class="b b-sm" onclick="go('journal')" title="Journal">${ico("note")}</button>
-          <button class="b b-sm" onclick="go('nexus')">Groß</button>
+
         </div>
       </div>
       <div class="hd-nx-stage"><canvas id="nxMini" style="display:block;width:100%"></canvas></div>
@@ -2907,7 +2909,7 @@ R.heute=function(){
     if(wl) wl.innerHTML=NEXUS_MINI.nodes.map(n=>
       `<span class="nx-wert"><i style="background:${n.color}"></i>
         <b>${n.sub}</b><em>${n.key}</em></span>`).join("");
-    mini.onclick=()=>{ if(Math.abs(NEXUS_MINI.vy)<.004) go("nexus"); };
+
   }
 };
 
@@ -3763,328 +3765,7 @@ function makeNexus(cv,opt={}){
 
 let NEXUS_BIG=null, NEXUS_MINI=null;
 
-R.nexus=function(){
-  const el=document.getElementById("v-nexus");
-  const D=nexusData();
-  const worst=D.nodes.filter(n=>n.stale>=3).sort((a,b)=>b.stale-a.stale);
-  el.innerHTML=`
-    <div class="p" style="padding:0;overflow:hidden;position:relative">
-      <div style="padding:18px 20px 0">
-        <div class="p-title" style="font-size:var(--t-lg)">${ico("orbit")}Nexus</div>
-        <div class="p-note" style="margin-top:4px">Jeder Sechseck-Knoten ist ein Lebensbereich, seine Füllung der Stand von heute. Die Punkte darum sind deine Gewohnheiten. Ziehen dreht die Kugel.</div>
-      </div>
-      <div id="nxWrap" style="position:relative"><canvas id="nxCv" style="display:block;width:100%"></canvas>
-        <div id="nxTip" style="position:absolute;display:none;pointer-events:none;padding:9px 12px;border-radius:var(--r);
-          background:rgba(10,14,22,.97);border:1px solid var(--line-2);box-shadow:var(--sh-2);font-size:var(--t-sm);z-index:5;min-width:130px"></div>
-      </div>
-    </div>
-    ${worst.length?`<div class="p" style="margin-top:14px;border-color:rgba(251,191,36,.28)">
-      <div class="p-title" style="margin-bottom:9px">${ico("flame")}Liegt gerade brach</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">${worst.map(n=>
-        `<span class="tag" style="border-color:${n.color}55;color:${n.color}">${n.key} · ${n.stale>=30?"über 30 Tage":n.stale+" Tage"}</span>`).join("")}</div>
-    </div>`:""}
-    <div class="grid c4" style="margin-top:14px">${D.nodes.map(n=>`
-      <div class="p p-tight">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
-          <i style="width:8px;height:8px;border-radius:2px;background:${n.color}"></i>
-          <span style="font-size:var(--t-sm);color:var(--text-dim)">${n.key}</span></div>
-        <div style="font-family:var(--f-disp);font-size:var(--t-lg);font-weight:700">${n.sub}</div>
-        <div class="bar"><i style="width:${Math.round(n.v*100)}%;background:${n.color}"></i></div>
-      </div>`).join("")}</div>`;
 
-  const cv=document.getElementById("nxCv");
-  const tip=document.getElementById("nxTip");
-  NEXUS_BIG=makeNexus(cv,{ratio:.62,maxH:660,onHover:(n,p)=>{
-    if(!n||!p){ tip.style.display="none"; return; }
-    tip.style.display="block";
-    tip.style.left=clamp(p.x+16,8,cv.clientWidth-160)+"px";
-    tip.style.top=clamp(p.y-10,8,cv.clientHeight-90)+"px";
-    tip.innerHTML=`<div style="color:${n.color};font-weight:700;margin-bottom:3px">${n.key}</div>
-      <div style="color:var(--text)">${n.sub}</div>
-      <div style="color:var(--text-faint);font-size:var(--t-xs);margin-top:4px">${Math.round(n.v*100)} % vom Ziel${n.stale>=3?` · zuletzt vor ${n.stale} Tagen`:""}</div>`;
-  }});
-  NEXUS_BIG.start();
-};
-
-/* ============================================================
-   11 — RHYTHMUS
-   Wann im Tag passiert was. Aus Planer-Blöcken der letzten
-   12 Wochen, aufgeschlüsselt nach Wochentag und Stunde.
-   ============================================================ */
-let rhyMode="all", rhyView="heat", rhyWeeks=12, rhyPick=null;
-
-/* Baut das Raster aus den Planer-Blöcken: Minuten je Wochentag und
-   Stunde, plus wie viele Wochen überhaupt etwas dort lag. */
-/* Der Rhythmus soll zeigen, wann dein Tag wirklich stattfindet — nicht
-   nur, was du in den Planer geschrieben hast. Deshalb kommen Schlaf und
-   Training als eigene Quellen dazu, sofern eine Uhrzeit bekannt ist.
-   Schlaf über Mitternacht wird wie ein Planerblock aufgeteilt. */
-function extraSegments(k,typeFilter){
-  const out=[];
-  const nimm=id=>!typeFilter||typeFilter==="all"||typeFilter===id;
-
-  const add=(id,von,bis,label)=>{
-    if(von===null||bis===null) return;
-    if(bis>von) out.push({b:{type:id,note:label},from:von,to:bis,cont:false,goesOver:false,virt:true});
-    else{ out.push({b:{type:id,note:label},from:von,to:1440,cont:false,goesOver:true,virt:true}); }
-  };
-
-  /* Schlaf würde unter „Alles“ die halbe Karte färben und alles andere
-     erschlagen. Er erscheint nur, wenn man ihn gezielt auswählt. */
-  if(typeFilter==="schlafen"){
-    /* Garmin führt eine Nacht unter dem Aufwachdatum. Ein Eintrag
-       „22:54 bis 07:15“ am 4. heißt also: eingeschlafen am 3. abends.
-       Der Abendteil gehört deshalb auf den Vortag, der Morgenteil auf
-       den Tag des Eintrags. */
-    const m=S.metrics[k]||{};
-    if(m.sleepFrom&&m.sleepTo){
-      const v=hm2min(m.sleepFrom), bis=hm2min(m.sleepTo);
-      if(bis>v) out.push({b:{type:"schlafen",note:"Schlaf"},from:v,to:bis,cont:false,goesOver:false,virt:true});
-      else if(bis>0) out.push({b:{type:"schlafen",note:"Schlaf"},from:0,to:bis,cont:true,goesOver:false,virt:true});
-    }
-    /* Der Abend, an dem die kommende Nacht beginnt */
-    const nm2=S.metrics[dk(addD(parsedk(k),1))]||{};
-    if(nm2.sleepFrom&&nm2.sleepTo){
-      const v=hm2min(nm2.sleepFrom), bis=hm2min(nm2.sleepTo);
-      if(bis<=v) out.push({b:{type:"schlafen",note:"Schlaf"},from:v,to:1440,cont:false,goesOver:true,virt:true});
-    }
-  }
-
-  sportOn(k).forEach(e=>{
-    if(!e.start) return;
-    const id=({tennis:"tennis",kraft:"gym",zone2:"zone2",laufen:"sport",mobility:"mobility"})[e.type]||"sport";
-    if(!nimm(id)) return;
-    const von=hm2min(e.start);
-    add(id,von,von+(e.duration||0),typeInfo(e.type).label);
-  });
-  return out;
-}
-
-function rhyBuild(weeks,typeFilter,untilWeeksAgo=0){
-  const mins={}, hits={};
-  const start=addD(sow(new Date()),-(weeks-1+untilWeeksAgo)*7);
-  const endEx=addD(sow(new Date()),-(untilWeeksAgo-1)*7);
-  const activeWeeks=new Set();
-  for(let i=0;;i++){
-    const d=addD(start,i); if(d>=endEx) break;
-    const k=dk(d), wd=(d.getDay()+6)%7, wIdx=Math.floor(i/7);
-    const seen={};
-    daySegments(k,typeFilter).concat(extraSegments(k,typeFilter)).forEach(g=>{
-      activeWeeks.add(wIdx);
-      for(let mnt=g.from;mnt<g.to;mnt+=15){
-        const hr=Math.floor(mnt/60)%24, key=wd+"-"+hr;
-        mins[key]=(mins[key]||0)+15;
-        if(!seen[key]){ seen[key]=1; hits[key]=(hits[key]||0)+1; }
-      }
-    });
-  }
-  /* Nur Wochen mit Einträgen zählen. Sonst verwässern leere Wochen
-     jeden Schnitt und alles sieht nach „kaum etwas“ aus. */
-  return {mins,hits,weeks,active:Math.max(1,activeWeeks.size)};
-}
-
-R.rhythmus=function(){
-  const el=document.getElementById("v-rhythmus");
-  const types=blockTypes();
-  /* Muster enthält die laufende Woche, sonst tauchen frische Einträge
-     nicht auf. Für den Vergleich dient ein Grundmuster ohne diese Woche. */
-  const A=rhyBuild(rhyWeeks,rhyMode,0);
-  const BASE=rhyBuild(rhyWeeks,rhyMode,1);
-  const cw=rhyBuild(1,rhyMode,0);
-  const maxA=Math.max(1,...Object.values(A.mins));
-  const hours=[...Array(24)].map((_,h)=>h);
-  const rgb=rhyMode==="all"?"79,227,210":hexRgb(blockById(rhyMode).bg);
-
-  /* ── Befunde ── */
-  const WDS=[0,1,2,3,4,5,6];
-  const perWd=WDS.map(wd=>hours.reduce((a,h)=>a+(A.mins[wd+"-"+h]||0),0)/A.active/60);
-  const perHr=hours.map(h=>WDS.reduce((a,wd)=>a+(A.mins[wd+"-"+h]||0),0)/A.active/60);
-  let peak={v:-1}; for(const wd of WDS) for(const h of hours){
-    const v=(A.mins[wd+"-"+h]||0)/A.active/60; if(v>peak.v) peak={v,wd,h}; }
-  /* Verlässlichkeit: in wie vielen aktiven Wochen lag zu dieser Zeit etwas */
-  let solid=[]; for(const wd of WDS) for(const h of hours){
-    const c=A.hits[wd+"-"+h]||0; if(c>=Math.ceil(A.active*.5)) solid.push({wd,h,c}); }
-  solid.sort((a,b)=>b.c-a.c);
-  /* Längstes wiederkehrend freies Fenster zwischen 7 und 22 Uhr */
-  let bestGap={len:0};
-  for(const wd of WDS){ let run=0,st=null;
-    for(let h=7;h<=22;h++){
-      const busy=(A.mins[wd+"-"+h]||0)/A.active/60>.12;
-      if(!busy){ if(st===null) st=h; run++; if(run>bestGap.len) bestGap={len:run,wd,from:st}; }
-      else { run=0; st=null; }
-    } }
-  /* Training je Wochentag — echte Einheiten, ohne erfundene Uhrzeit */
-  const trainWd=[...Array(7)].map(()=>0);
-  for(let i=0;i<rhyWeeks*7;i++){ const d=addD(addD(sow(new Date()),-(rhyWeeks-1)*7),i);
-    trainWd[(d.getDay()+6)%7]+=sportMin(dk(d)); }
-  const trainMax=Math.max(1,...trainWd);
-
-  const cell=(wd,hr)=>{
-    const key=wd+"-"+hr;
-    const a=(BASE.mins[key]||0)/BASE.active, c=(cw.mins[key]||0);
-    if(rhyView==="diff"){
-      const d=c-a;                                   /* Minuten über oder unter dem Schnitt */
-      const mag=clamp(Math.abs(d)/30,0,1);
-      const col=Math.abs(d)<5?"rgba(255,255,255,.04)"
-        :d>0?`rgba(74,222,128,${(mag*.85+.15).toFixed(2)})`
-             :`rgba(251,113,133,${(mag*.85+.15).toFixed(2)})`;
-      return `<button class="rc" data-c="${key}" title="${WD[wd]} ${p2(hr)}:00 — diese Woche ${Math.round(c)} min, sonst ${Math.round(a)} min"
-        style="background:${col}"></button>`;
-    }
-    const p=maxA?(A.mins[key]||0)/maxA:0;
-    return `<button class="rc" data-c="${key}" title="${WD[wd]} ${p2(hr)}:00 — Ø ${Math.round(a)} min pro Woche, in ${A.hits[key]||0} von ${A.active} Wochen"
-      style="background:${p>0?`rgba(${rgb},${(p*.9+.1).toFixed(2)})`:"rgba(255,255,255,.03)"}"></button>`;
-  };
-
-  const anyData=Object.keys(A.mins).length>0||Object.keys(cw.mins).length>0;
-
-  el.innerHTML=`
-  <div class="p-head" style="margin-bottom:14px">
-    <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Rhythmus</div>
-    <div class="p-note">Aus Planer, gemessenem Schlaf und Training. ${A.active} Wochen mit Einträgen, Fenster ${rhyWeeks} Wochen.</div></div>
-    <div class="rhy-seg" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <div class="seg">
-        <button class="${rhyView==="heat"?"on":""}" data-rv="heat">Muster</button>
-        <button class="${rhyView==="diff"?"on":""}" data-rv="diff">Diese Woche</button>
-      </div>
-      <div class="seg">${[4,12,26].map(n=>`<button class="${rhyWeeks===n?"on":""}" data-rw="${n}">${n} W</button>`).join("")}</div>
-    </div>
-  </div>
-
-  <div class="chips rhy-filter" style="margin-bottom:14px">
-    <button class="chip${rhyMode==="all"?" on":""}" data-rm="all">Alles</button>
-    ${types.map(t=>`<button class="chip${rhyMode===t.id?" on":""}" data-rm="${t.id}">
-      <i style="width:8px;height:8px;border-radius:2px;background:${t.bg};display:inline-block;margin-right:6px"></i>${esc(t.label)}</button>`).join("")}
-  </div>
-
-  ${anyData?`
-  <div class="grid rhy-grid">
-    <div class="grid">
-      <div class="p" style="overflow-x:auto">
-        <div style="min-width:640px">
-          <div style="display:grid;grid-template-columns:46px repeat(24,minmax(0,1fr));gap:3px;margin-bottom:5px">
-            <span></span>${hours.map(h=>`<span style="font-family:var(--f-mono);font-size:9px;color:var(--text-faint);text-align:center">${h%3===0?p2(h):""}</span>`).join("")}
-          </div>
-          ${WD.map((w,wd)=>`<div style="display:grid;grid-template-columns:46px repeat(24,minmax(0,1fr));gap:3px;margin-bottom:3px;align-items:center">
-            <span style="font-size:var(--t-sm);color:var(--text-dim);display:flex;align-items:center;gap:6px">${w}
-              <b style="font-family:var(--f-mono);font-size:9px;color:var(--text-faint);font-weight:400">${perWd[wd]>0?f(perWd[wd]):""}</b></span>
-            ${hours.map(h=>cell(wd,h)).join("")}</div>`).join("")}
-          <div style="display:flex;align-items:center;gap:9px;margin-top:14px;font-size:var(--t-sm);color:var(--text-faint);flex-wrap:wrap">
-            ${rhyView==="diff"
-              ? `<span>weniger als sonst</span>
-                 ${[.85,.5,.2].map(p=>`<i style="width:17px;height:11px;border-radius:2px;background:rgba(251,113,133,${p})"></i>`).join("")}
-                 <i style="width:17px;height:11px;border-radius:2px;background:rgba(255,255,255,.04)"></i>
-                 ${[.2,.5,.85].map(p=>`<i style="width:17px;height:11px;border-radius:2px;background:rgba(74,222,128,${p})"></i>`).join("")}
-                 <span>mehr als sonst</span>`
-              : `<span>selten</span>
-                 ${[.15,.35,.55,.75,1].map(p=>`<i style="width:17px;height:11px;border-radius:2px;background:rgba(${rgb},${p})"></i>`).join("")}
-                 <span>fast immer</span>
-                 <span style="margin-left:auto">Zahlen links: Stunden pro Woche</span>`}
-          </div>
-        </div>
-      </div>
-
-      <div class="p">
-        <div class="p-title" style="margin-bottom:12px">${ico("run")}Training je Wochentag</div>
-        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;height:110px">
-          ${trainWd.map((v,wd)=>`<div style="display:flex;flex-direction:column;justify-content:flex-end;height:100%;gap:6px">
-            <span style="font-family:var(--f-mono);font-size:9.5px;color:var(--text-faint);text-align:center">${v?Math.round(v/Math.max(1,A.active)):""}</span>
-            <div style="height:${Math.max(3,v/trainMax*72)}px;border-radius:4px 4px 0 0;background:${v?"var(--m-sport)":"var(--track)"};opacity:${v?.9:.4}"></div>
-            <span style="font-size:var(--t-xs);color:var(--text-dim);text-align:center">${WD[wd]}</span></div>`).join("")}
-        </div>
-        <div class="p-note" style="margin-top:9px">Minuten pro Woche im Schnitt. Echte Einheiten, keine geplanten.</div>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="p p-tight">
-        <div class="p-title" style="font-size:var(--t-base);margin-bottom:11px">${ico("flame")}Deine stärkste Zeit</div>
-        ${peak.v>0?`<div style="font-family:var(--f-disp);font-size:1.5rem;font-weight:700;line-height:1.1">${WDL[(peak.wd+1)%7]}</div>
-          <div style="color:var(--c1);font-family:var(--f-mono);font-size:var(--t-md);margin-top:2px">${p2(peak.h)}:00 – ${p2((peak.h+1)%24)}:00</div>
-          <div class="p-note" style="margin-top:6px">Im Schnitt ${Math.round(peak.v*60)} Minuten pro Woche.</div>`
-        :`<div class="p-note">Noch zu wenig erfasst.</div>`}
-      </div>
-
-      <div class="p p-tight">
-        <div class="p-title" style="font-size:var(--t-base);margin-bottom:11px">${ico("check")}Feste Gewohnheiten</div>
-        ${solid.length?`<div style="display:flex;flex-direction:column;gap:7px">${solid.slice(0,5).map(x=>`
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:var(--t-sm)">
-            <span style="color:var(--text-dim)">${WD[x.wd]} ${p2(x.h)}:00</span>
-            <span style="display:flex;align-items:center;gap:7px">
-              <i style="width:38px;height:4px;border-radius:2px;background:linear-gradient(90deg,var(--c1) ${x.c/A.active*100}%,var(--track) ${x.c/A.active*100}%)"></i>
-              <b style="font-family:var(--f-mono);font-size:var(--t-xs);color:var(--text)">${Math.round(x.c/A.active*100)} %</b></span>
-          </div>`).join("")}</div>
-          <div class="p-note" style="margin-top:9px">Zeiten, an denen in mindestens der Hälfte deiner aktiven Wochen etwas lag.</div>`
-        :`<div class="p-note">Noch keine wiederkehrenden Zeiten erkennbar. Das braucht ein paar Wochen.</div>`}
-      </div>
-
-      <div class="p p-tight">
-        <div class="p-title" style="font-size:var(--t-base);margin-bottom:11px">${ico("clock")}Größte freie Lücke</div>
-        ${bestGap.len>1?`<div style="font-family:var(--f-disp);font-size:1.3rem;font-weight:700">${WDL[(bestGap.wd+1)%7]}</div>
-          <div style="color:var(--text-dim);font-family:var(--f-mono);font-size:var(--t-base);margin-top:2px">${p2(bestGap.from)}:00 – ${p2(bestGap.from+bestGap.len)}:00</div>
-          <div class="p-note" style="margin-top:6px">${bestGap.len} Stunden, die bei dir fast immer offen sind.</div>`
-        :`<div class="p-note">Keine durchgehende Lücke gefunden.</div>`}
-      </div>
-
-      <div class="p p-tight">
-        <div class="p-title" style="font-size:var(--t-base);margin-bottom:11px">${ico("chart")}Tageszeit</div>
-        ${[["Morgen","6–11",6,12],["Mittag","12–17",12,18],["Abend","18–23",18,24]].map(([l,r,a,b])=>{
-          const v=perHr.slice(a,b).reduce((x,y)=>x+y,0);
-          const tot=perHr.reduce((x,y)=>x+y,0)||1;
-          return `<div style="padding:5px 0">
-            <div style="display:flex;justify-content:space-between;font-size:var(--t-sm);margin-bottom:4px">
-              <span style="color:var(--text-dim)">${l} <span style="color:var(--text-faint);font-size:var(--t-xs)">${r}</span></span>
-              <b style="font-family:var(--f-mono);font-size:var(--t-xs)">${Math.round(v/tot*100)} %</b></div>
-            <div class="bar" style="margin-top:0"><i style="width:${v/tot*100}%;background:var(--c1)"></i></div></div>`;}).join("")}
-      </div>
-    </div>
-  </div>`
-  :`<div class="p"><div class="empty">${ico("cal")}<div>Noch keine Planer-Blöcke in den letzten ${rhyWeeks} Wochen.<br>Trag im Planer etwas ein, dann füllt sich diese Ansicht.</div></div></div>`}
-  <style>#v-rhythmus .rc{aspect-ratio:1;border-radius:3px;border:none;padding:0;transition:transform var(--d1) var(--ez),outline-color var(--d1) var(--ez);outline:1px solid transparent}
-  #v-rhythmus .rc:hover{transform:scale(1.35);outline-color:var(--c1);z-index:2;position:relative}</style>`;
-
-  el.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{ rhyMode=b.dataset.rm; R.rhythmus(); });
-  el.querySelectorAll("[data-rv]").forEach(b=>b.onclick=()=>{ rhyView=b.dataset.rv; R.rhythmus(); });
-  el.querySelectorAll("[data-rw]").forEach(b=>b.onclick=()=>{ rhyWeeks=+b.dataset.rw; R.rhythmus(); });
-  el.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{
-    const [wd,hr]=b.dataset.c.split("-").map(Number);
-    rhyDetail(wd,hr);
-  });
-};
-
-/* Zelle angeklickt: welche Tage haben dazu beigetragen */
-function rhyDetail(wd,hr){
-  const rows=[];
-  const start=addD(sow(new Date()),-(rhyWeeks-1)*7);
-  for(let i=0;i<rhyWeeks*7;i++){
-    const d=addD(start,i); if((d.getDay()+6)%7!==wd) continue;
-    const k=dk(d);
-    const bs=daySegments(k,rhyMode).concat(extraSegments(k,rhyMode))
-      .filter(g=>g.from<(hr+1)*60&&g.to>hr*60)
-      .map(g=>({type:g.b.type,note:g.b.note,start:min2hm(g.from),end:min2hm(g.to),virt:g.virt}));
-    if(bs.length) rows.push({k,d,bs});
-  }
-  modal(`<h3>${WDL[(wd+1)%7]}, ${p2(hr)}:00 Uhr</h3>
-    <div class="p-note" style="margin-bottom:12px">An ${rows.length} Terminen lag hier etwas.</div>
-    ${rows.length?`<div style="display:flex;flex-direction:column;gap:7px;max-height:46vh;overflow-y:auto">
-      ${rows.reverse().map(r=>`<div style="padding:9px 11px;border-radius:var(--r);background:rgba(255,255,255,.04)">
-        <div style="font-size:var(--t-sm);color:var(--text-dim);margin-bottom:4px">${fmtShort(r.d)}</div>
-        ${r.bs.map(b=>{const t=blockById(b.type);
-          return `<div style="display:flex;align-items:center;gap:8px;font-size:var(--t-sm)">
-            <i style="width:7px;height:7px;border-radius:2px;background:${t.bg};flex:0 0 auto"></i>
-            <span style="flex:1">${esc(b.note||t.label)}${b.virt?` <span style="color:var(--text-faint);font-size:var(--t-xs)">gemessen</span>`:""}</span>
-            <span style="font-family:var(--f-mono);font-size:var(--t-xs);color:var(--text-faint)">${b.start}–${b.end}</span></div>`;}).join("")}
-      </div>`).join("")}</div>`
-    :`<div class="empty">${ico("cal")}<div>Zu dieser Zeit lag nie etwas an.</div></div>`}
-    <div class="mo-act"><button class="b" onclick="closeModal()">Schließen</button></div>`);
-}
-
-function hexRgb(h){
-  const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h||"#4fe3d2");
-  return m?[parseInt(m[1],16),parseInt(m[2],16),parseInt(m[3],16)].join(","):"79,227,210";
-}
-</script>
-<script>
 /* ============================================================
    11b — JOURNAL
    Stimmung und Tageslernen. Bewusst schmal gehalten: eine Zahl,

@@ -264,10 +264,19 @@ button.un-m{ text-align:left; color:inherit; font:inherit; cursor:pointer; }
 .sp-ok svg{ width:12px; height:12px; stroke-width:3; }
 .sp-lauf{ color:var(--c1); font-weight:600; }
 .sp-m.offen{ opacity:.78; }
-.sp-m.laeuft{ border-color:color-mix(in srgb, var(--kc) 45%, transparent); border-left-color:var(--kc);
-  background:color-mix(in srgb, var(--kc) 7%, transparent); opacity:1; }
-.sp-m.bestanden{ background:color-mix(in srgb, var(--kc) 20%, transparent); border-color:color-mix(in srgb, var(--kc) 40%, transparent);
-  border-left-color:var(--kc); }
+/* Laufende Module springen ins Auge: kräftiger Rahmen, leichtes Leuchten */
+.sp-m.laeuft{ opacity:1; border:1.5px solid var(--kc); border-left-width:3px;
+  background:linear-gradient(160deg, color-mix(in srgb, var(--kc) 22%, transparent), color-mix(in srgb, var(--kc) 8%, transparent));
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--kc) 14%, transparent), 0 6px 22px -8px color-mix(in srgb, var(--kc) 60%, transparent); }
+.sp-m.laeuft .sp-m-n{ color:#fff; }
+.sp-m.laeuft .sp-lauf{ display:flex; align-items:center; gap:5px; color:var(--kc); font-weight:700; }
+.sp-m.laeuft .sp-lauf::before{ content:""; width:6px; height:6px; border-radius:50%; background:var(--kc);
+  animation:spPuls 2s ease-in-out infinite; }
+@keyframes spPuls{ 0%,100%{ box-shadow:0 0 0 0 color-mix(in srgb, var(--kc) 70%, transparent); }
+  50%{ box-shadow:0 0 0 4px color-mix(in srgb, var(--kc) 0%, transparent); } }
+@media (prefers-reduced-motion:reduce){ .sp-m.laeuft .sp-lauf::before{ animation:none; } }
+.sp-m.bestanden{ background:color-mix(in srgb, var(--kc) 11%, transparent); border-color:color-mix(in srgb, var(--kc) 22%, transparent);
+  border-left-color:color-mix(in srgb, var(--kc) 80%, transparent); }
 @media (hover:hover) and (pointer:fine){ .sp-m:hover{ opacity:1; border-color:color-mix(in srgb, var(--kc) 60%, transparent); } }
 .sp-gen{ margin-top:8px; }
 .sp-gen .sp-m{ min-height:0; width:100%; flex-direction:row; align-items:center; gap:14px; }
@@ -5243,7 +5252,6 @@ function studienplanHtml(){
           :s==="laeuft"?`<span class="sp-lauf">läuft</span>`:""}</span>
     </button>`; };
   const balken=Object.keys(STUDIUM_KAT).map(kk=>z.proKat[kk]?`<i style="width:${z.proKat[kk]/STUDIUM_CP*100}%;background:${STUDIUM_KAT[kk].c}"></i>`:"").join("");
-  const lauf=STUDIENPLAN.filter(m=>modStatus(m)==="laeuft");
   return `<div class="p">
     <div class="p-head"><div class="p-title">${ico("cap")}Studienplan</div>
       <span class="p-note">Wirtschaftsingenieurwesen · Maschinenbau · antippen zum Abhaken</span></div>
@@ -5256,8 +5264,6 @@ function studienplanHtml(){
           ${z.note!==null?`<span>Ø Note <b>${f(z.note)}</b></span>`:""}
           <span><b>${Math.round(z.cp/STUDIUM_CP*100)} %</b> geschafft</span>
         </div>
-        ${lauf.length?`<div class="sp-lauf-z">Läuft gerade: ${lauf.map(m=>`<span style="--kc:${STUDIUM_KAT[m.kat].c}">${esc(m.n)}</span>`).join("")}
-          <em>${lauf.reduce((a,m)=>a+m.cp,0)} CP</em></div>`:""}
       </div>
     </div>
     <div class="sp-raster">${[1,2,3,4,5,6].map(sem=>{

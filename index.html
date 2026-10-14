@@ -27,7 +27,7 @@
   grid-template-columns:repeat(26,minmax(0,1fr)); gap:3px; max-width:calc(26 * 19px); }
 .hk-raster i{ display:block; aspect-ratio:1; border-radius:3px; background:rgba(255,255,255,.07); }
 .hk-raster i.ja{ background:var(--hc); }
-.hk-raster i.pz{ background:repeating-linear-gradient(45deg, rgba(139,124,240,.30) 0 2px, rgba(139,124,240,.08) 2px 4px); }
+.hk-raster i.pz{ background:repeating-linear-gradient(135deg, rgba(139,124,240,.22) 0 1px, rgba(139,124,240,.05) 1px 4px); }
 .hk-raster i.leer{ background:transparent; }
 .hk-raster i.heute{ outline:1px solid var(--text-dim); outline-offset:1px; }
 .rb-karte{ --z:11px; --zg:3px; }
@@ -55,7 +55,8 @@
 .rb-z.s4{ background:var(--rbf,var(--c1)); }
 .rb-z.sx{ background:rgba(255,255,255,.035); }
 .rb-z.sz{ background:transparent; cursor:default; }
-.rb-z.sp{ background:repeating-linear-gradient(45deg, rgba(139,124,240,.30) 0 2px, rgba(139,124,240,.08) 2px 4px); }
+/* Ferien und Pausen: nur ein feiner Hauch, sie sollen nicht ins Auge springen */
+.rb-z.sp{ background:repeating-linear-gradient(135deg, rgba(139,124,240,.22) 0 1px, rgba(139,124,240,.05) 1px 4px); }
 .rb-z.heute{ outline:1px solid var(--text-dim); outline-offset:1px; }
 .rb-z.sel{ outline:2px solid var(--text); outline-offset:1px; }
 .rb-z.gold{ box-shadow:inset 0 0 0 1.5px var(--gold), 0 0 6px -1px color-mix(in srgb, var(--gold) 70%, transparent); }
@@ -113,7 +114,7 @@
 .se-str i{ width:7px; height:7px; border-radius:2px; background:rgba(255,255,255,.08); }
 .se-str i.ja{ background:var(--sf); }
 .se-str i.of{ background:transparent; box-shadow:inset 0 0 0 1px var(--sf); }
-.se-str i.pz{ background:repeating-linear-gradient(45deg, rgba(139,124,240,.45) 0 1px, transparent 1px 3px); }
+.se-str i.pz{ background:repeating-linear-gradient(135deg, rgba(139,124,240,.22) 0 1px, rgba(139,124,240,.05) 1px 4px); }
 .se-w{ text-align:right; display:flex; flex-direction:column; line-height:1.1; }
 .se-w b{ font-size:var(--t-xl); font-variant-numeric:tabular-nums; color:var(--sf); }
 .se-w span{ font-size:var(--t-xs); color:var(--text-faint); }
@@ -1762,7 +1763,7 @@ select option{ background:#141a26; }
   background:color-mix(in srgb, var(--m-sleep) 9%, transparent); border:1px solid color-mix(in srgb, var(--m-sleep) 25%, transparent); }
 .lp-frei svg{ width:15px; height:15px; color:var(--m-sleep); flex:0 0 auto; }
 .lp-frei b{ color:var(--text); }
-.rb-z.vf{ background:repeating-linear-gradient(45deg, rgba(139,124,240,.35) 0 2px, rgba(139,124,240,.08) 2px 4px); }
+.rb-z.vf{ background:repeating-linear-gradient(135deg, rgba(139,124,240,.22) 0 1px, rgba(139,124,240,.05) 1px 4px); }
 
 .hd-raum{ font-style:normal; color:var(--text-faint); font-size:var(--t-xs); margin-left:6px; }
 .un-raum{ display:inline-flex; align-items:center; gap:5px; margin-top:4px; font-size:var(--t-sm); color:var(--text); font-weight:600; }
@@ -4747,8 +4748,8 @@ const tagLang=k=>{ const d=parsedk(k); return `${WD[wtagIdx(d)]}, ${fmtShort(d)}
    sondern unbekannt — er bleibt leer statt dunkel. */
 function rbStufe(m,k){
   if(k>today()) return "z";
-  if(istPause(k)) return "p";
   const v=m.wert(k);
+  if(istPause(k)&&(v===null||v<=0)) return "p";
   if(v===null) return "x";
   if(v<=0) return "0";
   return String(clamp(Math.ceil(clamp(m.stufe(v),0,1)*4),1,4));
@@ -6157,9 +6158,10 @@ function klausurJahrHtml(){
     let st;
     if(dk(d)>dk(ende)) st="sz";
     else if(k>today()) st=istVlfrei(k)?"vf":"zk";
-    else if(istPause(k)) st="sp";
-    else if(istVlfrei(k)&&!(nv(m.study)&&m.study>0)) st="vf";
+    /* Wer in Ferien oder Pause lernt, sieht das auch: Lernzeit schlägt Schraffur */
     else if(nv(m.study)&&m.study>0) st="l"+(m.study>=5?4:m.study>=3?3:m.study>=1.5?2:1);
+    else if(istPause(k)) st="sp";
+    else if(istVlfrei(k)) st="vf";
     else st="sx";
     const kl=ts.some(x=>x.art==="klausur")?" kj-k":ts.length?" kj-a":"";
     zellen.push(`<i class="rb-z ${st}${kl}${k===today()?" kj-heute":""}${k===kjTag?" sel":""}" data-kjk="${k}"

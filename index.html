@@ -1466,9 +1466,15 @@ select option{ background:#141a26; }
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 /* Keine Kante: Die Kugel läuft zu allen Seiten weich in den Block aus,
    statt als dunkles Rechteck darin zu stehen. */
+/* Nur ein schmaler Streifen am Rand läuft aus — die Kugel selbst bleibt
+   voll sichtbar und darf den Rahmen fast ganz nutzen. */
 .hd-nx-stage canvas{
-  -webkit-mask-image:radial-gradient(ellipse 72% 68% at 50% 50%, #000 52%, rgba(0,0,0,.6) 70%, transparent 100%);
-          mask-image:radial-gradient(ellipse 72% 68% at 50% 50%, #000 52%, rgba(0,0,0,.6) 70%, transparent 100%); }
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 11%, #000 89%, transparent 100%),
+                     linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%);
+  -webkit-mask-composite:source-in;
+          mask-image:linear-gradient(to bottom, transparent 0, #000 11%, #000 89%, transparent 100%),
+                     linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%);
+          mask-composite:intersect; }
 
 /* ── Mobil ────────────────────────────────────────────── */
 @media(max-width:860px){
@@ -3769,7 +3775,7 @@ R.heute=function(){
   if(mini){
     /* Handy: etwas flacher, damit die Kugel ruhig im Block sitzt */
     const schmal=window.innerWidth<700;
-    NEXUS_MINI=makeNexus(mini,{mini:true,ratio:schmal?.6:.78,maxH:schmal?250:380,minH:schmal?200:230});
+    NEXUS_MINI=makeNexus(mini,{mini:true,ratio:schmal?.68:.86,maxH:schmal?270:440,minH:schmal?220:260});
     NEXUS_MINI.start();
     const wl=V.querySelector("#nxWerte");
     if(wl) wl.innerHTML=NEXUS_MINI.nodes.map(n=>
@@ -4390,7 +4396,7 @@ function makeNexus(cv,opt={}){
     if(!wrap||!wrap.offsetParent){ X.run=false; return; }
     size();
     const ctx=X.ctx,w=X.w,h=X.h,cx=w/2,cy=h/2;
-    const R=Math.min(w*(X.mini?.30:.30),h*(X.mini?.34:.40));
+    const R=Math.min(w*(X.mini?.34:.30),h*(X.mini?.37:.40));
     ctx.setTransform(X.dpr,0,0,X.dpr,0,0);
     ctx.clearRect(0,0,w,h);
     const tm=(now-X.t0)*.001;
@@ -4440,7 +4446,7 @@ function makeNexus(cv,opt={}){
 
     /* In der kleinen Fassung kreisen die Knoten weiter außen, sonst
        schiebt sich einer vor die Zahl im Kern. */
-    const NR=R*(X.eng?1.62:X.mini?1.42:1);
+    const NR=R*(X.eng?1.42:X.mini?1.3:1);
     const P=X.nodes.map(n=>proj(n.lat,n.lon,cx,cy,NR)); X.P=P;
     const PS=X.sats.map(s=>proj(s.lat,s.lon,cx,cy,R*1.02));
 

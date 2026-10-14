@@ -4991,8 +4991,9 @@ function schlafZeitenChart(nae,ziel,r){
     if(nn.von&&nn.bis){
       const y1=y(nachtMin(nn.von)), y2=y(nachtMin(nn.bis)), hoch=Math.max(3,y2-y1);
       const gut=schlafOk(nn.k);
-      /* Ganz im Zielfenster (10 min Spielraum): grün wie das Fenster */
-      const imZiel=nachtMin(nn.von)>=zb-10&&nachtMin(nn.bis)<=za+10;
+      /* Grün nur, wenn du spätestens zur Zielzeit (23:00) im Bett warst —
+         keine Minute danach — und bis zur Aufstehzeit (10 min Spielraum) auf warst */
+      const imZiel=nachtMin(nn.von)<=zb&&nachtMin(nn.bis)<=za+10;
       b+=`<rect x="${(x(i)-bw/2).toFixed(1)}" y="${y1.toFixed(1)}" width="${bw.toFixed(1)}" height="${hoch.toFixed(1)}"
         rx="${Math.min(5,bw/2).toFixed(1)}" fill="${imZiel?"var(--good)":"var(--m-sleep)"}" opacity="${nn.pause?.28:gut?.95:.55}"
         ${sel?`stroke="var(--text)" stroke-width="1.6"`:""}/>`;
@@ -5061,7 +5062,7 @@ R.schlaf=function(){
 
   <div class="p sl-wann">
     <div class="p-head"><div class="p-title">${ico("clock")}Wann du schläfst</div>
-      <span class="p-note">oben je Nacht Stunden und Score · grün: Zielfenster und Nächte darin · Wochenende hinterlegt</span></div>
+      <span class="p-note">oben je Nacht Stunden und Score · grün: bis ${ZG().bettZiel} im Bett · Wochenende hinterlegt</span></div>
     <div class="sl-rhythmus">
       <div><span>Ø ins Bett</span><b>${r.bett!==null?nachtUhr(Math.round(r.bett)):"–"}</b>
         <em>${r.sBett!==null?`± ${Math.round(r.sBett)} min`:""}</em></div>

@@ -355,6 +355,9 @@ button.un-m{ text-align:left; color:inherit; font:inherit; cursor:pointer; }
 .sp-lauf-z em{ font-style:normal; margin-left:2px; }
 @media(max-width:520px){ .sl-kacheln{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .sl-felder label{ display:flex; flex-direction:column; gap:5px; font-size:var(--t-xs); color:var(--text-faint); }
+.sl-wann-tag{ display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+.sl-wann-tag .seg{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+.sl-wann-tag label{ display:flex; flex-direction:column; gap:5px; font-size:var(--t-xs); color:var(--text-faint); }
 
 /* ── Wie eine App, nicht wie eine Webseite (nach mobile-native) ──
    Jede Zeile hat einen Grund:
@@ -5104,6 +5107,10 @@ function streuung(a){ if(a.length<2) return null; const m=avg(a); return Math.sq
    - antippen zeigt die Nacht im Detail
    ──────────────────────────────────────────────────────── */
 let slNacht=null;
+/* Welche Nacht das Eintragsfeld bearbeitet: null = die letzte Nacht (heute
+   aufgewacht), sonst das Aufwach-Datum einer früheren Nacht. */
+let slEintrag=null;
+const slEintragTag=()=>slEintrag&&slEintrag<today()?slEintrag:today();
 /* Schlafdauer aus Bett- und Aufwachzeit, auf Viertelstunden gerundet */
 const schlafAusZeiten=(von,bis)=>Math.round(((hm2min(bis)-hm2min(von)+1440)%1440)/15)/4;
 /* Sobald beide Zeiten stehen, rechnet das Stundenfeld sofort mit — sichtbar,
@@ -5250,7 +5257,8 @@ function schlafNachtDetail(nae,r,ziel){
 
 R.schlaf=function(){
   const el=document.getElementById("v-schlaf");
-  const g=G(), k=today(), m=S.metrics[k]||{};
+  const g=G(), k=today(), ek=slEintragTag(), m=S.metrics[ek]||{};
+  const vorTag=n=>dk(addD(parsedk(k),-n));
   const alleN=schlafNaechte(slTage);
   const nae=alleN.filter(n=>!n.pause);
   const h=nae.map(n=>n.h).filter(v=>v!==null);
@@ -5299,7 +5307,11 @@ R.schlaf=function(){
     </div>
     <div class="p sl-eintrag">
       <div class="p-head" style="margin-bottom:10px"><div class="p-title">${ico("moon")}Schlaf eintragen</div>
-        <span class="p-note">Nacht auf heute</span></div>
+        <span class="p-note">Nacht vom ${tagLang(dk(addD(parsedk(ek),-1)))} auf ${ek===k?"heute":tagLang(ek)}</span></div>
+      <div class="sl-wann-tag">
+        <div class="seg">${[[0,"Heute"],[1,"Gestern"],[2,"Vorgestern"]].map(([n,l])=>`<button class="${ek===vorTag(n)?"on":""}" data-sle="${vorTag(n)}">${l}</button>`).join("")}</div>
+        <label>Aufgewacht am<input type="date" id="slTag" value="${ek}" max="${k}"></label>
+      </div>
       <div class="sl-felder">
         <label>Ins Bett<input type="time" id="slVon" value="${m.sleepFrom||""}"></label>
         <label>Aufgewacht<input type="time" id="slBis" value="${m.sleepTo||""}"></label>
@@ -5322,10 +5334,15 @@ R.schlaf=function(){
     slNacht = slNacht===b.dataset.sln ? null : b.dataset.sln;
     const top=document.getElementById("views").scrollTop; R.schlaf(); document.getElementById("views").scrollTop=top; });
   schlafFelder("slVon","slBis","slH");
+  const slWechsel=t=>{ if(!t) return; if(t>today()){ toast("Diese Nacht kommt noch","x"); R.schlaf(); return; }
+    slEintrag=t===today()?null:t; const top=document.getElementById("views").scrollTop; R.schlaf(); document.getElementById("views").scrollTop=top; };
+  el.querySelectorAll("[data-sle]").forEach(b=>b.onclick=()=>slWechsel(b.dataset.sle));
+  el.querySelector("#slTag").onchange=e=>slWechsel(e.target.value);
   el.querySelector("#slOk").onclick=()=>{
     /* Der Tag wird beim Speichern bestimmt, nicht beim Zeichnen — sonst
-       landet die Nacht beim Vortag, wenn die Seite über Nacht offen war. */
-    const kk=today();
+       landet die Nacht beim Vortag, wenn die Seite über Nacht offen war.
+       Eine bewusst gewählte frühere Nacht bleibt dagegen fest. */
+    const kk=slEintragTag();
     let hv=parseFloat(el.querySelector("#slH").value.replace(",","."));
     const sv=parseFloat(String(el.querySelector("#slS").value).replace(",","."));
     const von=el.querySelector("#slVon").value, bis=el.querySelector("#slBis").value;
@@ -5334,7 +5351,7 @@ R.schlaf=function(){
     if(isNaN(hv)&&isNaN(sv)&&!e.sleepFrom){ toast("Erst Zeiten oder Stunden eintragen","x"); return; }
     if(!isNaN(hv)) e.sleepHours=clamp(hv,0,16); if(!isNaN(sv)) e.sleepScore=clamp(Math.round(sv),0,100);
     S.metrics[kk]=Object.assign({},S.metrics[kk],e); save();
-    toast(`Schlaf eingetragen — Nacht auf ${kk===k?"heute":tagLang(kk)}`,"check"); R.schlaf(); paintOrb();
+    toast(`Schlaf eingetragen — Nacht auf ${kk===today()?"heute":tagLang(kk)}`,"check"); slEintrag=null; R.schlaf(); paintOrb();
   };
 };
 

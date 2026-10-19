@@ -356,7 +356,12 @@ button.un-m{ text-align:left; color:inherit; font:inherit; cursor:pointer; }
 @media(max-width:520px){ .sl-kacheln{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
 .sl-felder label{ display:flex; flex-direction:column; gap:5px; font-size:var(--t-xs); color:var(--text-faint); }
 .sl-wann-tag{ display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
-.sl-wann-tag .seg{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+.sl-wann-tag .seg{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+.sl-wann-tag .sl-7 button{ display:flex; flex-direction:column; align-items:center; gap:1px; padding:6px 0 5px; min-width:0; }
+.sl-7 small{ font-size:10px; line-height:1.2; opacity:.8; }
+.sl-7 b{ font-size:var(--t-md,15px); font-weight:600; font-variant-numeric:tabular-nums; line-height:1.2; }
+.sl-7 i{ width:5px; height:5px; border-radius:50%; background:transparent; }
+.sl-7 i.da{ background:var(--m-sleep); }
 .sl-wann-tag label{ display:flex; flex-direction:column; gap:5px; font-size:var(--t-xs); color:var(--text-faint); }
 
 /* ── Wie eine App, nicht wie eine Webseite (nach mobile-native) ──
@@ -5309,7 +5314,8 @@ R.schlaf=function(){
       <div class="p-head" style="margin-bottom:10px"><div class="p-title">${ico("moon")}Schlaf eintragen</div>
         <span class="p-note">Nacht vom ${tagLang(dk(addD(parsedk(ek),-1)))} auf ${ek===k?"heute":tagLang(ek)}</span></div>
       <div class="sl-wann-tag">
-        <div class="seg">${[[0,"Heute"],[1,"Gestern"],[2,"Vorgestern"]].map(([n,l])=>`<button class="${ek===vorTag(n)?"on":""}" data-sle="${vorTag(n)}">${l}</button>`).join("")}</div>
+        <div class="seg sl-7">${[6,5,4,3,2,1,0].map(n=>{ const t=vorTag(n), d=parsedk(t), da=nv((S.metrics[t]||{}).sleepHours);
+          return `<button class="${ek===t?"on":""}" data-sle="${t}" title="${da?"schon eingetragen":"noch leer"}"><small>${n===0?"heute":n===1?"gestern":WD[wtagIdx(d)]}</small><b>${d.getDate()}</b><i class="${da?"da":""}"></i></button>`; }).join("")}</div>
         <label>Aufgewacht am<input type="date" id="slTag" value="${ek}" max="${k}"></label>
       </div>
       <div class="sl-felder">

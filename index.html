@@ -3486,8 +3486,8 @@ function morgenModal(k){
     <div class="sl-felder">
       <label>Ins Bett<input type="time" id="mkVon" value="${m.sleepFrom||""}"></label>
       <label>Aufgewacht<input type="time" id="mkBis" value="${m.sleepTo||""}"></label>
-      <label>Stunden<input type="text" inputmode="decimal" autocomplete="off" id="mkH" value="${nv(m.sleepHours)?m.sleepHours:""}" placeholder="aus den Zeiten"></label>
-      <label>Score<input type="number" inputmode="numeric" min="0" max="100" id="mkS" value="${nv(m.sleepScore)?m.sleepScore:""}" placeholder="von der Uhr"></label>
+      <label>Stunden<input type="text" inputmode="decimal" autocomplete="off" id="mkH" value="${nv(m.sleepHours)?String(m.sleepHours).replace(".",","):""}" placeholder="aus den Zeiten"></label>
+      <label>Score<input type="text" inputmode="numeric" autocomplete="off" id="mkS" value="${nv(m.sleepScore)?m.sleepScore:""}" placeholder="von der Uhr"></label>
     </div>
     <div class="ck-sek">Heute im Plan</div>
     ${planListe(k)}
@@ -3496,9 +3496,10 @@ function morgenModal(k){
       :`<div class="ck-leer">Nichts vorgemerkt. Im Planer kannst du bis zu ${TODO_FOKUS} Aufgaben für heute wählen.</div>`}
     <div class="mo-act"><button class="b" onclick="closeModal()">Später</button>
       <button class="b b-1" id="ckOk">${ico("check")}Morgen-Check</button></div>`);
+  schlafFelder("mkVon","mkBis","mkH");
   document.getElementById("ckOk").onclick=()=>{
     const v=id=>document.getElementById(id).value;
-    let hv=parseFloat(String(v("mkH")).replace(",",".")); const sv=parseFloat(v("mkS"));
+    let hv=parseFloat(String(v("mkH")).replace(",",".")); const sv=parseFloat(String(v("mkS")).replace(",","."));
     const von=v("mkVon"), bis=v("mkBis"), e={};
     if(von&&bis){ e.sleepFrom=von; e.sleepTo=bis;
       if(isNaN(hv)) hv=Math.round(((hm2min(bis)-hm2min(von)+1440)%1440)/15)/4; }
@@ -3785,7 +3786,7 @@ R.heute=function(){
             .map(([f2,l,i,ph])=>`<div>
               <label style="display:flex;align-items:center;gap:6px;font-size:var(--t-sm);color:var(--text-dim);margin-bottom:5px">
                 ${ico(i).replace("<svg",'<svg width="13" height="13"')}${l}</label>
-              <input type="number" step="0.1" data-m="${f2}" value="${nv(m[f2])?m[f2]:""}" placeholder="${ph}"></div>`).join("")}
+              <input type="text" inputmode="decimal" autocomplete="off" data-m="${f2}" value="${nv(m[f2])?String(m[f2]).replace(".",","):""}" placeholder="${ph.replace(".",",")}"></div>`).join("")}
         </div>
         <button class="b b-1" id="mSave" style="width:100%;margin-top:12px">Werte speichern</button>
       </div>
@@ -3809,7 +3810,7 @@ R.heute=function(){
   V.querySelector("#hToday")?.addEventListener("click",()=>{ dayView=today(); R.heute(); });
   V.querySelector("#mSave").onclick=()=>{
     const e={};
-    V.querySelectorAll("[data-m]").forEach(i=>{ const v=parseFloat(i.value); if(!isNaN(v)) e[i.dataset.m]=v; });
+    V.querySelectorAll("[data-m]").forEach(i=>{ const v=parseFloat(String(i.value).replace(",",".")); if(!isNaN(v)) e[i.dataset.m]=v; });
     S.metrics[k]=Object.assign({},S.metrics[k],e);
     Object.keys(S.metrics[k]).forEach(f2=>{ if(!V.querySelector(`[data-m="${f2}"]`)) return;
       if(V.querySelector(`[data-m="${f2}"]`).value==="") delete S.metrics[k][f2]; });
@@ -5103,6 +5104,16 @@ function streuung(a){ if(a.length<2) return null; const m=avg(a); return Math.sq
    - antippen zeigt die Nacht im Detail
    ──────────────────────────────────────────────────────── */
 let slNacht=null;
+/* Schlafdauer aus Bett- und Aufwachzeit, auf Viertelstunden gerundet */
+const schlafAusZeiten=(von,bis)=>Math.round(((hm2min(bis)-hm2min(von)+1440)%1440)/15)/4;
+/* Sobald beide Zeiten stehen, rechnet das Stundenfeld sofort mit — sichtbar,
+   statt erst beim Speichern und nur, wenn das Feld leer war. */
+function schlafFelder(vonId,bisId,hId){
+  const v=document.getElementById(vonId), b=document.getElementById(bisId), h=document.getElementById(hId);
+  if(!v||!b||!h) return;
+  const rechne=()=>{ if(v.value&&b.value) h.value=String(schlafAusZeiten(v.value,b.value)).replace(".",","); };
+  ["input","change","blur"].forEach(ev=>{ v.addEventListener(ev,rechne); b.addEventListener(ev,rechne); });
+}
 const istWeNacht=k=>{ const d=parsedk(k).getDay(); return d===6||d===0; };
 function schlafRhythmus(nae){
   const mit=nae.filter(n=>n.von&&n.bis);
@@ -5292,8 +5303,8 @@ R.schlaf=function(){
       <div class="sl-felder">
         <label>Ins Bett<input type="time" id="slVon" value="${m.sleepFrom||""}"></label>
         <label>Aufgewacht<input type="time" id="slBis" value="${m.sleepTo||""}"></label>
-        <label>Stunden<input type="text" inputmode="decimal" autocomplete="off" id="slH" value="${nv(m.sleepHours)?m.sleepHours:""}" placeholder="aus den Zeiten"></label>
-        <label>Score<input type="number" inputmode="numeric" min="0" max="100" id="slS" value="${nv(m.sleepScore)?m.sleepScore:""}" placeholder="optional"></label>
+        <label>Stunden<input type="text" inputmode="decimal" autocomplete="off" id="slH" value="${nv(m.sleepHours)?String(m.sleepHours).replace(".",","):""}" placeholder="aus den Zeiten"></label>
+        <label>Score<input type="text" inputmode="numeric" autocomplete="off" id="slS" value="${nv(m.sleepScore)?m.sleepScore:""}" placeholder="optional"></label>
       </div>
       <button class="b b-1" id="slOk" style="width:100%;margin-top:10px">${nv(m.sleepHours)?"Ändern":"Eintragen"}</button>
     </div>
@@ -5310,20 +5321,20 @@ R.schlaf=function(){
   el.querySelectorAll("[data-sln]").forEach(b=>b.onclick=()=>{
     slNacht = slNacht===b.dataset.sln ? null : b.dataset.sln;
     const top=document.getElementById("views").scrollTop; R.schlaf(); document.getElementById("views").scrollTop=top; });
+  schlafFelder("slVon","slBis","slH");
   el.querySelector("#slOk").onclick=()=>{
+    /* Der Tag wird beim Speichern bestimmt, nicht beim Zeichnen — sonst
+       landet die Nacht beim Vortag, wenn die Seite über Nacht offen war. */
+    const kk=today();
     let hv=parseFloat(el.querySelector("#slH").value.replace(",","."));
-    const sv=parseFloat(el.querySelector("#slS").value);
+    const sv=parseFloat(String(el.querySelector("#slS").value).replace(",","."));
     const von=el.querySelector("#slVon").value, bis=el.querySelector("#slBis").value;
     const e={};
-    if(von&&bis){
-      e.sleepFrom=von; e.sleepTo=bis;
-      if(isNaN(hv)){ const zu=t=>{ const [a,b]=t.split(":").map(Number); return a*60+b; };
-        hv=Math.round(((zu(bis)-zu(von)+1440)%1440)/15)/4; }
-    }
+    if(von&&bis){ e.sleepFrom=von; e.sleepTo=bis; if(isNaN(hv)) hv=schlafAusZeiten(von,bis); }
     if(isNaN(hv)&&isNaN(sv)&&!e.sleepFrom){ toast("Erst Zeiten oder Stunden eintragen","x"); return; }
     if(!isNaN(hv)) e.sleepHours=clamp(hv,0,16); if(!isNaN(sv)) e.sleepScore=clamp(Math.round(sv),0,100);
-    S.metrics[k]=Object.assign({},S.metrics[k],e); save();
-    toast("Schlaf eingetragen"); R.schlaf(); paintOrb();
+    S.metrics[kk]=Object.assign({},S.metrics[kk],e); save();
+    toast(`Schlaf eingetragen — Nacht auf ${kk===k?"heute":tagLang(kk)}`,"check"); R.schlaf(); paintOrb();
   };
 };
 
@@ -7205,8 +7216,32 @@ ausUrl();
       was inzwischen aus SATZ dazukam — sonst müsste man von Hand
       neu laden, um Trainingsdaten vom Handy zu sehen. */
 window.addEventListener("pagehide",()=>{ if(syncTimer){ clearTimeout(syncTimer); pushCloud(); } });
+/* ── Frisch bleiben ──
+   Eine Homescreen-App bleibt oft tagelang im Speicher. Ohne das hier
+   zeigte sie morgens noch den Vortag: Tageswerte und Schlaf landeten
+   beim falschen Datum, der Morgen-Check blieb gesperrt. Deshalb wird
+   neu gezeichnet, sobald sich der Tag oder das Check-in-Fenster ändert
+   — und immer, wenn man in die App zurückkehrt. */
+let renderTag=today(), renderFenster=(typeof checkinJetzt==="function"?checkinJetzt().teil:null);
+function frischHalten(erzwingen){
+  const t=today(), fe=typeof checkinJetzt==="function"?checkinJetzt().teil:null;
+  const neuerTag=t!==renderTag, neuesFenster=fe!==renderFenster;
+  if(neuerTag){ if(dayView===renderTag||dayView<t) dayView=t; if(typeof lpMk!=="undefined") lpMk=null; }
+  renderTag=t; renderFenster=fe;
+  if(!(erzwingen||neuerTag||neuesFenster)) return;
+  const offen=document.getElementById("modal")?.classList.contains("on");
+  const tippt=document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+  if(offen||tippt) return;
+  const v=document.getElementById("views"), y=v?v.scrollTop:0;
+  document.getElementById("tbDate").textContent=fmtLong(new Date());
+  try{ R[VIEW]&&R[VIEW](); }catch(e){ console.error(e); }
+  paintOrb(); if(v&&!neuerTag) v.scrollTop=y;
+}
+setInterval(()=>{ if(!document.hidden) frischHalten(false); },60000);
+window.addEventListener("pageshow",()=>frischHalten(true));
 document.addEventListener("visibilitychange",()=>{
   if(document.hidden){ if(syncTimer){ clearTimeout(syncTimer); pushCloud(); } return; }
+  frischHalten(true);
   if(!cloudOn()) return;
   holeSatz().then(n=>{ if(n){ go(VIEW); toast(`${n} Einheit${n===1?"":"en"} aus SATZ übernommen`,"run"); } });
 });

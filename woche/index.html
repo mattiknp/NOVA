@@ -452,10 +452,20 @@ const SEITEN=[
   {id:"geschenke",l:"Geschenke", c:"#c4627f"},
 ];
 const SC=id=>SEITEN.find(s=>s.id===id).c;
-const leer=()=>({v:2,name:"",sem:{start:"",ende:""},h0:7,h1:22,module:[],fix:[],woche:{},aus:{},ganz:[],todos:[],termine:[],geschenke:[],upd:0});
+const leer=()=>({v:2,name:"",sem:{start:"",ende:""},h0:7,h1:22,module:[],fix:[],woche:{},aus:{},ganz:[],todos:[],termine:[],geschenke:[],korr:[],upd:0});
 let S=leer();
-function aufraeumen(){ S.module.forEach(m=>{ if(FARB_ALT[m.farbe]) m.farbe=FARB_ALT[m.farbe]; }); S.v=2; }
-function laden(){ try{ const r=localStorage.getItem(KEY); if(r) S=Object.assign(leer(),JSON.parse(r)); }catch(e){} aufraeumen(); }
+/* Einmalige Ergänzungen: jede läuft genau einmal (Marke in S.korr) und kommt
+   nach dem Löschen nicht wieder. Feste ids verhindern Doppelte beim Abgleich. */
+const KORR=[
+  ["englisch-c1",()=>{ if(!S.fix.some(b=>b.id==="englisch-c1"))
+    S.fix.push({id:"englisch-c1",titel:"Englisch C1",kat:"uni",modul:null,tag:0,start:"12:00",end:"13:30",ort:""}); }],
+];
+function aufraeumen(){ S.module.forEach(m=>{ if(FARB_ALT[m.farbe]) m.farbe=FARB_ALT[m.farbe]; }); S.v=2;
+  S.korr=Array.isArray(S.korr)?S.korr:[]; let neu=false;
+  KORR.forEach(([id,fn])=>{ if(S.korr.includes(id)) return; fn(); S.korr.push(id); neu=true; });
+  return neu; }
+function laden(){ try{ const r=localStorage.getItem(KEY); if(r) S=Object.assign(leer(),JSON.parse(r)); }catch(e){}
+  if(aufraeumen()) try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
 function sichern(ohneSync){ S.upd=Date.now(); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} if(!ohneSync) syncSpaeter(); }
 
 /* ── Datum ── */

@@ -1,12 +1,12 @@
 {
   "name": "Woche",
   "short_name": "Woche",
-  "description": "Stundenplan, Aufgaben und Uni an einem Ort.",
+  "description": "Kalender, Aufgaben, Uni und Geschenke an einem Ort.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
-  "background_color": "#f6f4ef",
-  "theme_color": "#f6f4ef",
+  "background_color": "#fbf8f3",
+  "theme_color": "#fbf8f3",
   "lang": "de",
   "icons": [
     { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },

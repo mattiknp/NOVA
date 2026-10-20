@@ -585,7 +585,48 @@ select option{ background:#141a26; }
 @keyframes luPuls{ 50%{ opacity:.25; } }
 @media (prefers-reduced-motion:reduce){ .lu-pill > i{ animation:none; } }
 .b.lu-an{ color:#9cc8ff; background:color-mix(in srgb, var(--m-study) 18%, transparent); border-color:color-mix(in srgb, var(--m-study) 55%, transparent); font-variant-numeric:tabular-nums; }
-.un-lu-heute{ font-size:var(--t-xs); color:var(--text-faint); margin-top:8px; }
+.lu-karte{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:28px; align-items:center; padding:24px 28px; margin-bottom:16px; overflow:hidden;
+  background:radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--m-study) 16%, transparent), transparent 60%), var(--panel); }
+.lu-karte.an{ border-color:color-mix(in srgb, var(--m-study) 55%, transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--m-study) 30%, transparent), 0 20px 60px -20px color-mix(in srgb, var(--m-study) 70%, transparent); }
+.lu-karte.an::before{ content:""; position:absolute; inset:-40%; pointer-events:none;
+  background:conic-gradient(from 0deg, transparent 0 70%, color-mix(in srgb, var(--m-study) 22%, transparent) 85%, transparent 100%);
+  animation:luDreh 9s linear infinite; }
+@keyframes luDreh{ to{ transform:rotate(360deg); } }
+.lu-karte > *{ position:relative; }
+.lu-ring{ position:relative; width:210px; height:210px; flex:0 0 auto; }
+.lu-ring svg{ width:100%; height:100%; transform:rotate(-90deg); }
+.lu-spur{ fill:none; stroke:rgba(255,255,255,.07); stroke-width:12; }
+.lu-fort{ fill:none; stroke:url(#luVerlauf); stroke-width:12; stroke-linecap:round; transition:stroke-dashoffset .9s var(--ez);
+  filter:drop-shadow(0 0 6px color-mix(in srgb, var(--m-study) 70%, transparent)); }
+.lu-karte.voll .lu-fort{ stroke:var(--good); filter:drop-shadow(0 0 8px color-mix(in srgb, var(--good) 70%, transparent)); }
+.lu-mitte{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center; }
+.lu-zeit{ font-family:var(--f-mono); font-size:38px; font-weight:600; letter-spacing:-.02em; line-height:1; color:var(--text); font-variant-numeric:tabular-nums; }
+.lu-karte.an .lu-zeit{ color:#bfe0ff; text-shadow:0 0 18px color-mix(in srgb, var(--m-study) 80%, transparent); }
+.lu-klein{ font-size:var(--t-xs); color:var(--text-faint); }
+.lu-titel{ font-size:26px; font-weight:650; letter-spacing:-.01em; color:var(--text); }
+.lu-unter{ font-size:var(--t-sm); color:var(--text-dim); margin-top:4px; max-width:46ch; }
+.lu-zahlen{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:18px 0 20px; }
+.lu-zahlen div{ display:flex; flex-direction:column; gap:2px; padding:10px 12px; border-radius:var(--r); background:rgba(255,255,255,.03); border:1px solid var(--line); }
+.lu-zahlen b{ font-size:22px; font-weight:650; color:var(--text); font-variant-numeric:tabular-nums; line-height:1.1; }
+.lu-zahlen span{ font-size:var(--t-xs); color:var(--text-faint); }
+.lu-knopf{ display:inline-flex; align-items:center; justify-content:center; gap:10px; height:54px; padding:0 30px; border-radius:var(--r-pill); border:0; cursor:pointer;
+  font:inherit; font-size:var(--t-md); font-weight:700; color:#06121f; background:linear-gradient(135deg,#8fd0ff,#3683db);
+  box-shadow:0 12px 30px -10px color-mix(in srgb, var(--m-study) 90%, transparent); transition:transform var(--d2) var(--ez), filter var(--d2); }
+.lu-knopf svg{ width:20px; height:20px; fill:currentColor; }
+.lu-knopf:active{ transform:scale(.96); }
+@media (hover:hover){ .lu-knopf:hover{ filter:brightness(1.08); } }
+.lu-karte.an .lu-knopf{ color:#fff; background:linear-gradient(135deg,#ff7a7a,#d9485a); box-shadow:0 12px 30px -10px rgba(217,72,90,.8); }
+@media (max-width:640px){
+  .lu-karte{ grid-template-columns:minmax(0,1fr); justify-items:center; gap:16px; padding:22px 18px; text-align:center; }
+  .lu-ring{ width:210px; height:210px; }
+  .lu-zeit{ font-size:34px; }
+  .lu-rechts{ display:flex; flex-direction:column; align-items:center; width:100%; }
+  .lu-titel{ font-size:22px; }
+  .lu-zahlen{ grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; text-align:left; margin:14px 0 16px; }
+  .lu-knopf{ width:100%; }
+}
+@media (prefers-reduced-motion:reduce){ .lu-karte.an::before{ animation:none; } }
 .tb-clock{ font-family:var(--f-mono); font-size:var(--t-sm); color:var(--text-dim); font-variant-numeric:tabular-nums; }
 
 .kbtn{
@@ -6206,13 +6247,61 @@ const LU_FRAGEN_AB=240; /* Minuten */
 const luLaeuft=()=>!!(S.lernUhr&&S.lernUhr.start);
 const luMin=()=>luLaeuft()?Math.max(0,(Date.now()-S.lernUhr.start)/60000):0;
 const luHM=min=>{ const m=Math.round(min); return `${Math.floor(m/60)}:${p2(m%60)}`; };
+/* Für die große Karte: unter einer Stunde nur Minuten:Sekunden */
+const luGrossUhr=()=>{ const u=luUhr(); return u.startsWith("0:")?u.slice(2):u; };
 const luUhr=()=>{ const s=Math.floor(luMin()*60); return `${Math.floor(s/3600)}:${p2(Math.floor(s/60)%60)}:${p2(s%60)}`; };
+/* Heute gelernt in Stunden — samt dem Teil der laufenden Einheit, der
+   auf heute fällt (eine Einheit seit gestern Abend zählt nur ab 0 Uhr). */
+function luHeuteH(){
+  const k=today(), m=(S.metrics[k]||{}).study; let h=nv(m)?m:0;
+  if(luLaeuft()){ const mitt=parsedk(k).getTime(); h+=Math.max(0,Date.now()-Math.max(S.lernUhr.start,mitt))/3600000; }
+  return h;
+}
+const LU_R=88, LU_U=2*Math.PI*LU_R;
+function luKarte(){
+  const an=luLaeuft(), ziel=G().study||3, h=luHeuteH(), anteil=Math.min(1,h/ziel), d=an?new Date(S.lernUhr.start):null;
+  const heuteN=(S.lernSitz||[]).filter(x=>dk(new Date(x.bis))===today()).length;
+  const woche=[...Array(7)].map((_,i)=>(S.metrics[dk(addD(sow(new Date()),i))]||{}).study).reduce((a,v)=>a+(nv(v)?v:0),0);
+  return `<div class="p lu-karte${an?" an":""}${anteil>=1?" voll":""}">
+    <div class="lu-ring">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <defs><linearGradient id="luVerlauf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7cc4ff"/><stop offset="1" stop-color="#3683db"/></linearGradient></defs>
+        <circle cx="100" cy="100" r="${LU_R}" class="lu-spur"/>
+        <circle cx="100" cy="100" r="${LU_R}" class="lu-fort" data-luring stroke-dasharray="${LU_U}" stroke-dashoffset="${LU_U*(1-anteil)}"/>
+      </svg>
+      <div class="lu-mitte">
+        <span class="lu-klein">${an?"diese Einheit":"heute gelernt"}</span>
+        <b class="lu-zeit" ${an?"data-lugross":""}>${an?luGrossUhr():luHM(h*60)}</b>
+        <span class="lu-klein" data-luprozent>${Math.round(anteil*100)} % vom Tagesziel</span>
+      </div>
+    </div>
+    <div class="lu-rechts">
+      <div class="lu-titel">${an?"Du lernst gerade":"Lernzeit"}</div>
+      <div class="lu-unter">${an?`seit ${p2(d.getHours())}:${p2(d.getMinutes())} Uhr · der Timer läuft auch bei geschlossener App weiter`
+        :anteil>=1?"Tagesziel geschafft — alles ab jetzt ist Bonus.":`Noch ${luHM(Math.max(0,ziel-h)*60)} h bis zu deinem Ziel von ${f(ziel)} h.`}</div>
+      <div class="lu-zahlen">
+        <div><b data-luheute>${f(h)}</b><span>h heute</span></div>
+        <div><b>${f(ziel)}</b><span>h Ziel</span></div>
+        <div><b>${f(woche)}</b><span>h diese Woche</span></div>
+        <div><b>${heuteN}</b><span>${heuteN===1?"Einheit":"Einheiten"} heute</span></div>
+      </div>
+      <button class="lu-knopf" id="luGross">${an?`${ico("stop")}Stoppen`:`${ico("play")}Lernen starten`}</button>
+    </div>
+  </div>`;
+}
 function luZeichnen(){
   const p=document.getElementById("luPill"); if(p) p.hidden=!luLaeuft();
+  const ring=document.querySelector("[data-luring]");
+  if(ring&&luLaeuft()){ const ziel=G().study||3, h=luHeuteH(), a=Math.min(1,h/ziel);
+    ring.setAttribute("stroke-dashoffset",LU_U*(1-a));
+    const pz=document.querySelector("[data-luprozent]"); if(pz) pz.textContent=`${Math.round(a*100)} % vom Tagesziel`;
+    const hz=document.querySelector("[data-luheute]"); if(hz) hz.textContent=f(h);
+    const k=document.querySelector(".lu-karte"); if(k) k.classList.toggle("voll",a>=1); }
   const u=luUhr();
   document.querySelectorAll("[data-lu]").forEach(e=>e.textContent=u);
   document.querySelectorAll("[data-luhm]").forEach(e=>e.textContent=u.slice(0,-3));
   document.querySelectorAll("[data-lus]").forEach(e=>e.textContent=u.slice(-3));
+  document.querySelectorAll("[data-lugross]").forEach(e=>e.textContent=luGrossUhr());
 }
 function luNachher(){
   luZeichnen();
@@ -6377,10 +6466,10 @@ R.uni=function(){
     <div><div class="un-titel">Uni${akt?`<span class="un-sem">${akt}. Semester</span>`:""}</div>
       <div class="p-note">${vlfreiAm(today())?`${esc(vlfreiAm(today()).name)} bis ${fmtShort(parsedk(vlfreiAm(today()).bis))} · vorlesungsfrei`
         :sem?`Semesterwoche ${sem.w} · seit ${fmtShort(sem.start)}`:"Semesterwoche erscheint, sobald die Semesterferien als Pause eingetragen sind"}</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-      <button class="b${luLaeuft()?" lu-an":""}" id="unLu">${luLaeuft()?`${ico("stop")}<span data-lu>${luUhr()}</span>&nbsp;Stopp`:`${ico("play")}Lernen starten`}</button>
-      <button class="b b-1" id="unNeu">${ico("plus")}Termin</button></div>
+    <button class="b b-1" id="unNeu">${ico("plus")}Termin</button>
   </div>
+
+  ${luKarte()}
 
   ${lernplanHtml()}
 
@@ -6430,7 +6519,7 @@ R.uni=function(){
   ${studienplanHtml()}`;
 
   el.querySelector("#unNeu").onclick=()=>terminModal();
-  el.querySelector("#unLu").onclick=()=>luLaeuft()?luStopp():luStart();
+  el.querySelector("#luGross").onclick=()=>luLaeuft()?luStopp():luStart();
   lernplanWiring(el); klausurJahrWiring(el);
   el.querySelectorAll("[data-unweg]").forEach(b=>b.onclick=()=>{
     S.uniTermine=(S.uniTermine||[]).filter(t=>t.id!==b.dataset.unweg);

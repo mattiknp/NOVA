@@ -30,7 +30,7 @@
   --tinte:#2b1419; --tinte-2:#5f454a; --leise:#7d6368;
   --linie:#eedcd3; --linie-2:#e0c3b9; --raster:#e6b3aa;
   --plum:#61122b; --wein:#8e2c48; --rose:#b46a6a; --rose-dunkel:#9a4c4f; --blush:#e9a5a5; --puder:#f4cfd6; --puder-2:#faeaed;
-  --butter:#ffd983; --butter-2:#fff1cc; --senf:#d6a33a; --senf-dunkel:#8f6200;
+  --baby:#a9cbe8; --baby-2:#e6f0f9; --butter:#ffd983; --butter-2:#fff1cc; --senf:#d6a33a; --senf-dunkel:#8f6200;
   --oliv:#333700; --moos:#6f6c1e; --salbei:#a7a77a; --kakao:#5b3a29; --sand:#d8c3a5;
   --gut:#6f6c1e; --rot:#a8323f;
   --disp:"Gloock","Bodoni 72","Didot",Georgia,serif;
@@ -396,6 +396,7 @@ details.fertig-liste[open] summary::before{ content:"- "; }
   .kopf-r{ top:calc(12px + env(safe-area-inset-top)); right:0; }
   .titel{ font-size:54px; padding:0 4px; }
   .titel.lang{ font-size:40px; }
+  .kopf-r + .titel{ padding-right:52px; }
   .unter{ padding:8px 6px 0; }
   .raster2{ grid-template-columns:minmax(0,1fr); }
   .karte{ padding:16px; }
@@ -479,6 +480,7 @@ const PAL=[
   {c:"#b46a6a", ki:"#2e0712", n:"Altrosa"},
   {c:"#e9a5a5", ki:"#61122b", n:"Blush"},
   {c:"#f4cfd6", ki:"#61122b", n:"Puder"},
+  {c:"#a9cbe8", ki:"#61122b", n:"Babyblau"},
   {c:"#ffd983", ki:"#61122b", n:"Butter"},
   {c:"#d6a33a", ki:"#333700", n:"Senf"},
   {c:"#333700", ki:"#f4cfd6", n:"Oliv"},
@@ -521,26 +523,26 @@ const TER_ARTEN=[["abgabe","Abgabe",P.Butter],["klausur","Klausur",P.Pflaume],["
    Regel: Der Titel liegt halb auf den Streifen, also nie in einer
    Streifenfarbe; mindestens ein Streifen ist hell. */
 const SEITEN=[
-  {id:"heute",    l:"Heute",     c:P.Pflaume, t:"#61122b", a:P.Blush,   b:P.Puder},
+  {id:"heute",    l:"Heute",     c:P.Pflaume, t:"#61122b", a:P.Babyblau,b:P.Puder},
   {id:"kalender", l:"Kalender",  c:P.Altrosa, t:"#9a4c4f", a:P.Oliv,    b:P.Puder},
   {id:"aufgaben", l:"Aufgaben",  c:P.Oliv,    t:"#333700", a:P.Butter,  b:P.Blush},
   {id:"uni",      l:"Uni",       c:P.Butter,  t:"#61122b", a:P.Butter,  b:P.Senf},
-  {id:"geschenke",l:"Geschenke", c:P.Blush,   t:"#8e2c48", a:P.Puder,   b:P.Blush},
+  {id:"geschenke",l:"Geschenke", c:P.Blush,   t:"#8e2c48", a:P.Babyblau,b:P.Puder},
 ];
 /* Im Kalender trägt jeder Monat sein eigenes Farbpaar, wie ein Wandkalender */
 const MON_THEMEN=[
-  {c:P.Pflaume,t:"#61122b",a:P.Blush, b:P.Puder},     /* Jan */
+  {c:P.Pflaume,t:"#61122b",a:P.Babyblau,b:"#fcf8f1"}, /* Jan */
   {c:P.Altrosa,t:"#9a4c4f",a:P.Oliv,  b:P.Puder},     /* Feb */
   {c:P.Oliv,   t:"#333700",a:P.Butter,b:"#fcf8f1"},   /* Mär */
-  {c:P.Pflaume,t:"#61122b",a:P.Salbei,b:P.Puder},     /* Apr */
+  {c:P.Pflaume,t:"#61122b",a:P.Babyblau,b:P.Puder},   /* Apr */
   {c:P.Moos,   t:"#61122b",a:P.Moos,  b:P.Butter},    /* Mai */
   {c:P.Oliv,   t:"#333700",a:P.Altrosa,b:P.Butter},   /* Jun */
   {c:P.Wein,   t:"#8e2c48",a:P.Blush, b:P.Butter},    /* Jul */
   {c:P.Kakao,  t:"#5b3a29",a:P.Senf,  b:"#fcf8f1"},   /* Aug */
   {c:P.Pflaume,t:"#61122b",a:P.Oliv,  b:P.Blush},     /* Sep */
   {c:P.Pflaume,t:"#61122b",a:P.Butter,b:P.Puder},     /* Okt */
-  {c:P.Wein,   t:"#8e2c48",a:P.Kakao, b:P.Puder},     /* Nov */
-  {c:P.Altrosa,t:"#9a4c4f",a:P.Oliv,  b:P.Puder},     /* Dez */
+  {c:P.Wein,   t:"#8e2c48",a:P.Babyblau,b:P.Puder},   /* Nov */
+  {c:P.Altrosa,t:"#9a4c4f",a:P.Oliv,  b:P.Babyblau},  /* Dez */
 ];
 const leer=()=>({v:3,name:"",sem:{start:"",ende:""},h0:7,h1:22,module:[],fix:[],woche:{},aus:{},ganz:[],todos:[],termine:[],geschenke:[],monNotiz:{},korr:[],upd:0});
 let S=leer();
@@ -549,6 +551,38 @@ let S=leer();
 const KORR=[
   ["englisch-c1",()=>{ if(!S.fix.some(b=>b.id==="englisch-c1"))
     S.fix.push({id:"englisch-c1",titel:"Englisch C1",kat:"uni",modul:null,tag:0,start:"12:00",end:"13:30",ort:""}); }],
+  /* Stundenplan WS 2026/27, 3. Fachsemester Bachelor, Gruppe B2 (aus der PDF der Uni).
+     Vorhandene Module mit gleichem Namen werden genutzt; steht zur selben Zeit am
+     selben Tag schon etwas, kommt nichts doppelt dazu. */
+  ["stundenplan-ws26-b2",()=>{
+    const mod=(id,name,kurz,farbe,notiz)=>{ let m=S.module.find(x=>x.name.trim().toLowerCase()===name.toLowerCase());
+      if(!m){ m={id,name,kurz,cp:null,farbe,notiz}; S.module.push(m); } return m.id; };
+    const qm=mod("ws26-qm","Quantitative Methoden II","QM II",P.Babyblau,"203211 Übung B2 (Kubach), 203212 Vorlesung B (Röser), Tutorium (Hirsch/Landgrebe)");
+    const em=mod("ws26-empra","Empra","Empra",P.Pflaume,"203221 Übung B2 und Vorlesung (Röser)");
+    const de=mod("ws26-de","Denken und Entscheiden","D&E",P.Oliv,"203111 Gruppe B (Kleinke)");
+    const en=mod("ws26-en","Wissenschaftsenglisch","Englisch",P.Altrosa,"203411 Kurs B2 (Stammnitz-Kim)");
+    const wv=mod("ws26-wv","Wirtschaftliche Vertiefung","Wirtschaft",P.Senf,"203311 Vorlesung (Fritz)");
+    const re=mod("ws26-recht","Rechtliche Grundlagen","Recht",P.Moos,"203321 Blockveranstaltung (Wolpert): 16.10., 30.10., 6.11., 27.11.2026, online am 15.01.2027");
+    const fix=(id,modul,titel,tag,start,end,ort)=>{ if(S.fix.some(b=>b.id===id||(b.tag===tag&&b.start===start))) return;
+      S.fix.push({id,titel,kat:"uni",modul,tag,start,end,ort,farbe:null}); };
+    fix("ws26-empra-ue1",em,"Übung B2",0,"10:15","11:45","Labor B14/001+002");
+    fix("ws26-wv-1",wv,"Vorlesung",0,"14:15","15:45","Raum C10/11.02");
+    fix("ws26-wv-2",wv,"Vorlesung",0,"16:00","17:30","Raum C10/11.02");
+    fix("ws26-qm-ue",qm,"Übung B2",1,"08:30","10:00","Labor A11/006");
+    fix("ws26-empra-ue2",em,"Übung B2",1,"12:00","13:30","Labor B14/001+002");
+    fix("ws26-qm-tut",qm,"Tutorium",1,"14:15","15:45","Labor A11/006");
+    fix("ws26-de-1",de,"Gruppe B",2,"10:15","11:45","Raum B14/008");
+    fix("ws26-en",en,"Kurs B2",2,"12:00","13:30","Raum A12/418");
+    fix("ws26-qm-vl",qm,"Vorlesung B",3,"08:30","10:00","Raum D19/102");
+    fix("ws26-de-2",de,"Gruppe B",3,"10:15","11:45","Raum C10/11.02");
+    fix("ws26-empra-vl",em,"Vorlesung",3,"12:00","13:30","Raum C10/11.02");
+    /* Rechtliche Grundlagen: nur an einzelnen Freitagen */
+    [["2026-10-16","09:00","13:30","Blockveranstaltung","Raum C10/11.02"],["2026-10-30","09:00","13:30","Blockveranstaltung","Raum C10/11.02"],
+     ["2026-11-06","09:00","13:30","Blockveranstaltung","Raum C10/11.02"],["2026-11-27","09:00","13:30","Blockveranstaltung","Raum C10/11.02"],
+     ["2027-01-15","09:00","12:15","Online-Termin","online"]].forEach(([k,st,en2,titel,ort])=>{
+      const d=pk(k), mk=mkVon(d), id="ws26-recht-"+k; S.woche[mk]=S.woche[mk]||[];
+      if(!S.woche[mk].some(b=>b.id===id)) S.woche[mk].push({id,titel,kat:"uni",modul:re,tag:wtag(d),start:st,end:en2,ort,farbe:null}); });
+  }],
 ];
 function aufraeumen(){
   let neu=false;

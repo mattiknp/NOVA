@@ -576,14 +576,35 @@ select option{ background:#141a26; }
 .tb-title{ font-family:var(--f-disp); font-size:var(--t-lg); font-weight:600; letter-spacing:-.01em; }
 .tb-date{ font-size:var(--t-sm); color:var(--text-dim); }
 .tb-spacer{ flex:1; }
-.lu-pill{ display:inline-flex; align-items:center; gap:7px; height:32px; padding:0 9px 0 11px; border-radius:var(--r-pill); font:inherit; font-size:var(--t-sm); font-weight:600;
-  font-variant-numeric:tabular-nums; color:#9cc8ff; cursor:pointer; flex:0 0 auto;
-  background:color-mix(in srgb, var(--m-study) 20%, transparent); border:1px solid color-mix(in srgb, var(--m-study) 55%, transparent); }
-.lu-pill[hidden]{ display:none; }
-.lu-pill > i{ width:7px; height:7px; border-radius:50%; background:var(--m-study); box-shadow:0 0 8px var(--m-study); animation:luPuls 1.8s ease-in-out infinite; }
-.lu-pill svg{ width:14px; height:14px; opacity:.85; }
+/* ── Lernmodus: solange der Timer läuft, spürt man es überall ── */
+html.lernt{ --c1:#6cb8ff; --c1-deep:#2f74c9; --c1-glow:rgba(92,170,255,.32); }
+html.lernt .shell::after{ content:""; position:fixed; inset:0; pointer-events:none; z-index:40;
+  box-shadow:inset 0 0 0 2px rgba(108,184,255,.45), inset 0 0 90px rgba(54,131,219,.40);
+  animation:luAtem 5s ease-in-out infinite; }
+html.lernt .stage{ background:radial-gradient(120% 60% at 50% -10%, rgba(54,131,219,.14), transparent 60%); }
+@keyframes luAtem{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
+html.lernt .rl[data-go="uni"]{ position:relative; color:#9cc8ff; }
+html.lernt .rl[data-go="uni"]::after{ content:""; position:absolute; top:7px; right:9px; width:8px; height:8px; border-radius:50%;
+  background:var(--m-study); box-shadow:0 0 10px var(--m-study); animation:luPuls 1.8s ease-in-out infinite; }
+.lu-leiste{ position:relative; display:flex; align-items:center; gap:10px; padding:8px 22px; overflow:hidden;
+  background:linear-gradient(90deg, rgba(54,131,219,.30), rgba(54,131,219,.12) 60%, rgba(54,131,219,.22));
+  border-bottom:1px solid rgba(108,184,255,.35); }
+.lu-leiste[hidden]{ display:none; }
+.lu-leiste::after{ content:""; position:absolute; left:0; bottom:0; height:2px; width:calc(var(--lu-anteil,0) * 100%);
+  background:linear-gradient(90deg,#8fd0ff,#3683db); box-shadow:0 0 10px #3683db; transition:width .9s var(--ez); }
+.lu-l-info{ flex:1; min-width:0; display:flex; align-items:center; gap:12px; text-align:left; color:#cfe6ff; }
+.lu-l-punkt{ width:9px; height:9px; border-radius:50%; background:#6cb8ff; box-shadow:0 0 12px #6cb8ff; animation:luPuls 1.8s ease-in-out infinite; flex:0 0 auto; }
+.lu-l-label{ font-size:var(--t-xs); font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#9cc8ff; }
+.lu-l-zeit{ font-family:var(--f-mono); font-size:22px; font-weight:600; color:#e6f3ff; font-variant-numeric:tabular-nums; text-shadow:0 0 14px rgba(54,131,219,.9); }
+.lu-l-bar{ flex:0 1 160px; height:6px; border-radius:6px; background:rgba(255,255,255,.1); overflow:hidden; }
+.lu-l-bar i{ display:block; height:100%; width:calc(var(--lu-anteil,0) * 100%); border-radius:6px; background:linear-gradient(90deg,#8fd0ff,#3683db); transition:width .9s var(--ez); }
+html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:tabular-nums; }
+.lu-l-stopp{ display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 15px; border-radius:var(--r-pill); font-weight:700; font-size:var(--t-sm);
+  color:#fff; background:linear-gradient(135deg,#ff7a7a,#d9485a); box-shadow:0 8px 20px -8px rgba(217,72,90,.8); flex:0 0 auto; }
+.lu-l-stopp svg{ width:14px; height:14px; fill:currentColor; }
+.lu-l-stopp:active{ transform:scale(.96); }
 @keyframes luPuls{ 50%{ opacity:.25; } }
-@media (prefers-reduced-motion:reduce){ .lu-pill > i{ animation:none; } }
+@media (prefers-reduced-motion:reduce){ html.lernt .shell::after, .lu-l-punkt, html.lernt .rl[data-go="uni"]::after{ animation:none; } }
 .b.lu-an{ color:#9cc8ff; background:color-mix(in srgb, var(--m-study) 18%, transparent); border-color:color-mix(in srgb, var(--m-study) 55%, transparent); font-variant-numeric:tabular-nums; }
 .lu-karte{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:28px; align-items:center; padding:24px 28px; margin-bottom:16px; overflow:hidden;
   background:radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--m-study) 16%, transparent), transparent 60%), var(--panel); }
@@ -1638,10 +1659,12 @@ select option{ background:#141a26; }
   .tb-date{ font-size:var(--t-xs); }
   .tb-clock,.kbtn span{ display:none; }
   /* Läuft der Lern-Timer, weicht ⌘K der Pille — sonst bricht die Kopfleiste um */
-  .topbar:has(.lu-pill:not([hidden])) .kbtn{ display:none; }
-  .topbar:has(.lu-pill:not([hidden])){ gap:6px; }
   .tb-date{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .lu-pill{ padding:0 11px; gap:6px; } .lu-pill svg,.lu-pill .lu-s{ display:none; }
+  .lu-leiste{ padding:7px 14px; gap:8px; }
+  .lu-l-label{ display:none; }
+  .lu-l-zeit{ font-size:20px; }
+  .lu-l-bar{ flex:1 1 60px; }
+  html.lernt .rl[data-go="uni"]::after{ top:6px; right:calc(50% - 18px); }
   .kbtn{ padding:8px 10px; }
   .topbar > .b-i:first-child{ display:none; }
 
@@ -2956,13 +2979,20 @@ function shell(){
           <div class="tb-date" id="tbDate"></div>
         </div>
         <div class="tb-spacer"></div>
-        <button class="lu-pill" id="luPill" hidden title="Lern-Timer stoppen"><i></i><span><span data-luhm>0:00</span><span class="lu-s" data-lus>:00</span></span>${ico("stop")}</button>
         <span class="tb-clock" id="tbClock"></span>
         <button class="kbtn" data-act="cmdk">${ico("search")}<span>Schnellbefehl</span><kbd>⌘K</kbd></button>
         <span class="orb" id="tbOrb" title="Tagesbewertung"></span>
         <button class="b b-i" data-act="sync" title="Geräte abgleichen">${ico("orbit")}</button>
         <button class="b b-i" data-act="cloud" title="Cloud">${ico("cloud")}<i id="syncDot" style="position:absolute;width:6px;height:6px;border-radius:50%;background:var(--text-faint);margin:14px 0 0 14px;"></i></button>
       </header>
+      <div class="lu-leiste" id="luLeiste" hidden>
+        <button class="lu-l-info" id="luZurUni" title="Zur Lern-Karte">
+          <span class="lu-l-punkt"></span><span class="lu-l-label">Lernmodus</span>
+          <b class="lu-l-zeit" data-lugross>0:00</b>
+          <span class="lu-l-bar"><i></i></span><span class="lu-l-pz" data-luprozent2>0 %</span>
+        </button>
+        <button class="lu-l-stopp" id="luLStopp">${ico("stop")}<span>Stoppen</span></button>
+      </div>
       <div class="views" id="views"></div>
     </div>
   </div>
@@ -2986,7 +3016,8 @@ function wireShell(){
   document.querySelectorAll('[data-act="more"]').forEach(b=>b.onclick=moreSheet);
   document.querySelectorAll('[data-act="sync"]').forEach(b=>b.onclick=syncNow);
   document.querySelectorAll('[data-act="settings"]').forEach(b=>b.onclick=settingsModal);
-  document.getElementById("luPill").onclick=luStopp;
+  document.getElementById("luLStopp").onclick=luStopp;
+  document.getElementById("luZurUni").onclick=()=>go("uni");
   luZeichnen();
 }
 
@@ -3005,6 +3036,7 @@ function go(v){
   try{ R[v]&&R[v](); }catch(e){ console.error("Render "+v,e); }
   paintOrb();
   document.getElementById("views").scrollTop=0;
+  if(typeof luZeichnen==="function") luZeichnen();
 }
 
 function paintOrb(){
@@ -6289,8 +6321,17 @@ function luKarte(){
     </div>
   </div>`;
 }
+const NOVA_TITEL=document.title;
 function luZeichnen(){
-  const p=document.getElementById("luPill"); if(p) p.hidden=!luLaeuft();
+  const an=luLaeuft(), root=document.documentElement;
+  /* Lernmodus: ganz NOVA wird blau, atmet und zeigt oben die Zeit */
+  root.classList.toggle("lernt",an);
+  const lst=document.getElementById("luLeiste"); if(lst) lst.hidden=!an||VIEW==="uni";
+  if(an){ const a=Math.min(1,luHeuteH()/(G().study||3));
+    root.style.setProperty("--lu-anteil",a.toFixed(4));
+    const pz=document.querySelector("[data-luprozent2]"); if(pz) pz.textContent=`${Math.round(a*100)} %`;
+    document.title=`${luGrossUhr()} · Lernen — NOVA`; }
+  else if(document.title!==NOVA_TITEL) document.title=NOVA_TITEL;
   const ring=document.querySelector("[data-luring]");
   if(ring&&luLaeuft()){ const ziel=G().study||3, h=luHeuteH(), a=Math.min(1,h/ziel);
     ring.setAttribute("stroke-dashoffset",LU_U*(1-a));
@@ -6299,8 +6340,6 @@ function luZeichnen(){
     const k=document.querySelector(".lu-karte"); if(k) k.classList.toggle("voll",a>=1); }
   const u=luUhr();
   document.querySelectorAll("[data-lu]").forEach(e=>e.textContent=u);
-  document.querySelectorAll("[data-luhm]").forEach(e=>e.textContent=u.slice(0,-3));
-  document.querySelectorAll("[data-lus]").forEach(e=>e.textContent=u.slice(-3));
   document.querySelectorAll("[data-lugross]").forEach(e=>e.textContent=luGrossUhr());
 }
 function luNachher(){
@@ -6309,7 +6348,7 @@ function luNachher(){
 }
 function luStart(){
   if(luLaeuft()) return;
-  S.lernUhr={start:Date.now()}; save(); toast("Lern-Timer läuft — oben antippen zum Stoppen","play"); luNachher();
+  S.lernUhr={start:Date.now()}; save(); toast("Lernmodus an — viel Erfolg","play"); luNachher();
 }
 function luBuchen(von,bis){
   let t=von, h=0;

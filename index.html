@@ -1739,6 +1739,8 @@ select option{ background:#141a26; }
 .rb-z.kj-heute{ outline:2px solid #fff; outline-offset:1px; z-index:1; }
 .rb-leg .rb-z.kj-heute{ outline-width:1.5px; }
 .kj-tag{ font-size:var(--t-xs); padding:2px 9px; border-radius:var(--r-pill); }
+button.kj-tag{ display:inline-flex; align-items:center; gap:5px; font:inherit; font-size:var(--t-sm); padding:4px 10px; border:0; cursor:pointer; }
+button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
 .kj-tag.k{ color:var(--bad); background:color-mix(in srgb, var(--bad) 13%, transparent); }
 .kj-tag.a{ color:var(--warn); background:color-mix(in srgb, var(--warn) 13%, transparent); }
 .kj-liste{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
@@ -6181,9 +6183,13 @@ function lpImportModal(zeilen,name){
 function klausurJahrHtml(){
   /* Von dieser Woche bis Ende April — davor ist vorbei, danach Sommer */
   const h=parsedk(today()), start=sow(h);
-  const ende=new Date(h.getMonth()>=4?h.getFullYear()+1:h.getFullYear(),3,30);
-  const wochen=Math.max(4,Math.ceil(((ende-start)/86400000+1)/7));
+  let ende=new Date(h.getMonth()>=4?h.getFullYear()+1:h.getFullYear(),3,30);
   const ter=uniTermine(), proTag={};
+  /* Liegt eine Klausur später (Sommersemester), wächst das Raster bis zu
+     ihrem Monatsende mit — sonst wäre sie eingetragen, aber unsichtbar. */
+  const spaet=ter.map(t=>t.datum).filter(k=>k>dk(ende)).sort().pop();
+  if(spaet){ const d=parsedk(spaet); ende=new Date(d.getFullYear(),d.getMonth()+1,0); }
+  const wochen=Math.max(4,Math.ceil(((ende-start)/86400000+1)/7));
   ter.forEach(t=>{ (proTag[t.datum]=proTag[t.datum]||[]).push(t); });
   const zellen=[], monate=[]; let letzt=-1;
   for(let w=0;w<wochen;w++) for(let t=0;t<7;t++){
@@ -6204,9 +6210,11 @@ function klausurJahrHtml(){
   }
   const kommend=ter.filter(t=>t.datum>=today());
   const det=kjTag?(()=>{ const ts=proTag[kjTag]||[], m=S.metrics[kjTag]||{};
-    return `<b class="rb-dt">${tagLang(kjTag)}</b>${ts.map(t=>`<span class="kj-tag ${t.art==="klausur"?"k":"a"}">${esc(t.titel)}${t.zeit?` · ${t.zeit}`:""}</span>`).join("")}
-      ${nv(m.study)&&m.study>0?`<span><b>${f(m.study)} h</b> gelernt</span>`:""}${!ts.length&&!(m.study>0)?`<span class="rb-hinweis">Nichts eingetragen.</span>`:""}`; })()
-    :`<span class="rb-hinweis">Tippe auf einen Tag.</span>`;
+    const n=tageBis(kjTag);
+    return `<b class="rb-dt">${tagLang(kjTag)}</b>${ts.map(t=>`<button class="kj-tag ${t.art==="klausur"?"k":"a"}" data-kjt="${t.id}" title="Bearbeiten">${esc(t.titel)}${t.zeit?` · ${t.zeit}`:""}${ico("edit")}</button>`).join("")}
+      ${nv(m.study)&&m.study>0?`<span><b>${f(m.study)} h</b> gelernt</span>`:""}${!ts.length&&!(m.study>0)&&n<0?`<span class="rb-hinweis">Nichts eingetragen.</span>`:""}
+      ${n>=0?`<button class="b b-sm" data-kjneu="${kjTag}" style="margin-left:auto">${ico("plus")}${ts.length?"Noch etwas":"Klausur oder Abgabe"} an diesem Tag</button>`:""}`; })()
+    :`<span class="rb-hinweis">Tippe auf einen Tag — dort kannst du direkt eine Klausur eintragen.</span>`;
   const spalten=`grid-template-columns:repeat(${wochen},minmax(0,1fr))`;
   return `<div class="p kj">
     <div class="p-head"><div class="p-title">${ico("cal")}Klausuren bis ${MSL[ende.getMonth()]}</div>
@@ -6230,21 +6238,15 @@ function klausurJahrWiring(el){
   el.querySelectorAll("[data-kjk]").forEach(c=>c.onclick=()=>{ kjTag=kjTag===c.dataset.kjk?null:c.dataset.kjk;
     const sc=document.getElementById("kjScroll"), x=sc?sc.scrollLeft:0, y=document.getElementById("views").scrollTop;
     R.uni(); const s2=document.getElementById("kjScroll"); if(s2) s2.scrollLeft=x; document.getElementById("views").scrollTop=y; });
-  el.querySelectorAll("[data-kjt]").forEach(b=>b.onclick=()=>terminBearbeiten(b.dataset.kjt));
-  /* Raster so scrollen, dass heute sichtbar ist (Handy) */
+  el.querySelectorAll("[data-kjt]").forEach(b=>b.onclick=()=>terminModal(b.dataset.kjt));
+  el.querySelectorAll("[data-kjneu]").forEach(b=>b.onclick=()=>terminModal(null,b.dataset.kjneu));
 
 }
-function terminBearbeiten(id){
-  const t=(S.uniTermine||[]).find(x=>x.id===id); if(!t) return;
-  modal(`<h3>${esc(t.titel)}</h3>
-    <label>Titel</label><input id="tbT" value="${esc(t.titel)}">
-    <div style="display:flex;gap:10px"><div style="flex:1"><label>Datum</label><input type="date" id="tbD2" value="${t.datum}"></div>
-      <div style="flex:1"><label>Uhrzeit</label><input type="time" id="tbZ" value="${t.zeit||""}"></div></div>
-    <div class="mo-act"><button class="b" id="tbDel" style="margin-right:auto;color:var(--bad)">Löschen</button>
-      <button class="b" onclick="closeModal()">Abbrechen</button><button class="b b-1" id="tbOk2">Speichern</button></div>`);
-  document.getElementById("tbOk2").onclick=()=>{ t.titel=document.getElementById("tbT").value.trim()||t.titel;
-    t.datum=document.getElementById("tbD2").value||t.datum; t.zeit=document.getElementById("tbZ").value||null; save(); closeModal(); R.uni(); };
-  document.getElementById("tbDel").onclick=()=>{ S.uniTermine=S.uniTermine.filter(x=>x.id!==id); save(); closeModal(); toast("Gelöscht"); R.uni(); };
+/* Gewählten Tag im (auf dem Handy waagerecht scrollenden) Raster zeigen */
+function kjZeige(k){
+  const sc=document.getElementById("kjScroll"), c=sc&&sc.querySelector(`[data-kjk="${k}"]`); if(!c) return;
+  const r=c.getBoundingClientRect(), rs=sc.getBoundingClientRect();
+  if(r.left<rs.left+20||r.right>rs.right-20) sc.scrollLeft+=r.left-rs.left-rs.width/2;
 }
 
 R.uni=function(){
@@ -6349,26 +6351,34 @@ R.uni=function(){
   el.querySelectorAll("[data-spm]").forEach(b=>b.onclick=()=>modulModal(b.dataset.spm));
 };
 
-function terminModal(){
-  let art="klausur";
-  const mods=STUDIENPLAN.filter(m=>modStatus(m)==="laeuft");
-  modal(`<h3>Klausur oder Abgabe</h3>
+function terminModal(id,datumVor){
+  const alt=id?(S.uniTermine||[]).find(x=>x.id===id):null;
+  if(id&&!alt) return;
+  let art=alt?alt.art:"klausur", modul=alt?alt.modul:null;
+  const mods=STUDIENPLAN.filter(m=>modStatus(m)==="laeuft"||m.id===modul);
+  const artL=a=>(UNI_ARTEN.find(x=>x[0]===a)||UNI_ARTEN[0])[1];
+  const autoVon=()=>{ const m=mods.find(x=>x.id===modul); return m?`${artL(art)} ${m.n}`:artL(art); };
+  let autoTitel=!alt||alt.titel===autoVon();
+  modal(`<h3>${alt?esc(alt.titel):"Klausur oder Abgabe"}</h3>
     <label>Art</label>
-    <div class="chips" id="unArt">${UNI_ARTEN.map(([id,l])=>`<button class="chip${id===art?" on":""}" data-ua="${id}">${l}</button>`).join("")}</div>
-    <label>Modul (optional)</label>
-    <div class="chips" id="unMod">${mods.map(m=>`<button class="chip" data-um="${m.id}" style="--kc:${STUDIUM_KAT[m.kat].c}">${esc(m.n)}</button>`).join("")}</div>
-    <label>Titel</label><input id="unTitel" placeholder="z. B. Klausur Technische Mechanik III">
+    <div class="chips" id="unArt">${UNI_ARTEN.map(([a,l])=>`<button class="chip${a===art?" on":""}" data-ua="${a}">${l}</button>`).join("")}</div>
+    ${mods.length?`<label>Modul (optional)</label>
+    <div class="chips" id="unMod">${mods.map(m=>`<button class="chip${m.id===modul?" on":""}" data-um="${m.id}" style="--kc:${STUDIUM_KAT[m.kat].c}">${esc(m.n)}</button>`).join("")}</div>`:""}
+    <label>Titel</label><input id="unTitel" value="${alt?esc(alt.titel):""}" placeholder="${esc(autoVon())}" autocomplete="off">
     <div style="display:flex;gap:10px">
-      <div style="flex:1"><label>Datum</label><input type="date" id="unDatum" value="${today()}"></div>
-      <div style="flex:1"><label>Uhrzeit (optional)</label><input type="time" id="unZeit"></div></div>
-    <div class="mo-act"><button class="b" onclick="closeModal()">Abbrechen</button>
-      <button class="b b-1" id="unOk">Eintragen</button></div>`);
-  let modul=null, autoTitel=true;
-  const ti=document.getElementById("unTitel");
+      <div style="flex:1"><label>Datum</label><input type="date" id="unDatum" value="${alt?alt.datum:(datumVor||"")}"></div>
+      <div style="flex:1"><label>Uhrzeit (optional)</label><input type="time" id="unZeit" value="${alt&&alt.zeit?alt.zeit:""}"></div></div>
+    <div class="p-note" id="unWann" style="margin-top:8px;min-height:1.2em"></div>
+    <div class="mo-act">${alt?`<button class="b" id="unDel" style="margin-right:auto;color:var(--bad)">Löschen</button>`:""}
+      <button class="b" onclick="closeModal()">Abbrechen</button>
+      <button class="b b-1" id="unOk">${alt?"Speichern":"Eintragen"}</button></div>`);
+  const ti=document.getElementById("unTitel"), da=document.getElementById("unDatum"), wann=document.getElementById("unWann");
+  /* Sofort sehen, wann das ist — vertippte Jahre fallen so gleich auf */
+  const zeigWann=()=>{ const k=da.value; if(!k){ wann.textContent=""; return; } const n=tageBis(k);
+    wann.textContent=`${tagLang(k)} ${parsedk(k).getFullYear()} · ${countdownText(n)}${n<0?" — liegt in der Vergangenheit":""}`; };
+  da.addEventListener("input",zeigWann); da.addEventListener("change",zeigWann); zeigWann();
   ti.oninput=()=>{ autoTitel=!ti.value.trim(); };
-  const titelSetzen=()=>{ if(!autoTitel) return;
-    const m=mods.find(x=>x.id===modul), a=(UNI_ARTEN.find(x=>x[0]===art)||UNI_ARTEN[0])[1];
-    ti.value=m?`${a} ${m.n}`:""; };
+  const titelSetzen=()=>{ ti.placeholder=autoVon(); if(autoTitel) ti.value=modul?autoVon():""; };
   document.querySelectorAll("[data-ua]").forEach(b=>b.onclick=()=>{ art=b.dataset.ua;
     document.querySelectorAll("[data-ua]").forEach(x=>x.classList.toggle("on",x===b)); titelSetzen(); });
   document.querySelectorAll("[data-um]").forEach(b=>b.onclick=()=>{
@@ -6376,12 +6386,18 @@ function terminModal(){
     document.querySelectorAll("[data-um]").forEach(x=>x.classList.toggle("on",x.dataset.um===modul));
     titelSetzen(); });
   document.getElementById("unOk").onclick=()=>{
-    const titel=ti.value.trim(), datum=document.getElementById("unDatum").value;
-    if(!titel||!datum){ toast("Titel und Datum angeben","x"); return; }
+    const datum=da.value, titel=ti.value.trim()||autoVon();
+    if(!datum){ toast("Wann ist es? Datum fehlt","x"); da.focus(); return; }
+    const neu={titel,datum,art,modul,zeit:document.getElementById("unZeit").value||null};
     S.uniTermine=S.uniTermine||[];
-    S.uniTermine.push({id:uid(),titel,datum,art,modul,zeit:document.getElementById("unZeit").value||null});
-    save(); closeModal(); toast("Termin eingetragen"); R.uni();
+    if(alt) Object.assign(alt,neu); else S.uniTermine.push({id:uid(),...neu});
+    save(); closeModal();
+    toast(`${artL(art)} ${alt?"gespeichert":"eingetragen"} — ${countdownText(tageBis(datum))}`,"check");
+    kjTag=datum; R.uni(); kjZeige(datum);
+    document.querySelector("#v-uni .kj")?.scrollIntoView({block:"nearest",behavior:"smooth"});
   };
+  document.getElementById("unDel")?.addEventListener("click",()=>{
+    S.uniTermine=S.uniTermine.filter(x=>x.id!==alt.id); save(); closeModal(); toast("Gelöscht"); R.uni(); });
 }
 
 /* ============================================================

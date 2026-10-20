@@ -185,6 +185,20 @@ input:focus,select:focus,textarea:focus{ border-color:var(--sec-text); box-shado
 .a-meta .tag .ic{ width:13px; height:13px; }
 .notiz-vor{ font-style:italic; color:var(--tinte-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
 .a-meta{ min-width:0; }
+.a-anh{ flex:0 0 auto; align-self:center; display:inline-flex; align-items:center; gap:3px; height:28px; padding:0 9px; border-radius:999px;
+  background:var(--weiss); color:var(--wein); font-size:12px; font-weight:700; box-shadow:0 0 0 1.5px color-mix(in srgb, var(--wein) 30%, transparent) inset; }
+.a-anh .ic{ width:14px; height:14px; }
+.u-neu{ display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.u-pfeil{ color:var(--leise); transform:rotate(90deg); width:18px; margin-left:6px; }
+.h2-mod{ display:inline-block; vertical-align:middle; font-family:var(--sans); font-size:14px; font-weight:700; padding:4px 12px; border-radius:999px; background:var(--kc); color:var(--ki); }
+.u-mini{ display:flex; flex-direction:column; gap:2px; }
+.u-mini-z{ display:flex; align-items:center; gap:10px; padding:7px 4px; text-align:left; border-bottom:1px solid color-mix(in srgb, var(--rose) 25%, transparent); min-width:0; }
+.u-mini-z:last-child{ border-bottom:0; }
+.u-mini-z > i{ width:10px; height:10px; border-radius:50%; flex:0 0 auto; }
+.u-mini-t{ flex:1; min-width:0; font-size:14px; color:var(--tinte-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.u-mini-t b{ color:var(--tinte); font-weight:650; }
+.u-mini-c{ display:inline-flex; align-items:center; gap:2px; font-size:12px; font-weight:700; color:var(--wein); }
+.u-mini-c .ic{ width:13px; height:13px; }
 .leer-linien{ min-height:96px; pointer-events:none; }
 /* Termine: Datumsblock, Titel, Countdown, Haken */
 .tr-gruppe{ margin-top:14px; }
@@ -547,7 +561,7 @@ const MON_THEMEN=[
   {c:P.Wein,   t:"#8e2c48",a:P.Babyblau,b:P.Puder},   /* Nov */
   {c:P.Altrosa,t:"#9a4c4f",a:P.Oliv,  b:P.Babyblau},  /* Dez */
 ];
-const leer=()=>({v:3,name:"",sem:{start:"",ende:""},h0:7,h1:22,module:[],fix:[],woche:{},aus:{},ganz:[],todos:[],termine:[],geschenke:[],monNotiz:{},korr:[],upd:0});
+const leer=()=>({uniArten:[],v:3,name:"",sem:{start:"",ende:""},h0:7,h1:22,module:[],fix:[],woche:{},aus:{},ganz:[],todos:[],termine:[],geschenke:[],monNotiz:{},korr:[],upd:0});
 let S=leer();
 /* Einmalige Ergänzungen: jede läuft genau einmal (Marke in S.korr) und kommt
    nach dem Löschen nicht wieder. Feste ids verhindern Doppelte beim Abgleich. */
@@ -742,6 +756,8 @@ const IC={
   flagge:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
   kuchen:'<path d="M4 20h16v-7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2zM4 15c2 1.5 4 1.5 6 0s4-1.5 6 0 3 1 4 .5M12 11V7M12 4.5v.5"/>',
   edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  clip:'<path d="M20.5 11.5l-8.2 8.2a5 5 0 0 1-7-7l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.5 8.5a1.8 1.8 0 0 1-2.6-2.6l7.8-7.8"/>',
+  datei:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
 };
 const ic=(n,k="")=>`<svg class="ic ${k}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]||""}</svg>`;
 let SEITE="heute";
@@ -785,6 +801,16 @@ const kopf=(titel,unter,rechts,lang)=>`<header class="kopf">${rechts?`<div class
    Heute
    ============================================================ */
 function gruss(){ const h=new Date().getHours(); return h<5?"Gute Nacht":h<11?"Guten Morgen":h<17?"Hallo":h<22?"Guten Abend":"Gute Nacht"; }
+/* Heute: kurze Erinnerung an offene Uni-Aufgaben, Details auf der Uni-Seite */
+function uniMini(){
+  const l=S.todos.filter(t=>istUni(t)&&!t.done).sort(aufSort); if(!l.length) return "";
+  return `<div class="kasten">
+    <div class="k-kopf"><h3 class="lab" style="--kc:#8e2c48">uni-aufgaben:</h3><button class="btn klein ghost" data-go="uni">Uni ${ic("rechts")}</button></div>
+    <div class="u-mini">${l.slice(0,5).map(t=>{ const m=t.modul&&modVon(t.modul), n=(t.dateien||[]).length;
+      return `<button class="u-mini-z" data-act="aEdit" data-id="${t.id}"><i style="background:${m?m.farbe:P.Sand}"></i>
+        <span class="u-mini-t"><b>${esc(uniTitel(t))}</b>${m?` ${esc(m.kurz||m.name)}`:""}</span>${alterChip(t)}${n?`<span class="u-mini-c">${ic("clip")}${n}</span>`:""}</button>`; }).join("")}
+      ${l.length>5?`<div class="hinweis" style="padding:4px 2px 0">und ${l.length-5} weitere</div>`:""}</div></div>`;
+}
 function pilleHtml(x){ return `<button class="pille" style="${kv(x.c)}" ${ganzAttr(x)}>${ic(ganzIcon(x))}${esc(x.titel)}</button>`; }
 function ablaufHtml(l,k,jetzt){
   const mk=mkVon(pk(k));
@@ -843,6 +869,7 @@ function vHeute(){
           <button class="btn rund" data-act="schnellA" aria-label="Hinzufügen" style="background:var(--oliv);color:var(--puder);box-shadow:none">${ic("plus")}</button></div>
         ${aufg.map(aZeile).join("")}
       </div>
+      ${uniMini()}
       ${fristen.length?`<div class="karte"><div class="k-kopf"><h3 class="lab" style="--kc:#8f6200">fristen:</h3><button class="btn klein ghost" data-go="uni">Uni ${ic("rechts")}</button></div>
         ${fristen.slice(0,5).map(terZeile).join("")}</div>`:""}
       ${geb.length?`<div class="kasten"><div class="k-kopf"><h3 class="lab" style="--kc:${P.Wein}">geburtstage:</h3><button class="btn klein ghost" data-go="geschenke">Geschenke ${ic("rechts")}</button></div>
@@ -1063,7 +1090,9 @@ function eintragBlatt(opt){
    Notiz und Dateien vom eigenen Gerät.
    ============================================================ */
 const istUni=t=>t.bereich==="uni"||(!!t.modul&&t.bereich!=="alltag");
-const UNI_ARTEN=["Nachbereitung","Vorbereitung","Übungsblatt","Lernen","Sonstiges"];
+const UNI_ARTEN=["Nachbereitung","Vorbereitung","Übungsblatt","Lernen"];
+const uniArten=()=>[...UNI_ARTEN,...(S.uniArten||[]).filter(a=>!UNI_ARTEN.includes(a)&&a!=="Sonstiges")];
+const uniTitel=t=>t.text||t.art||"Uni-Aufgabe";
 const alterTage=t=>Math.max(0,tagDiff(dk(new Date(t.t||Date.now())),heute()));
 function alterChip(t){
   if(t.done) return ""; const n=alterTage(t);
@@ -1076,15 +1105,15 @@ const alltagListe=()=>S.todos.filter(t=>!istUni(t)&&(!t.done||heuteErledigt(t)))
 const groesse=b=>b<1048576?`${Math.max(1,Math.round(b/1024))} KB`:`${(b/1048576).toFixed(1).replace(".",",")} MB`;
 function aZeile(t){
   const m=t.modul&&modVon(t.modul), c=m?m.farbe:P.Oliv, n=(t.dateien||[]).length, uni=istUni(t);
-  const meta=[uni&&t.art?`<span>${esc(t.art)}</span>`:"",
+  const meta=[uni&&t.art&&t.text?`<span>${esc(t.art)}</span>`:"",
     uni&&!m?"":m&&uni?"":m?`<span class="tag" style="--kc:${m.farbe}"><i></i>${esc(m.kurz||m.name)}</span>`:"",
     t.due&&!t.done?`<span class="${t.due<heute()?"rot":""}">bis ${t.due===heute()?"heute":kurzD(pk(t.due))}</span>`:"",
-    n?`<span class="tag">${ic("clip")}${n}</span>`:"",
     t.notiz?`<span class="notiz-vor">${esc(t.notiz.split("\n")[0].slice(0,70))}</span>`:""].filter(Boolean).join("");
   return `<div class="a-z${t.done?" fertig":""}" style="${kv(c)}">
     <button class="a-box" data-act="aHaken" data-id="${t.id}" aria-label="${t.done?"Wieder öffnen":"Erledigt"}">${ic("check")}</button>
-    <button class="a-t" data-act="aEdit" data-id="${t.id}"><span class="a-zeile"><span>${esc(t.text)}</span>${alterChip(t)}</span>
-      ${meta?`<span class="a-meta">${meta}</span>`:""}</button></div>`;
+    <button class="a-t" data-act="aEdit" data-id="${t.id}"><span class="a-zeile"><span>${esc(uni?uniTitel(t):t.text)}</span>${alterChip(t)}</span>
+      ${meta?`<span class="a-meta">${meta}</span>`:""}</button>
+    ${n?`<button class="a-anh" data-act="aEdit" data-id="${t.id}" aria-label="${n} ${n===1?"Datei":"Dateien"}">${ic("clip")}<span>${n}</span></button>`:""}</div>`;
 }
 function aufgabeNeu(text,extra){ text=(text||"").trim(); if(!text) return false;
   S.todos.push(Object.assign({id:uid(),text,done:false,t:Date.now()},extra||{})); sichern(); return true; }
@@ -1108,16 +1137,23 @@ async function oeffneDatei(id){
   if(!/^(image\/|application\/pdf|text\/)/.test(d.typ||"")) a.download=d.name;
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),60000);
 }
-function aufgabeBlatt(id){
-  const t=S.todos.find(x=>x.id===id); if(!t) return;
-  const uni=istUni(t);
+/* Neue Uni-Aufgabe: Art und Modul sind schon gewählt, das Blatt öffnet sich direkt.
+   Erst „Anlegen“ legt sie an; wer abbricht, verwirft auch angehängte Dateien. */
+function uniAufgabeNeu(art,modul){
+  aufgabeBlatt(null,{id:uid(),text:"",bereich:"uni",art,modul:modul||null,done:false,t:Date.now(),dateien:[]});
+}
+function aufgabeBlatt(id,entwurf){
+  const t=entwurf||S.todos.find(x=>x.id===id); if(!t) return;
+  const uni=istUni(t), neu=!!entwurf;
+  if(neu) beimZu=async()=>{ for(const d of (t.dateien||[])) await DB.del(d.id).catch(()=>{}); };
   const e={text:t.text, modul:t.modul||null, art:t.art||"Nachbereitung", due:t.due||"", notiz:t.notiz||""};
   const zeichne=()=>{
     const ds=t.dateien||[];
-    blatt(`<h2>${uni?"Uni-Aufgabe":"Aufgabe"}</h2>
-      <div class="feld"><label for="aT">Was</label><input id="aT" value="${esc(e.text)}" autocomplete="off"></div>
+    const artenHier=[...new Set([...uniArten(),e.art,"Sonstiges"])];
+    blatt(`<h2>${uni?(neu?`${esc(e.art)}${e.modul&&modVon(e.modul)?` <span class="h2-mod" style="${kv(modVon(e.modul).farbe)}">${esc(modVon(e.modul).kurz||modVon(e.modul).name)}</span>`:""}`:"Uni-Aufgabe"):"Aufgabe"}</h2>
+      <div class="feld"><label for="aT">${uni?"Titel (optional)":"Was"}</label><input id="aT" value="${esc(e.text)}" autocomplete="off"></div>
       ${uni?`
-      <div class="feld"><label>Art</label><div class="wahl">${UNI_ARTEN.map(a=>`<button class="chip${e.art===a?" on":""}" data-uart="${a}" style="${kv(P.Pflaume)}">${a}</button>`).join("")}</div></div>
+      <div class="feld"><label>Art</label><div class="wahl">${artenHier.map(a=>`<button class="chip${e.art===a?" on":""}" data-uart="${esc(a)}" style="${kv(P.Pflaume)}">${esc(a)}</button>`).join("")}</div></div>
       ${S.module.length?`<div class="feld"><label>Modul</label><div class="wahl">${S.module.map(m=>`<button class="chip${e.modul===m.id?" on":""}" data-m="${m.id}" style="${kv(m.farbe)}"><i class="pkt"></i>${esc(m.kurz||m.name)}</button>`).join("")}</div></div>`:""}
       <div class="feld"><label for="aD">Bis wann (optional)</label><input type="date" id="aD" value="${e.due}"></div>
       <div class="feld"><h3 class="lab" style="--kc:${P.Wein}">notizen:</h3><textarea class="liniert" id="aN" rows="4" aria-label="Notizen">${esc(e.notiz)}</textarea></div>
@@ -1126,7 +1162,7 @@ function aufgabeBlatt(id){
           <button class="datei-n" data-dauf="${d.id}"><b>${esc(d.name)}</b><span>${groesse(d.groesse||0)}</span></button>
           <button class="btn rund klein ghost" data-dweg="${d.id}" aria-label="${esc(d.name)} entfernen">${ic("x")}</button></div>`).join("")}</div>`:""}
         <label class="btn klein datei-neu">${ic("clip")}Datei hinzufügen<input type="file" id="aF" multiple></label></div>`:""}
-      <div class="blatt-akt"><button class="btn gefahr links" id="aDel">Löschen</button><button class="btn" data-act="zu">Abbrechen</button><button class="btn prim" id="aOk">Speichern</button></div>`);
+      <div class="blatt-akt">${neu?"":`<button class="btn gefahr links" id="aDel">Löschen</button>`}<button class="btn" data-act="zu">Abbrechen</button><button class="btn prim" id="aOk">${neu?"Anlegen":"Speichern"}</button></div>`);
     const q=s=>document.getElementById(s);
     const merke=()=>{ e.text=q("aT").value; if(uni){ e.due=q("aD").value; e.notiz=q("aN").value; } };
     document.querySelectorAll("#blatt [data-uart]").forEach(c=>c.onclick=()=>{ merke(); e.art=c.dataset.uart; zeichne(); });
@@ -1144,10 +1180,11 @@ function aufgabeBlatt(id){
       }
       try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(_){}
       sichern(); zeichne(); });
-    q("aOk").onclick=()=>{ merke(); if(!e.text.trim()){ toast("Was ist zu tun?"); return; }
-      Object.assign(t,{text:e.text.trim()}, uni?{modul:e.modul,art:e.art,due:e.due||null,notiz:e.notiz.trim(),bereich:"uni"}:{}); sichern(); zu(); zeige(); };
-    q("aDel").onclick=async()=>{ for(const d of (t.dateien||[])) await DB.del(d.id).catch(()=>{});
-      S.todos=S.todos.filter(x=>x.id!==id); sichern(); zu(); toast("Gelöscht"); zeige(); };
+    q("aOk").onclick=()=>{ merke(); if(!uni&&!e.text.trim()){ toast("Was ist zu tun?"); return; }
+      Object.assign(t,{text:e.text.trim()}, uni?{modul:e.modul,art:e.art,due:e.due||null,notiz:e.notiz.trim(),bereich:"uni"}:{});
+      if(neu){ S.todos.push(t); beimZu=null; } sichern(); zu(); zeige(); if(neu) toast(`${uniTitel(t)} angelegt`); };
+    q("aDel")?.addEventListener("click",async()=>{ for(const d of (t.dateien||[])) await DB.del(d.id).catch(()=>{});
+      S.todos=S.todos.filter(x=>x.id!==t.id); sichern(); zu(); toast("Gelöscht"); zeige(); });
   };
   zeichne();
 }
@@ -1171,7 +1208,7 @@ function terZeile(t){
     <button class="a-box" data-act="terHaken" data-id="${t.id}" aria-label="${t.erledigt?"Wieder öffnen":"Erledigt"}" style="--kc:${aufPapier(a[2])};--ki:#fffdf9">${ic("check")}</button>
   </div>`;
 }
-let uniFilter="alle", uniArt="Nachbereitung", uniMod=null;
+let uniFilter="alle", uniArt="Nachbereitung";
 function vUni(){
   const sem=semInfo();
   const passt=t=>uniFilter==="alle"||(uniFilter==="klausur"?t.art==="klausur":t.art!=="klausur");
@@ -1198,11 +1235,13 @@ function vUni(){
     </div>
     <div class="kasten uni-auf">
       <h3 class="lab" style="--kc:#8e2c48;margin-bottom:10px">uni-aufgaben:</h3>
-      <div class="neu-a"><input id="neuU" placeholder="Neue Uni-Aufgabe" autocomplete="off" enterkeyhint="done" aria-label="Neue Uni-Aufgabe">
-        <button class="btn rund prim" data-act="neuU" aria-label="Hinzufügen" style="background:var(--plum);color:var(--butter)">${ic("plus")}</button></div>
-      <div class="neu-opt">
-        ${UNI_ARTEN.map(a=>`<button class="chip${uniArt===a?" on":""}" data-unart="${a}" style="${kv(P.Pflaume)}">${a}</button>`).join("")}
-        ${S.module.map(m=>`<button class="chip${uniMod===m.id?" on":""}" data-unmod="${m.id}" style="${kv(m.farbe)}"><i class="pkt"></i>${esc(m.kurz||m.name)}</button>`).join("")}
+      <div class="u-neu">
+        <div class="wahl" role="radiogroup" aria-label="Art">${uniArten().map(a=>`<button class="chip${uniArt===a?" on":""}" data-unart="${esc(a)}" style="${kv(P.Pflaume)}" role="radio" aria-checked="${uniArt===a}">${esc(a)}</button>`).join("")}
+          <button class="chip" data-unartneu aria-label="Eigene Art hinzufügen">${ic("plus")}</button>
+          <button class="chip${uniArt==="Sonstiges"?" on":""}" data-unart="Sonstiges" style="${kv(P.Pflaume)}" role="radio" aria-checked="${uniArt==="Sonstiges"}">Sonstiges</button></div>
+        <div class="u-pfeil">${ic("rechts")}</div>
+        <div class="wahl">${S.module.map(m=>`<button class="chip" data-unmod="${m.id}" style="${kv(m.farbe)}"><i class="pkt"></i>${esc(m.kurz||m.name)}</button>`).join("")}
+          <button class="chip" data-unmod="">ohne Modul</button></div>
       </div>
       ${ag.length?ag.map(([m,l])=>`<div class="a-gruppe"><div class="lab" style="--kc:${m?aufPapier(m.farbe):"#5f454a"}">${m?esc(m.name):"ohne modul"}<small>${l.length}</small></div>${l.map(aZeile).join("")}</div>`).join("")
         :`<div class="leer">Alles nachbereitet.</div>`}
@@ -1339,6 +1378,12 @@ function personBlatt(id){
   q("pDel")?.addEventListener("click",()=>{ if(!confirm(`${p.name} mit allen Notizen und Ideen löschen?`)) return;
     S.geschenke=S.geschenke.filter(x=>x.id!==p.id); sichern(); zu(); toast("Gelöscht"); zeige(); });
 }
+function uniArtSetzen(inp){
+  if(inp.dataset.fertig) return; inp.dataset.fertig="1";
+  const v=inp.value.trim();
+  if(v){ if(!uniArten().includes(v)&&v!=="Sonstiges"){ S.uniArten=[...(S.uniArten||[]),v]; sichern(); } uniArt=v; }
+  zeige();
+}
 function anlassSetzen(inp){
   if(inp.dataset.fertig) return; inp.dataset.fertig="1";
   const v=inp.value.trim().replace(/\|/g,"/"), pid=inp.dataset.ganlin;
@@ -1424,7 +1469,8 @@ function syncBlatt(){
    ============================================================ */
 function blatt(html){ const b=document.getElementById("blatt"); b.innerHTML=html; document.getElementById("ov").classList.add("on");
   setTimeout(()=>{ const f=b.querySelector("input:not([type=date]):not([type=time])"); if(f&&!f.value&&matchMedia("(pointer:fine)").matches) f.focus(); },60); }
-function zu(){ document.getElementById("ov").classList.remove("on"); }
+let beimZu=null;
+function zu(){ document.getElementById("ov").classList.remove("on"); if(beimZu){ const f=beimZu; beimZu=null; f(); } }
 let toastT=null;
 function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("on"),2200); }
 const behalte=(id,fn)=>{ const v=document.getElementById(id)?.value; fn(); if(v){ const n=document.getElementById(id); if(n) n.value=v; } };
@@ -1457,8 +1503,12 @@ document.addEventListener("click",e=>{
   if(mod){ const alt=kalModus; kalModus=mod.dataset.modus; try{ localStorage.setItem(MODUS_KEY,kalModus); }catch(_){}
     if(kalModus==="monat"&&alt!=="monat") monWahl=kalDatum; if(alt==="monat"&&kalModus!=="monat") kalDatum=monWahl; zeige(); return; }
   const uf=e.target.closest("[data-ufilter]"); if(uf){ uniFilter=uf.dataset.ufilter; zeige(); return; }
-  const unart=e.target.closest("[data-unart]"); if(unart){ uniArt=unart.dataset.unart; behalte("neuU",zeige); return; }
-  const unmod=e.target.closest("[data-unmod]"); if(unmod){ uniMod=uniMod===unmod.dataset.unmod?null:unmod.dataset.unmod; behalte("neuU",zeige); return; }
+  const unart=e.target.closest("[data-unart]"); if(unart){ uniArt=unart.dataset.unart; unart.parentElement.querySelectorAll("[data-unart]").forEach(c=>{ c.classList.toggle("on",c===unart); c.setAttribute("aria-checked",c===unart); }); return; }
+  const unmod=e.target.closest("[data-unmod]"); if(unmod){ uniAufgabeNeu(uniArt,unmod.dataset.unmod||null); return; }
+  const unneu=e.target.closest("[data-unartneu]");
+  if(unneu){ const inp=Object.assign(document.createElement("input"),{className:"anl-in",maxLength:24,autocomplete:"off"});
+    inp.dataset.unartin="1"; inp.setAttribute("aria-label","Eigene Art"); inp.enterKeyHint="done";
+    unneu.replaceWith(inp); inp.focus(); inp.addEventListener("blur",()=>uniArtSetzen(inp)); return; }
   const gst=e.target.closest("[data-gst]");
   if(gst){ const [pid,iid]=gst.dataset.gst.split("|"), p=S.geschenke.find(x=>x.id===pid), i=p&&p.ideen.find(x=>x.id===iid); if(!i) return;
     i.status=({idee:"gekauft",gekauft:"verschenkt",verschenkt:"idee"})[i.status]; i.jahr=i.status==="verschenkt"?new Date().getFullYear():null; sichern(); zeige();
@@ -1486,7 +1536,6 @@ document.addEventListener("click",e=>{
     case "kalVor": kalSchritt(1); break;
     case "kalHeute": { const alt=pk(kalDatum).getMonth(); kalDatum=heute(); monWahl=heute(); zeige(null,pk(kalDatum).getMonth()!==alt); break; }
     case "schnellA": { const i=document.getElementById("schnellA"); if(aufgabeNeu(i.value,{bereich:"alltag"})){ zeige(); document.getElementById("schnellA")?.focus(); } break; }
-    case "neuU": { const i=document.getElementById("neuU"); if(aufgabeNeu(i.value,{bereich:"uni",art:uniArt,modul:uniMod})){ zeige(); document.getElementById("neuU")?.focus(); } break; }
     case "aHaken": { const t=S.todos.find(x=>x.id===id); if(!t) break; t.done=!t.done; t.doneAt=t.done?Date.now():null; sichern(); zeige(); if(t.done) toast("Erledigt"); break; }
     case "aEdit": aufgabeBlatt(id); break;
     case "terHaken": { const t=S.termine.find(x=>x.id===id); if(!t) break; t.erledigt=!t.erledigt; sichern(); zeige(); if(t.erledigt) toast(t.art==="klausur"?"Geschrieben. Stark!":"Abgegeben. Stark!"); break; }
@@ -1505,7 +1554,7 @@ document.addEventListener("change",e=>{
 document.addEventListener("keydown",e=>{
   if(e.key==="Escape") zu();
   if(e.key!=="Enter"||e.isComposing) return;
-  if(e.target.id==="neuU"){ e.preventDefault(); document.querySelector('[data-act="neuU"]').click(); }
+  if(e.target.dataset&&e.target.dataset.unartin){ e.preventDefault(); uniArtSetzen(e.target); }
   if(e.target.dataset&&e.target.dataset.ganlin){ e.preventDefault(); anlassSetzen(e.target); }
   if(e.target.id==="schnellA"){ e.preventDefault(); document.querySelector('[data-act="schnellA"]').click(); }
   if(e.target.dataset&&e.target.dataset.gneu){ e.preventDefault(); ideeNeu(e.target.dataset.gneu); }

@@ -370,14 +370,20 @@ details.fertig-liste[open] summary::before{ content:"- "; }
 .schalter.an .sw::after{ transform:translateX(18px); }
 .blatt-akt{ display:flex; gap:8px; justify-content:flex-end; margin-top:22px; flex-wrap:wrap; }
 .blatt-akt .links{ margin-right:auto; }
-.farben{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; max-width:340px; }
-.farbe{ position:relative; aspect-ratio:1; border-radius:50%; background:var(--kc); color:var(--ki); font-size:11px; font-weight:750; display:grid; place-items:center;
-  box-shadow:0 0 0 1.5px color-mix(in srgb, var(--tinte) 12%, transparent) inset; transition:transform .16s var(--ez); }
+.farb-kopf{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.farb-opt{ position:relative; display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 13px 0 6px; border-radius:999px; font-size:13px; font-weight:600;
+  background:var(--weiss); color:var(--tinte-2); box-shadow:0 0 0 1.5px var(--linie-2) inset; cursor:pointer; transition:transform .16s var(--ez); }
+.farb-opt:active{ transform:scale(.97); }
+.farb-opt i{ width:22px; height:22px; border-radius:50%; background:var(--kc); box-shadow:0 0 0 1px color-mix(in srgb, var(--tinte) 12%, transparent) inset; }
+.farb-opt.on{ box-shadow:0 0 0 2px var(--tinte) inset; color:var(--tinte); }
+.farb-opt input[type=color]{ position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; padding:0; border:0; }
+.farben{ display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); grid-auto-flow:column; grid-template-rows:repeat(4,auto); gap:7px; max-width:420px; }
+.farbe{ position:relative; aspect-ratio:1; border-radius:50%; background:var(--kc); color:var(--ki); display:grid; place-items:center;
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--tinte) 12%, transparent) inset; transition:transform .16s var(--ez); }
 .farbe:active{ transform:scale(.9); }
 .farbe.on{ box-shadow:0 0 0 2.5px var(--papier), 0 0 0 4.5px var(--tinte); }
 .farbe.on::after{ content:""; width:8px; height:8px; border-radius:50%; background:var(--ki); }
-.farbe.auto.on::after{ display:none; }
-.farb-name{ font-size:12.5px; color:var(--leise); margin-top:8px; }
+.farb-name{ font-size:12.5px; color:var(--leise); margin-top:10px; }
 .hinweis{ font-size:13px; color:var(--tinte-2); line-height:1.55; }
 
 .toast{ position:fixed; left:50%; bottom:28px; transform:translate(-50%,20px); background:var(--plum); color:var(--butter); padding:12px 20px; border-radius:999px;
@@ -474,29 +480,34 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
    Die Palette stammt aus der Vorlage (Pflaume, Altrosa, Butter,
    Oliv) plus Verwandte. Jede Farbe kennt ihre Kontrastschrift.
    ============================================================ */
-const PAL=[
-  {c:"#61122b", ki:"#ffd983", n:"Pflaume"},
-  {c:"#8e2c48", ki:"#ffe3e8", n:"Wein"},
-  {c:"#b46a6a", ki:"#2e0712", n:"Altrosa"},
-  {c:"#e9a5a5", ki:"#61122b", n:"Blush"},
-  {c:"#f4cfd6", ki:"#61122b", n:"Puder"},
-  {c:"#a9cbe8", ki:"#61122b", n:"Babyblau"},
-  {c:"#ffd983", ki:"#61122b", n:"Butter"},
-  {c:"#d6a33a", ki:"#333700", n:"Senf"},
-  {c:"#333700", ki:"#f4cfd6", n:"Oliv"},
-  {c:"#6f6c1e", ki:"#ffe9b0", n:"Moos"},
-  {c:"#a7a77a", ki:"#333700", n:"Salbei"},
-  {c:"#5b3a29", ki:"#f4cfd6", n:"Kakao"},
-  {c:"#d8c3a5", ki:"#61122b", n:"Sand"},
+/* Neun Farbfamilien, jeweils von dunkel nach hell, alle gedämpft und warm
+   wie die Vorlage. Die Planerfarben (Pflaume, Altrosa, Butter, Oliv …)
+   stecken darin; ihre bewährte Kontrastschrift ist fest hinterlegt. */
+const FAMILIEN=[
+  ["Beere",     [["#4a0d20","Brombeere"],["#61122b","Pflaume","#ffd983"],["#8e2c48","Wein","#ffe3e8"],["#b84f6f","Himbeere"]]],
+  ["Rosé",      [["#9a4c4f","Rosenholz"],["#b46a6a","Altrosa","#2e0712"],["#e9a5a5","Blush","#61122b"],["#f4cfd6","Puder","#61122b"]]],
+  ["Koralle",   [["#8c3b24","Rost"],["#b4573a","Terrakotta"],["#e39a7e","Koralle"],["#f6d2c2","Pfirsich"]]],
+  ["Gelb",      [["#8f6200","Bernstein"],["#d6a33a","Senf","#333700"],["#ffd983","Butter","#61122b"],["#fff0c4","Vanille"]]],
+  ["Oliv",      [["#333700","Oliv","#f4cfd6"],["#6f6c1e","Moos","#ffe9b0"],["#a7a77a","Salbei","#333700"],["#dcdcbc","Pistazie"]]],
+  ["Petrol",    [["#234a44","Tanne"],["#4f7d73","Petrol"],["#8fb5a8","Eukalyptus"],["#d3e6dd","Minze"]]],
+  ["Blau",      [["#2f4f73","Nachtblau"],["#5f87ad","Taubenblau"],["#a9cbe8","Babyblau","#61122b"],["#dcebf7","Himmel"]]],
+  ["Flieder",   [["#4b2f5e","Aubergine"],["#7d5f94","Flieder"],["#b9a3cf","Lavendel"],["#e6dcf0","Lila Hauch"]]],
+  ["Erde",      [["#5b3a29","Kakao","#f4cfd6"],["#8c6a4f","Karamell"],["#d8c3a5","Sand","#61122b"],["#f1e6d6","Leinen"]]],
 ];
+const lum=c=>{ const n=parseInt(String(c).slice(1),16), lin=v=>{ v/=255; return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4); };
+  return .2126*lin(n>>16)+.7152*lin((n>>8)&255)+.0722*lin(n&255); };
+const kontrast=(a,b)=>{ const x=lum(a), y=lum(b); return (Math.max(x,y)+.05)/(Math.min(x,y)+.05); };
+/* Schrift für eine Farbe: am liebsten ein Ton aus derselben Familie, sonst Tinte oder Papier */
+const PAL=FAMILIEN.flatMap(([fam,toene])=>toene.map(([c,n,ki])=>{
+  if(!ki){ const kand=[toene[0][0],toene[3][0],"#2e0712","#fffdf9"].filter(x=>x!==c);
+    ki=kand.find(x=>kontrast(c,x)>=4.5&&(x===toene[0][0]||x===toene[3][0]))||kand.sort((a,b)=>kontrast(c,b)-kontrast(c,a))[0]; }
+  return {c,n,ki,fam}; }));
 const P=Object.fromEntries(PAL.map(p=>[p.n,p.c]));
-/* Kontrastschrift: aus der Palette, sonst über die Helligkeit */
+/* Kontrastschrift: aus der Palette, sonst über die Helligkeit (eigene Farben) */
 function inkVon(c){
   const p=PAL.find(x=>x.c.toLowerCase()===String(c).toLowerCase()); if(p) return p.ki;
-  const m=String(c).match(/^#?([0-9a-f]{6})$/i); if(!m) return "#fffdf9";
-  const n=parseInt(m[1],16), lin=v=>{ v/=255; return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4); };
-  const L=.2126*lin(n>>16)+.7152*lin((n>>8)&255)+.0722*lin(n&255);
-  return L>.42?"#61122b":"#fff4ec";
+  if(!/^#[0-9a-f]{6}$/i.test(String(c))) return "#fffdf9";
+  return kontrast(c,"#2e0712")>=kontrast(c,"#fffdf9")?"#2e0712":"#fffdf9";
 }
 const kv=c=>`--kc:${c};--ki:${inkVon(c)}`;
 
@@ -961,12 +972,22 @@ function kalNachher(){
 }
 
 /* Farbwahl: „Automatisch“ (Modul oder Art) oder eine der Planerfarben */
-function farbWahlHtml(gewaehlt,auto){
-  return `<div class="farben" id="fWahl">
-    <button class="farbe auto${!gewaehlt?" on":""}" data-farbe="" style="${kv(auto)}" aria-label="Automatisch">auto</button>
-    ${PAL.map(p=>`<button class="farbe${gewaehlt&&gewaehlt.toLowerCase()===p.c?" on":""}" data-farbe="${p.c}" style="--kc:${p.c};--ki:${p.ki}" aria-label="${p.n}" title="${p.n}"></button>`).join("")}
-  </div>
-  <div class="farb-name">${gewaehlt?(PAL.find(p=>p.c===gewaehlt.toLowerCase())||{n:"eigene Farbe"}).n:"Automatisch: Farbe der Art oder des Moduls"}</div>`;
+function farbWahlHtml(gewaehlt,auto,mitAuto=true){
+  const g=(gewaehlt||"").toLowerCase(), treffer=PAL.find(p=>p.c===g), eigen=g&&!treffer;
+  return `<div class="farb-kopf">
+      ${mitAuto?`<button class="farb-opt${!g?" on":""}" data-farbe="" style="${kv(auto)}"><i></i>Automatisch</button>`:""}
+      <label class="farb-opt${eigen?" on":""}" style="${eigen?kv(g):"--kc:conic-gradient(#61122b,#b4573a,#ffd983,#6f6c1e,#4f7d73,#a9cbe8,#7d5f94,#e9a5a5,#61122b);--ki:#2e0712"}">
+        <i></i>Eigene Farbe<input type="color" id="fEigen" value="${eigen?g:(treffer?g:auto)}" aria-label="Eigene Farbe wählen"></label>
+    </div>
+    <div class="farben" id="fWahl" role="listbox" aria-label="Farbpalette">
+      ${PAL.map(p=>`<button class="farbe${g===p.c?" on":""}" data-farbe="${p.c}" style="--kc:${p.c};--ki:${p.ki}" aria-label="${p.n}" title="${p.n}" role="option" aria-selected="${g===p.c}"></button>`).join("")}
+    </div>
+    <div class="farb-name">${!g?"Automatisch: Farbe der Art oder des Moduls":treffer?treffer.n:"Eigene Farbe"}</div>`;
+}
+/* Verdrahtung der Farbwahl in einem Blatt */
+function farbWahlWiring(setze){
+  document.querySelectorAll("#blatt [data-farbe]").forEach(c=>c.onclick=()=>setze(c.dataset.farbe||null));
+  const ei=document.getElementById("fEigen"); if(ei) ei.addEventListener("change",()=>setze(ei.value.toLowerCase()));
 }
 
 /* Eintrag anlegen / bearbeiten — mit Uhrzeit oder ganztägig, mit eigener Farbe */
@@ -1008,7 +1029,7 @@ function eintragBlatt(opt){
     document.querySelectorAll("#bKat [data-k]").forEach(c=>c.onclick=()=>{ merke(); e.kat=c.dataset.k; if(e.kat!=="uni"&&e.kat!=="lernen") e.modul=null; zeichne(); });
     document.querySelectorAll("#bMod [data-m]").forEach(c=>c.onclick=()=>{ merke(); e.modul=e.modul===c.dataset.m?null:c.dataset.m; zeichne(); });
     document.querySelectorAll("#blatt [data-art]").forEach(c=>c.onclick=()=>{ merke(); e.titel=e.titel===c.dataset.art?"":c.dataset.art; zeichne(); });
-    document.querySelectorAll("#fWahl [data-farbe]").forEach(c=>c.onclick=()=>{ merke(); e.farbe=c.dataset.farbe||null; zeichne(); });
+    farbWahlWiring(f=>{ merke(); e.farbe=f; zeichne(); });
     q("bGanz").onclick=()=>{ merke(); e.ganz=!e.ganz; if(e.bis<e.datum) e.bis=e.datum; zeichne(); };
     q("bWdh")?.addEventListener("click",()=>{ merke(); wdh=!wdh; zeichne(); });
     const entfernen=()=>{ if(b){ S.fix=S.fix.filter(x=>x.id!==b.id); Object.keys(S.woche).forEach(m=>S.woche[m]=S.woche[m].filter(x=>x.id!==b.id)); }
@@ -1189,11 +1210,11 @@ function modBlatt(id){
       <div class="feld"><label for="mN">Name</label><input id="mN" value="${esc(e.name)}" placeholder="z. B. Statistik I" autocomplete="off"></div>
       <div class="feld zeile"><div><label for="mK">Kürzel</label><input id="mK" value="${esc(e.kurz)}" placeholder="Stat I" maxlength="12" autocomplete="off"></div>
         <div><label for="mC">CP</label><input id="mC" value="${esc(e.cp??"")}" inputmode="numeric" placeholder="6" autocomplete="off"></div></div>
-      <div class="feld"><label>Farbe</label><div class="farben">${PAL.map(p=>`<button class="farbe${p.c===String(e.farbe).toLowerCase()?" on":""}" data-f="${p.c}" style="--kc:${p.c};--ki:${p.ki}" aria-label="${p.n}" title="${p.n}"></button>`).join("")}</div></div>
+      <div class="feld"><label>Farbe</label>${farbWahlHtml(e.farbe,e.farbe,false)}</div>
       <div class="feld"><label for="mNo">Notizen</label><textarea id="mNo" rows="3" placeholder="Dozent:in, Prüfungsform, Links">${esc(e.notiz||"")}</textarea></div>
       <div class="blatt-akt">${m?`<button class="btn gefahr links" id="mDel">Löschen</button>`:""}<button class="btn" data-act="zu">Abbrechen</button><button class="btn prim" id="mOk">${m?"Speichern":"Anlegen"}</button></div>`);
     const q=s=>document.getElementById(s), merke=()=>{ e.name=q("mN").value; e.kurz=q("mK").value; e.cp=q("mC").value; e.notiz=q("mNo").value; };
-    document.querySelectorAll("#blatt [data-f]").forEach(c=>c.onclick=()=>{ merke(); e.farbe=c.dataset.f; zeichne(); });
+    farbWahlWiring(f=>{ if(!f) return; merke(); e.farbe=f; zeichne(); });
     q("mOk").onclick=()=>{ merke(); if(!e.name.trim()){ toast("Name fehlt"); return; }
       const neu={id:m?m.id:uid(),name:e.name.trim(),kurz:e.kurz.trim(),cp:parseInt(e.cp,10)||null,farbe:e.farbe,notiz:e.notiz.trim()};
       if(m) Object.assign(m,neu); else S.module.push(neu); sichern(); zu(); toast(m?"Gespeichert":"Modul angelegt"); zeige(); };

@@ -189,6 +189,15 @@ input:focus,select:focus,textarea:focus{ border-color:var(--sec-text); box-shado
   background:var(--weiss); color:var(--wein); font-size:12px; font-weight:700; box-shadow:0 0 0 1.5px color-mix(in srgb, var(--wein) 30%, transparent) inset; }
 .a-anh .ic{ width:14px; height:14px; }
 .u-neu{ display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+.weg-chip{ padding:0 4px 0 13px; gap:4px; background:var(--kc); color:var(--ki); box-shadow:none; }
+.weg-chip .weg-n{ display:inline-flex; align-items:center; gap:7px; color:inherit; font:inherit; height:100%; }
+.weg-chip .weg-n i.pkt{ background:var(--ki); }
+.weg{ width:24px; height:24px; border-radius:50%; display:grid; place-items:center; color:inherit; background:color-mix(in srgb, var(--ki) 22%, transparent); position:relative; }
+.weg::after{ content:""; position:absolute; inset:-6px; }
+.weg .ic{ width:12px; height:12px; stroke-width:2.6; }
+.chip.fest{ opacity:.6; }
+.u-neu.bearb .wahl{ animation:wackel .3s var(--ez); }
+@keyframes wackel{ 30%{ transform:translateX(-2px); } 60%{ transform:translateX(2px); } }
 .u-pfeil{ color:var(--leise); transform:rotate(90deg); width:18px; margin-left:6px; }
 .h2-mod{ display:inline-block; vertical-align:middle; font-family:var(--sans); font-size:14px; font-weight:700; padding:4px 12px; border-radius:999px; background:var(--kc); color:var(--ki); }
 .u-mini{ display:flex; flex-direction:column; gap:2px; }
@@ -1141,7 +1150,17 @@ function eintragBlatt(opt){
    ============================================================ */
 const istUni=t=>t.bereich==="uni"||(!!t.modul&&t.bereich!=="alltag");
 const UNI_ARTEN=["Nachbereitung","Vorbereitung","Übungsblatt","Lernen"];
-const uniArten=()=>[...UNI_ARTEN,...(S.uniArten||[]).filter(a=>!UNI_ARTEN.includes(a)&&a!=="Sonstiges")];
+/* Die Arten gehören ihr: Standard plus eigene, alles entfernbar; „Sonstiges“ bleibt immer */
+function uniArten(){
+  if(!Array.isArray(S.uniArtenListe)) S.uniArtenListe=[...UNI_ARTEN,...(S.uniArten||[]).filter(a=>!UNI_ARTEN.includes(a))];
+  return S.uniArtenListe.filter(a=>a&&a!=="Sonstiges");
+}
+let uniBearbeiten=false;
+function modulLoeschen(m){
+  if(!confirm(`„${m.name}“ löschen? Termine und Aufgaben bleiben, verlieren aber die Zuordnung.`)) return false;
+  S.module=S.module.filter(x=>x.id!==m.id); [...S.fix,...Object.values(S.woche).flat(),...S.todos,...S.termine].forEach(x=>{ if(x.modul===m.id) x.modul=null; });
+  sichern(); toast(`${m.name} gelöscht`); return true;
+}
 const uniTitel=t=>t.text||t.art||"Uni-Aufgabe";
 const alterTage=t=>Math.max(0,tagDiff(dk(new Date(t.t||Date.now())),heute()));
 function alterChip(t){
@@ -1312,14 +1331,21 @@ function vUni(){
     </section>
   </div>
     <div class="kasten uni-auf">
-      <h3 class="lab" style="--kc:#8e2c48;margin-bottom:10px">uni-aufgaben:</h3>
-      <div class="u-neu">
-        <div class="wahl" role="radiogroup" aria-label="Art">${uniArten().map(a=>`<button class="chip${uniArt===a?" on":""}" data-unart="${esc(a)}" style="${kv(P.Pflaume)}" role="radio" aria-checked="${uniArt===a}">${esc(a)}</button>`).join("")}
-          <button class="chip" data-unartneu aria-label="Eigene Art hinzufügen">${ic("plus")}</button>
-          <button class="chip${uniArt==="Sonstiges"?" on":""}" data-unart="Sonstiges" style="${kv(P.Pflaume)}" role="radio" aria-checked="${uniArt==="Sonstiges"}">Sonstiges</button></div>
+      <div class="k-kopf"><h3 class="lab" style="--kc:#8e2c48">uni-aufgaben:</h3>
+        <button class="btn klein${uniBearbeiten?" prim":" ghost"}" data-act="uniBearb" ${uniBearbeiten?`style="background:var(--plum);color:var(--butter)"`:""}>${uniBearbeiten?`${ic("check")}fertig`:`${ic("edit")}bearbeiten`}</button></div>
+      <div class="u-neu${uniBearbeiten?" bearb":""}">
+        <div class="wahl" role="${uniBearbeiten?"group":"radiogroup"}" aria-label="Art">${uniArten().map(a=>uniBearbeiten
+            ?`<span class="chip weg-chip" style="${kv(P.Pflaume)}">${esc(a)}<button class="weg" data-uartweg="${esc(a)}" aria-label="${esc(a)} entfernen">${ic("x")}</button></span>`
+            :`<button class="chip${uniArt===a?" on":""}" data-unart="${esc(a)}" style="${kv(P.Pflaume)}" role="radio" aria-checked="${uniArt===a}">${esc(a)}</button>`).join("")}
+          <button class="chip" data-unartneu aria-label="Eigene Art hinzufügen">${ic("plus")}${uniBearbeiten?"Art":""}</button>
+          ${uniBearbeiten?`<span class="chip fest" title="bleibt immer">Sonstiges</span>`
+            :`<button class="chip${uniArt==="Sonstiges"?" on":""}" data-unart="Sonstiges" style="${kv(P.Pflaume)}" role="radio" aria-checked="${uniArt==="Sonstiges"}">Sonstiges</button>`}</div>
         <div class="u-pfeil">${ic("rechts")}</div>
-        <div class="wahl">${S.module.map(m=>`<button class="chip" data-unmod="${m.id}" style="${kv(m.farbe)}"><i class="pkt"></i>${esc(m.kurz||m.name)}</button>`).join("")}
-          <button class="chip" data-unmod="">ohne Modul</button></div>
+        <div class="wahl">${S.module.map(m=>uniBearbeiten
+            ?`<span class="chip weg-chip" style="${kv(m.farbe)}"><button class="weg-n" data-act="modEdit" data-id="${m.id}" aria-label="${esc(m.name)} bearbeiten"><i class="pkt"></i>${esc(m.kurz||m.name)}</button><button class="weg" data-umodweg="${m.id}" aria-label="${esc(m.name)} löschen">${ic("x")}</button></span>`
+            :`<button class="chip" data-unmod="${m.id}" style="${kv(m.farbe)}"><i class="pkt"></i>${esc(m.kurz||m.name)}</button>`).join("")}
+          ${uniBearbeiten?`<button class="chip" data-act="modNeu">${ic("plus")}Modul</button>`:`<button class="chip" data-unmod="">ohne Modul</button>`}</div>
+        ${uniBearbeiten?`<p class="hinweis">Tippe auf ein Modul, um Name und Farbe zu ändern.</p>`:""}
       </div>
       ${ag.length?ag.map(([m,l])=>`<div class="a-gruppe"><div class="lab" style="--kc:${m?aufPapier(m.farbe):"#5f454a"}">${m?esc(m.name):"ohne modul"}<small>${l.length}</small></div>${l.map(aZeile).join("")}</div>`).join("")
         :`<div class="leer">Alles nachbereitet.</div>`}
@@ -1343,9 +1369,7 @@ function modBlatt(id){
     q("mOk").onclick=()=>{ merke(); if(!e.name.trim()){ toast("Name fehlt"); return; }
       const neu={id:m?m.id:uid(),name:e.name.trim(),kurz:e.kurz.trim(),cp:parseInt(e.cp,10)||null,farbe:e.farbe,notiz:e.notiz.trim()};
       if(m) Object.assign(m,neu); else S.module.push(neu); sichern(); zu(); toast(m?"Gespeichert":"Modul angelegt"); zeige(); };
-    q("mDel")?.addEventListener("click",()=>{ if(!confirm(`„${m.name}“ löschen? Einträge bleiben, verlieren aber die Zuordnung.`)) return;
-      S.module=S.module.filter(x=>x.id!==m.id); [...S.fix,...Object.values(S.woche).flat(),...S.todos,...S.termine].forEach(x=>{ if(x.modul===m.id) x.modul=null; });
-      sichern(); zu(); toast("Gelöscht"); zeige(); });
+    q("mDel")?.addEventListener("click",()=>{ if(modulLoeschen(m)){ zu(); zeige(); } });
   };
   zeichne();
 }
@@ -1460,7 +1484,7 @@ function personBlatt(id){
 function uniArtSetzen(inp){
   if(inp.dataset.fertig) return; inp.dataset.fertig="1";
   const v=inp.value.trim();
-  if(v){ if(!uniArten().includes(v)&&v!=="Sonstiges"){ S.uniArten=[...(S.uniArten||[]),v]; sichern(); } uniArt=v; }
+  if(v){ if(!uniArten().includes(v)&&v!=="Sonstiges"){ S.uniArtenListe=[...uniArten(),v]; sichern(); } uniArt=v; }
   zeige();
 }
 function anlassSetzen(inp){
@@ -1584,6 +1608,11 @@ document.addEventListener("click",e=>{
   const ur=e.target.closest("[data-ureiter]"); if(ur){ uniReiter=ur.dataset.ureiter; zeige(); return; }
   const unart=e.target.closest("[data-unart]"); if(unart){ uniArt=unart.dataset.unart; unart.parentElement.querySelectorAll("[data-unart]").forEach(c=>{ c.classList.toggle("on",c===unart); c.setAttribute("aria-checked",c===unart); }); return; }
   const unmod=e.target.closest("[data-unmod]"); if(unmod){ uniAufgabeNeu(uniArt,unmod.dataset.unmod||null); return; }
+  const uweg=e.target.closest("[data-uartweg]");
+  if(uweg){ const a=uweg.dataset.uartweg; S.uniArtenListe=uniArten().filter(x=>x!==a); if(uniArt===a) uniArt=uniArten()[0]||"Sonstiges";
+    sichern(); toast(`„${a}“ entfernt`); zeige(); return; }
+  const mweg=e.target.closest("[data-umodweg]");
+  if(mweg){ const m=modVon(mweg.dataset.umodweg); if(m&&modulLoeschen(m)) zeige(); return; }
   const unneu=e.target.closest("[data-unartneu]");
   if(unneu){ const inp=Object.assign(document.createElement("input"),{className:"anl-in",maxLength:24,autocomplete:"off"});
     inp.dataset.unartin="1"; inp.setAttribute("aria-label","Eigene Art"); inp.enterKeyHint="done";
@@ -1619,6 +1648,7 @@ document.addEventListener("click",e=>{
     case "aEdit": aufgabeBlatt(id); break;
     case "terHaken": { const t=S.termine.find(x=>x.id===id); if(!t) break; t.erledigt=!t.erledigt; sichern(); zeige(); if(t.erledigt) toast(t.art==="klausur"?"Geschrieben. Stark!":"Abgegeben. Stark!"); break; }
     case "modNeu": modBlatt(null); break;
+    case "uniBearb": uniBearbeiten=!uniBearbeiten; zeige(); break;
     case "modEdit": modBlatt(id); break;
     case "terNeu": terBlatt(null,a.dataset.art); break;
     case "terEdit": terBlatt(id); break;

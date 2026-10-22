@@ -2418,7 +2418,7 @@ function bestRun(ok){
    zerfallende Stärke wie die Gewohnheiten. Beides ist einstellbar.
    ──────────────────────────────────────────────────────── */
 const ZIEL_STD={ sleepTage:4, studyTage:5, phoneTage:3, phoneMax:1,
-                  scoreMin:70, bettZiel:"23:00", aufZiel:"07:00" };
+                  scoreMin:70, bettZiel:"23:00", aufZiel:"08:00" };
 const ZG=()=>Object.assign({},ZIEL_STD,S.zielTage||{});
 
 /* Scroll-Bewertung. Vorher wurde durch das Ziel geteilt. Stand das Ziel
@@ -3265,7 +3265,7 @@ function settingsModal(){
     S.zielTage={ sleepTage:nz("zSleep"), studyTage:nz("zStudy"), phoneTage:nz("zPhone"),
                  scoreMin:clamp(parseInt(document.getElementById("gScore").value,10)||70,0,100),
                  bettZiel:document.getElementById("gBett").value||"23:00",
-                 aufZiel:document.getElementById("gAuf").value||"07:00",
+                 aufZiel:document.getElementById("gAuf").value||"08:00",
                  phoneMax:Math.max(0,parseFloat(document.getElementById("gPhone").value)||0) };
     save(); closeModal(); toast("Ziele gespeichert"); go(VIEW);
   };

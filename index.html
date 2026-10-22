@@ -5743,7 +5743,10 @@ const lpSlug=s=>String(s||"").toLowerCase().replace(/[^a-z0-9äöüß]+/g,"-").r
    die Woche, in der man es bearbeitet — ein Blatt, das montags fällig ist,
    gehört in die Woche davor. */
 const lpWochenTag=x=>(x.art==="woche"||x.art==="einzel")?dk(addD(parsedk(x.datum),-3)):x.art==="blatt"?(x.ab||x.datum):x.datum;
+/* Alle-2-Wochen-Aufgaben (takt 2) haben zwei Wochen Zeit: ab = Montag der ersten Woche */
+const lpZweiAb=d=>dk(addD(sow(addD(parsedk(d),-3)),-7));
 const lpWocheVon=mk=>{ const e=dk(addD(parsedk(mk),6)); return lpAlle().filter(x=>{
+  if(x.takt===2) return (x.ab||lpZweiAb(x.datum))<=e&&lpWochenTag(x)>=mk;
   if(x.art==="blatt") return (x.ab||x.datum)<=e&&x.datum>=mk&&(!x.fertig||lpWochenTag(x)>=mk||x.datum<=e);
   const w=lpWochenTag(x); return w>=mk&&w<=e; }); };
 /* Für die Wochen-Serie zählt jeder Schritt genau einmal: in der Woche seiner Frist */
@@ -5757,7 +5760,7 @@ function lpVorschlag(x){
   if(x.art==="anki") return x.datum;
   if(x.plan&&x.plan<=x.datum) return x.plan;                      /* selbst gewählt */
   if(x.art==="blatt"&&x.empf&&x.empf>=today()) return x.empf;      /* Tag aus dem Plan */
-  const fenster=x.art==="blatt"?(x.ab||dk(addD(parsedk(x.datum),-6))):dk(addD(parsedk(x.datum),-6)), ab=today()>fenster?today():fenster;
+  const fenster=x.art==="blatt"?(x.ab||dk(addD(parsedk(x.datum),-6))):x.takt===2?(x.ab||lpZweiAb(x.datum)):dk(addD(parsedk(x.datum),-6)), ab=today()>fenster?today():fenster;
   if(ab>x.datum) return x.datum;
   let best=ab, bestL=Infinity;
   for(let d=parsedk(ab); dk(d)<=x.datum; d=addD(d,1)){ const L=tagLast(dk(d)); if(L<bestL){ bestL=L; best=dk(d); } }
@@ -5829,7 +5832,7 @@ function lpZeile(x,opt={}){
     <button class="lp-box" data-lphak="${x.id}" aria-label="${x.fertig?"Wieder öffnen":"Abhaken"}" aria-pressed="${!!x.fertig}">${ico("check")}</button>
     <button class="lp-t" data-lpedit="${x.id}">
       <b>${opt.mitModul?`<i>${esc(lpKurz(x.modul))}</i> `:""}${esc(x.titel)}</b>
-      <span>${[x.art==="anki"?`${x.neu} neue Ankis · Soll ${x.gesamt}`:esc(x.detail||""),
+      <span>${[x.art==="anki"?`${x.neu} neue Ankis · Soll ${x.gesamt}`:esc(x.detail||""), x.takt===2&&!x.fertig?"2 Wochen Zeit":"",
         vor&&vor!==x.datum?(x.plan?`geplant ${lpTagLabel(vor)}`:`Vorschlag ${lpTagLabel(vor)} · ruhigster Tag`):""].filter(Boolean).join(" · ")}</span></button>
     <span class="lp-d${spaet?" rot":""}">${spaet?"seit ":x.art==="anki"?"":"bis "}${lpTagLabel(x.datum)}</span>
   </div>`;
@@ -6004,7 +6007,7 @@ function lpSchrittModal(id){
   let plan=x.plan||null;
   document.querySelectorAll("#lsP [data-p]").forEach(b=>b.onclick=()=>{ plan=b.dataset.p;
     document.querySelectorAll("#lsP [data-p]").forEach(c=>c.classList.toggle("on",c===b)); });
-  document.getElementById("lsOk").onclick=()=>{ const d=document.getElementById("lsD").value; if(d) x.datum=d;
+  document.getElementById("lsOk").onclick=()=>{ const d=document.getElementById("lsD").value; if(d){ x.datum=d; if(x.takt===2) x.ab=lpZweiAb(d); }
     if(plan&&plan<=x.datum) x.plan=plan; else delete x.plan;
     const n=document.getElementById("lsN"); if(n) x.detail=n.value.trim();
     const a=document.getElementById("lsA");
@@ -6016,32 +6019,43 @@ function lpSchrittModal(id){
 /* ── Wöchentliche Aufgabe, z. B. Übungsblatt TM3 jede Woche bis Montag ── */
 function lpWocheModal(){
   const mods=STUDIENPLAN.filter(m=>modStatus(m)==="laeuft");
-  let modul=mods[0]?.id||null, tag=0;
+  let modul=mods[0]?.id||null, tag=0, takt=1;
   const ende=dk(addD(new Date(),7*16));
   modal(`<h3>Wöchentliche Aufgabe</h3>
     <label>Modul</label><div class="chips" id="lwM">${mods.map(m=>`<button class="chip${m.id===modul?" on":""}" data-m="${m.id}">${esc(lpKurz(m.id))}</button>`).join("")}</div>
     <label>Was?</label><input id="lwT" value="Übungsblatt" placeholder="z. B. Übungsblatt rechnen">
-    <label>Fällig jede Woche am</label><div class="chips" id="lwTag">${TWD.map((t,i)=>`<button class="chip${i===tag?" on":""}" data-t="${i}">${t}</button>`).join("")}</div>
+    <label>Rhythmus</label><div class="chips" id="lwTakt"><button class="chip on" data-k="1">jede Woche</button><button class="chip" data-k="2">alle 2 Wochen</button></div>
+    <label id="lwTagL">Fällig jede Woche am</label><div class="chips" id="lwTag">${TWD.map((t,i)=>`<button class="chip${i===tag?" on":""}" data-t="${i}">${t}</button>`).join("")}</div>
     <div style="display:flex;gap:10px"><div style="flex:1"><label>Ab</label><input type="date" id="lwV" value="${today()}"></div>
       <div style="flex:1"><label>Bis</label><input type="date" id="lwB" value="${ende}"></div></div>
-    <p class="p-note" style="margin-top:10px">Die vorlesungsfreie Zeit wird übersprungen, gezählt wird fortlaufend (1, 2, 3 …). NOVA schlägt dir jeweils den ruhigsten Tag vor der Frist vor.</p>
+    <p class="p-note" style="margin-top:10px" id="lwHinweis">Die vorlesungsfreie Zeit wird übersprungen, gezählt wird fortlaufend (1, 2, 3 …). NOVA schlägt dir jeweils den ruhigsten Tag vor der Frist vor.</p>
     <div class="mo-act"><button class="b" onclick="closeModal()">Abbrechen</button><button class="b b-1" id="lwOk">Anlegen</button></div>`);
   document.querySelectorAll("#lwM [data-m]").forEach(b=>b.onclick=()=>{ modul=b.dataset.m; document.querySelectorAll("#lwM [data-m]").forEach(x=>x.classList.toggle("on",x===b)); });
   document.querySelectorAll("#lwTag [data-t]").forEach(b=>b.onclick=()=>{ tag=+b.dataset.t; document.querySelectorAll("#lwTag [data-t]").forEach(x=>x.classList.toggle("on",x===b)); });
+  document.querySelectorAll("#lwTakt [data-k]").forEach(b=>b.onclick=()=>{ takt=+b.dataset.k; document.querySelectorAll("#lwTakt [data-k]").forEach(x=>x.classList.toggle("on",x===b));
+    document.getElementById("lwTagL").textContent=takt===2?"Fällig alle 2 Wochen am":"Fällig jede Woche am";
+    document.getElementById("lwHinweis").textContent=takt===2
+      ?"Jede Aufgabe hat zwei Wochen Zeit und steht in beiden Wochen im Plan. Die vorlesungsfreie Zeit wird übersprungen, gezählt wird fortlaufend (1, 2, 3 …)."
+      :"Die vorlesungsfreie Zeit wird übersprungen, gezählt wird fortlaufend (1, 2, 3 …). NOVA schlägt dir jeweils den ruhigsten Tag vor der Frist vor."; });
   document.getElementById("lwOk").onclick=()=>{
     const titel=document.getElementById("lwT").value.trim(), v=document.getElementById("lwV").value, b=document.getElementById("lwB").value;
     if(!modul||!titel||!v||!b||b<v){ toast("Modul, Text und Zeitraum angeben","x"); return; }
-    const l=lp().schritte; let n=0;
+    const l=lp().schritte; let n=0, frei=dk(sow(parsedk(v)));
     for(let mo=sow(parsedk(v)); dk(mo)<=b; mo=addD(mo,7)){
       if(wocheIstPause(dk(mo))||wocheVlfrei(dk(mo))) continue;
       const d=dk(addD(mo,tag)); if(d<v||d>b||istVlfrei(d)) continue;
+      /* Alle 2 Wochen: Zeitfenster schließen lückenlos aneinander an, beginnend in der Startwoche */
+      let ab=null;
+      if(takt===2){ ab=lpZweiAb(d); if(ab<frei) continue; frei=dk(addD(parsedk(ab),14));
+        /* Nach den Ferien beginnt das Zeitfenster erst mit der ersten Vorlesungswoche */
+        while(wocheVlfrei(ab)&&ab<dk(sow(addD(parsedk(d),-3)))) ab=dk(addD(parsedk(ab),7)); }
       const id=`lw_${modul}_${lpSlug(titel)}_${d}`;
       if(l.some(x=>x.id===id)) continue;
-      l.push({id,modul,datum:d,art:"woche",basis:titel,titel,detail:"",neu:null,gesamt:null,fertig:null});
+      l.push(Object.assign({id,modul,datum:d,art:"woche",basis:titel,titel,detail:"",neu:null,gesamt:null,fertig:null},takt===2?{takt:2,ab}:{}));
       n++;
     }
     lpWochenNummern();
-    save(); closeModal(); toast(`${n} Wochen angelegt — die vorlesungsfreie Zeit ausgelassen`,"check"); R.uni();
+    save(); closeModal(); toast(`${n} ${takt===2?"Aufgaben alle 2 Wochen":"Wochen"} angelegt, die vorlesungsfreie Zeit ausgelassen`,"check"); R.uni();
   };
 }
 
@@ -6053,11 +6067,11 @@ function lpEditor(modul){
   const artName={anki:"Anki",blatt:"Blatt",woche:"Woche",einzel:"Aufgabe"};
   modal(`<h3>${esc(lpName(modul))} · Plan bearbeiten</h3>
     ${reihen.map(r=>{ const rr=l().filter(x=>x.art==="woche"&&x.basis===r), tag=wtagIdx(parsedk(rr[0].datum));
-      return `<div class="lpe-reihe"><div class="lpe-rk">Wöchentlich</div>
+      return `<div class="lpe-reihe"><div class="lpe-rk">${rr.some(x=>x.takt===2)?"Alle 2 Wochen":"Wöchentlich"}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <input data-rname="${esc(r)}" value="${esc(r)}" style="flex:1;min-width:140px">
           <select data-rtag="${esc(r)}" style="width:auto">${TWDL.map((t,i)=>`<option value="${i}"${i===tag?" selected":""}>fällig ${t}</option>`).join("")}</select>
-          <span class="p-note">${rr.length} Wochen</span></div></div>`; }).join("")}
+          <span class="p-note">${rr.length} ${rr.some(x=>x.takt===2)?"Aufgaben":"Wochen"}</span></div></div>`; }).join("")}
     <div class="lpe-liste">${l().map(x=>`<div class="lpe-z" data-lez="${x.id}">
       <span class="lpe-a ${x.art}">${artName[x.art]||x.art}</span>
       <input type="date" data-led="${x.id}" value="${x.datum}">
@@ -6074,13 +6088,13 @@ function lpEditor(modul){
     lpAlle().forEach(x=>{ if(x.modul!==modul) return;
       const d=document.querySelector(`[data-led="${x.id}"]`)?.value, t=document.querySelector(`[data-let="${x.id}"]`)?.value.trim(),
             n=document.querySelector(`[data-len="${x.id}"]`)?.value;
-      if(d) x.datum=d; if(t) x.titel=t;
+      if(d){ x.datum=d; if(x.takt===2) x.ab=lpZweiAb(d); } if(t) x.titel=t;
       if(n!==undefined&&n!==null&&n!==""&&+n!==x.neu){ x.neu=parseInt(n,10)||0; x.korr=1; } });
     /* Reihen: Name und Wochentag */
     reihen.forEach(r=>{ const neuName=document.querySelector(`[data-rname="${CSS.escape(r)}"]`)?.value.trim()||r,
         tag=+document.querySelector(`[data-rtag="${CSS.escape(r)}"]`)?.value;
       lpAlle().filter(x=>x.modul===modul&&x.art==="woche"&&x.basis===r).forEach(x=>{
-        x.basis=neuName; if(!x.fertig){ const mo=sow(parsedk(x.datum)); x.datum=dk(addD(mo,tag)); } }); });
+        x.basis=neuName; if(!x.fertig){ const mo=sow(parsedk(x.datum)); x.datum=dk(addD(mo,tag)); if(x.takt===2) x.ab=lpZweiAb(x.datum); } }); });
     S.lernplan.schritte=lpAlle().filter(x=>!weg.has(x.id));
     lpGesamtNeu(modul); lpWochenNummern();
   };

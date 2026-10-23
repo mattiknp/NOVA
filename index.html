@@ -576,6 +576,32 @@ select option{ background:#141a26; }
 .tb-title{ font-family:var(--f-disp); font-size:var(--t-lg); font-weight:600; letter-spacing:-.01em; }
 .tb-date{ font-size:var(--t-sm); color:var(--text-dim); }
 .tb-spacer{ flex:1; }
+/* ── Ihre Woche: ihr Planer aus der Woche-App, nur zum Ansehen ── */
+.pw-woche{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:10px; align-items:start; }
+.pw-tag{ min-width:0; display:flex; flex-direction:column; gap:6px; padding:10px 9px; border-radius:var(--r); background:rgba(255,255,255,.025); border:1px solid var(--line); }
+.pw-tag.heute{ border-color:color-mix(in srgb, #f4a6c0 60%, transparent); background:rgba(244,166,192,.05); }
+.pw-tag.vorbei{ opacity:.55; }
+.pw-k{ display:flex; align-items:baseline; gap:6px; padding:0 2px 2px; }
+.pw-k b{ font-family:var(--f-disp); font-size:var(--t-lg); font-weight:650; font-variant-numeric:tabular-nums; color:var(--text); }
+.pw-k span{ font-size:var(--t-xs); color:var(--text-faint); text-transform:uppercase; letter-spacing:.06em; }
+.pw-tag.heute .pw-k span{ color:#f4a6c0; }
+.pw-b{ min-width:0; padding:7px 9px 7px 10px; border-radius:var(--r-sm,10px); border-left:3px solid var(--bc); background:color-mix(in srgb, var(--bc) 16%, transparent); }
+.pw-b small{ display:block; font-size:11px; color:var(--text-dim); font-variant-numeric:tabular-nums; }
+.pw-b b{ display:block; font-size:var(--t-sm); font-weight:600; color:var(--text); line-height:1.25; overflow-wrap:anywhere; }
+.pw-b span{ display:block; font-size:11px; color:var(--text-dim); overflow-wrap:anywhere; }
+.pw-g{ font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:999px; color:var(--text); background:color-mix(in srgb, var(--bc) 26%, transparent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pw-frei{ font-size:var(--t-xs); color:var(--text-faint); padding:0 2px; }
+.pw-seg button{ display:inline-flex; align-items:center; justify-content:center; min-width:34px; }
+.pw-seg button svg{ width:15px; height:15px; stroke-width:2; }
+.pw-seg button:disabled{ opacity:.35; }
+.pw-name{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:14px; font-size:var(--t-sm); color:var(--text-dim); }
+.pw-name input{ width:150px; }
+@media (max-width:1100px){ .pw-woche{ grid-template-columns:repeat(4,minmax(0,1fr)); } }
+@media (max-width:640px){
+  .pw-woche{ grid-template-columns:minmax(0,1fr); gap:8px; }
+  .pw-b{ display:grid; grid-template-columns:88px minmax(0,1fr); column-gap:10px; }
+  .pw-b small{ grid-row:1 / span 2; align-self:center; font-size:12px; }
+}
 /* ── Lernmodus: solange der Timer läuft, spürt man es überall ── */
 html.lernt{ --c1:#6cb8ff; --c1-deep:#2f74c9; --c1-glow:rgba(92,170,255,.32); }
 html.lernt .shell::after{ content:""; position:fixed; inset:0; pointer-events:none; z-index:40;
@@ -2833,6 +2859,7 @@ async function pushCloud(){
     if(!r2.ok) throw new Error(r2.status);
     syncSha=(await r2.json()).content.sha;
     setSync("ok","Synchron");
+    if(typeof teilHoch==="function") teilHoch().catch(()=>{});
   }catch(e){ setSync("err","Sync fehlgeschlagen"); }
 }
 /* Sagt genau, woran es lag — „keine Daten“ ist als Diagnose wertlos. */
@@ -2979,6 +3006,7 @@ const NAV=[
   {id:"habits",  t:"Gewohnheiten", i:"list",   g:2},
   {id:"rueckblick",t:"Rückblick",  i:"grid",   g:2},
   {id:"geschenke",t:"Geschenke",   i:"gift",   g:2},
+  {id:"partner",  t:"Freundin",    i:"heart",  g:2},
 ];
 let VIEW="heute";
 
@@ -3065,6 +3093,7 @@ function go(v){
   document.getElementById("tbTitle").textContent=n?n.t:"";
   document.getElementById("tbDate").textContent=fmtLong(new Date());
   try{ R[v]&&R[v](); }catch(e){ console.error("Render "+v,e); }
+  if(v==="partner"&&typeof teilAbgleich==="function") teilAbgleich();
   paintOrb();
   document.getElementById("views").scrollTop=0;
   if(typeof luZeichnen==="function") luZeichnen();
@@ -6908,6 +6937,104 @@ function gsBald(tage=14){
     .sort((a,b)=>a.n.tage-b.n.tage);
 }
 
+/* ── Planer teilen ───────────────────────────────────────
+   NOVA legt nur einen Auszug des Planers ab (Datum, Uhrzeit, Titel,
+   Farbe, ohne Schlaf) und liest nur ihren Auszug. Beides liegt im
+   privaten Repo Woche-daten, ihre App kommt an nova.json nie heran. */
+const TEIL_REPO="Woche-daten", TEIL_MEIN="matti-planer.json", TEIL_IHR="woche-planer.json";
+const TEIL_CACHE="nova_teil_ihr", TEIL_LETZT="nova_teil_letzt", TEIL_NAME="nova_teil_name";
+const teilUrl=pfad=>`https://api.github.com/repos/${GH_USER}/${TEIL_REPO}/${pfad?`contents/${pfad}`:""}`;
+const teilIhr=()=>{ try{ return JSON.parse(localStorage.getItem(TEIL_CACHE)||"null"); }catch(e){ return null; } };
+const teilMeinName=()=>localStorage.getItem(TEIL_NAME)||"Matti";
+const teilGenitiv=n=>/[sßxz]$/i.test(n)?`${n}’`:`${n}s`;
+function teilLabel(){
+  const d=teilIhr(), n=d&&String(d.von||"").trim();
+  const nav=NAV.find(x=>x.id==="partner"); if(nav) nav.t=n?`${teilGenitiv(n)} Woche`:"Freundin";
+  return nav?nav.t:"Freundin";
+}
+teilLabel();
+function teilAuszug(){
+  const tage={}, h=parsedk(today());
+  for(let i=-7;i<=62;i++){ const k=dk(addD(h,i));
+    const b=planDay(k).filter(x=>x&&x.type!=="schlafen").map(x=>{ const t=blockById(x.type);
+      return {start:x.start||"",end:x.end||"",titel:x.note||t.label,farbe:t.bg,...(x.note?{art:t.label}:{}),...(x.raum?{ort:x.raum}:{})}; })
+      .sort((a,b)=>a.start.localeCompare(b.start));
+    const g=(S.uniTermine||[]).filter(t=>t.datum===k).map(t=>({titel:`${t.titel}${t.zeit?` · ${t.zeit}`:""}`,farbe:"#e35d6a"}));
+    if(b.length||g.length) tage[k]={b,g};
+  }
+  return {v:1,app:"nova",von:teilMeinName(),tage};
+}
+let teilSha=null, teilFehler="";
+async function teilHoch(){
+  if(!cloudOn()) return; const tok=cloudTok(); if(!tok) return;
+  const a=teilAuszug(), roh=JSON.stringify(a);
+  if(localStorage.getItem(TEIL_LETZT)===roh) return;
+  const kopf={Authorization:`token ${tok}`};
+  const shaHolen=async()=>{ const r=await fetch(teilUrl(TEIL_MEIN)+"?v="+Date.now(),{headers:kopf}); teilSha=r.ok?(await r.json()).sha:null; };
+  if(!teilSha) await shaHolen();
+  const senden=()=>fetch(teilUrl(TEIL_MEIN),{method:"PUT",headers:{...kopf,"Content-Type":"application/json"},
+    body:JSON.stringify({message:`planer ${new Date().toISOString()}`,content:btoa(unescape(encodeURIComponent(JSON.stringify({...a,stand:new Date().toISOString()})))),...(teilSha?{sha:teilSha}:{})})});
+  let r=await senden();
+  if(r.status===409||r.status===422){ await shaHolen(); r=await senden(); }
+  if(!r.ok){ teilFehler=(r.status===403||r.status===404)?"zugriff":String(r.status); throw new Error(r.status); }
+  teilSha=(await r.json()).content.sha; localStorage.setItem(TEIL_LETZT,roh);
+}
+async function teilHolen(){
+  if(!cloudOn()||!cloudTok()){ teilFehler="aus"; return false; }
+  const kopf={Authorization:`token ${cloudTok()}`};
+  try{
+    const r=await fetch(teilUrl(TEIL_IHR)+"?v="+Date.now(),{headers:kopf});
+    if(r.status===404){ const repo=await fetch(teilUrl(""),{headers:kopf}); teilFehler=repo.ok?"fehlt":"zugriff"; return false; }
+    if(r.status===401||r.status===403){ teilFehler="zugriff"; return false; }
+    if(!r.ok){ teilFehler=String(r.status); return false; }
+    const roh=decodeURIComponent(escape(atob((await r.json()).content.replace(/\n/g,""))));
+    teilFehler=""; if(roh===localStorage.getItem(TEIL_CACHE)) return false;
+    localStorage.setItem(TEIL_CACHE,roh);
+    const vorher=document.querySelector('.rl[data-go="partner"] .rl-txt')?.textContent, jetzt=teilLabel();
+    document.querySelectorAll('.rl[data-go="partner"] .rl-txt').forEach(e=>e.textContent=jetzt);
+    if(VIEW==="partner") document.getElementById("tbTitle").textContent=jetzt;
+    return true;
+  }catch(e){ teilFehler="netz"; return false; }
+}
+async function teilAbgleich(){
+  teilHoch().catch(()=>{});
+  const neu=await teilHolen();
+  if(VIEW==="partner") R.partner();
+}
+let pwWoche=0;
+R.partner=function(){
+  const el=document.getElementById("v-partner"); if(!el) return;
+  const d=teilIhr(), name=d&&String(d.von||"").trim()||"Sie";
+  const m=addD(sow(new Date()),7*pwWoche), so=addD(m,6), t0=today();
+  const kurz=x=>`${x.getDate()}.${x.getMonth()+1}.`;
+  const stand=d&&d.stand?new Date(d.stand):null;
+  const tage=[0,1,2,3,4,5,6].map(i=>{ const dd=addD(m,i), k=dk(dd), t=(d&&d.tage&&d.tage[k])||{b:[],g:[]};
+    const leer=!(t.b||[]).length&&!(t.g||[]).length;
+    return `<div class="pw-tag${k===t0?" heute":""}${k<t0?" vorbei":""}">
+      <div class="pw-k"><b>${dd.getDate()}</b><span>${TWD[i]}${k===t0?" · heute":""}</span></div>
+      ${(t.g||[]).map(g=>`<div class="pw-g" style="--bc:${esc(g.farbe||"#f4a6c0")}">${esc(g.titel)}</div>`).join("")}
+      ${(t.b||[]).map(b=>`<div class="pw-b" style="--bc:${esc(b.farbe||"#f4a6c0")}"><small>${esc(b.start)}–${esc(b.end)}</small><b>${esc(b.titel)}</b>${b.art||b.ort?`<span>${esc([b.art,b.ort].filter(Boolean).join(" · "))}</span>`:""}</div>`).join("")}
+      ${leer?`<div class="pw-frei">frei</div>`:""}</div>`; }).join("");
+  const hinweis=!cloudOn()||!cloudTok()?"Der Cloud-Abgleich ist aus. Ihr Planer kommt über dasselbe Konto."
+    :teilFehler==="zugriff"?`Dein Token darf noch nicht auf <b>${TEIL_REPO}</b> zugreifen. Auf GitHub beim Token unter „Repository access“ ${TEIL_REPO} hinzufügen, mit „Contents: Read and write“.`
+    :!d&&teilFehler==="fehlt"?"Ihr Planer ist noch nicht geteilt. Das passiert automatisch, sobald ihre Woche-App das nächste Mal abgleicht."
+    :!d?"Lädt …":"";
+  el.innerHTML=`<div class="p">
+    <div class="p-head">
+      <div><div class="p-title">${ico("heart")}${esc(teilGenitiv(name))} Woche</div>
+        <div class="p-note">${kurz(m)} bis ${kurz(so)}${stand?` · Stand ${dk(stand)===t0?"heute":kurz(stand)} ${p2(stand.getHours())}:${p2(stand.getMinutes())}`:""}</div></div>
+      <div class="seg pw-seg"><button data-pw="-1" ${pwWoche<=-1?"disabled":""} aria-label="Woche davor">${ico("left")}</button>
+        <button data-pw="0" class="${pwWoche===0?"on":""}">Diese Woche</button>
+        <button data-pw="1" ${pwWoche>=8?"disabled":""} aria-label="Woche danach">${ico("right")}</button></div>
+    </div>
+    ${hinweis?`<p class="p-note" style="margin-bottom:12px">${hinweis}</p>`:""}
+    ${d?`<div class="pw-woche">${tage}</div>`:""}
+    <div class="pw-name">Bei ihr heißt du <input type="text" id="pwName" value="${esc(teilMeinName())}" maxlength="24" autocomplete="off" aria-label="Dein Name bei ihr"></div>
+  </div>`;
+  el.querySelectorAll("[data-pw]").forEach(b=>b.onclick=()=>{ const v=+b.dataset.pw; pwWoche=v===0?0:Math.max(-1,Math.min(8,pwWoche+v)); R.partner(); });
+  const n=el.querySelector("#pwName");
+  n.onchange=()=>{ const v=n.value.trim(); if(!v) { n.value=teilMeinName(); return; } localStorage.setItem(TEIL_NAME,v); teilHoch().catch(()=>{}); toast(`Bei ihr heißt du jetzt ${v}`,"heart"); };
+};
 R.geschenke=function(){
   const el=document.getElementById("v-geschenke");
   const ps=gsPersonen().map(p=>({p,n:gsNaechster(p)}))
@@ -7697,6 +7824,7 @@ if(cloudOn()){
   pullCloud().then(async ok=>{
     const n=await holeSatz();
     if(ok||n) go(VIEW);
+    teilAbgleich();
     if(n) setTimeout(()=>toast(`${n} Einheit${n===1?"":"en"} aus SATZ übernommen`,"run"),1000);
   });
 } else setSync("off");

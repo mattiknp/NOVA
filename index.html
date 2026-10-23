@@ -637,6 +637,22 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 .lu-knopf svg{ width:20px; height:20px; fill:currentColor; }
 .lu-knopf:active{ transform:scale(.96); }
 @media (hover:hover){ .lu-knopf:hover{ filter:brightness(1.08); } }
+.lu-knoepfe{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.lu-nach{ display:inline-flex; align-items:center; gap:8px; height:54px; padding:0 22px; border-radius:var(--r-pill); cursor:pointer;
+  font:inherit; font-size:var(--t-sm); font-weight:600; color:var(--text-dim); background:rgba(255,255,255,.04); border:1px solid var(--line-2);
+  transition:transform var(--d2) var(--ez), color var(--d2), background var(--d2); }
+.lu-nach svg{ width:17px; height:17px; }
+.lu-nach:active{ transform:scale(.96); }
+@media (hover:hover){ .lu-nach:hover{ color:var(--text); background:rgba(255,255,255,.08); } }
+.lu-dauer{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; }
+.lu-dauer input{ font-variant-numeric:tabular-nums; }
+.lu-sitz{ display:flex; flex-direction:column; gap:6px; }
+.lu-sitz-z{ display:flex; align-items:center; gap:10px; padding:8px 10px 8px 12px; border-radius:var(--r); background:rgba(255,255,255,.03); border:1px solid var(--line); font-size:var(--t-sm); }
+.lu-sitz-z b{ font-variant-numeric:tabular-nums; font-weight:650; min-width:44px; }
+.lu-sitz-z span{ flex:1; color:var(--text-faint); font-size:var(--t-xs); }
+.lu-sitz-z button{ width:30px; height:30px; display:grid; place-items:center; border-radius:50%; border:0; background:none; color:var(--text-faint); cursor:pointer; }
+.lu-sitz-z button svg{ width:15px; height:15px; }
+@media (hover:hover){ .lu-sitz-z button:hover{ color:var(--bad); background:rgba(255,255,255,.06); } }
 .lu-karte.an .lu-knopf{ color:#fff; background:linear-gradient(135deg,#ff7a7a,#d9485a); box-shadow:0 12px 30px -10px rgba(217,72,90,.8); }
 @media (max-width:640px){
   .lu-karte{ grid-template-columns:minmax(0,1fr); justify-items:center; gap:16px; padding:22px 18px; text-align:center; }
@@ -646,6 +662,8 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
   .lu-titel{ font-size:22px; }
   .lu-zahlen{ grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; text-align:left; margin:14px 0 16px; }
   .lu-knopf{ width:100%; }
+  .lu-knoepfe{ width:100%; flex-direction:column; gap:8px; }
+  .lu-nach{ width:100%; justify-content:center; height:46px; }
 }
 @media (prefers-reduced-motion:reduce){ .lu-karte.an::before{ animation:none; } }
 .tb-clock{ font-family:var(--f-mono); font-size:var(--t-sm); color:var(--text-dim); font-variant-numeric:tabular-nums; }
@@ -6470,7 +6488,10 @@ function luKarte(){
         <div><b>${f(woche)}</b><span>h diese Woche</span></div>
         <div><b>${heuteN}</b><span>${heuteN===1?"Einheit":"Einheiten"} heute</span></div>
       </div>
-      <button class="lu-knopf" id="luGross">${an?`${ico("stop")}Stoppen`:`${ico("play")}Lernen starten`}</button>
+      <div class="lu-knoepfe">
+        <button class="lu-knopf" id="luGross">${an?`${ico("stop")}Stoppen`:`${ico("play")}Lernen starten`}</button>
+        <button class="lu-nach" id="luNach">${ico("plus")}Zeit nachtragen</button>
+      </div>
     </div>
   </div>`;
 }
@@ -6538,6 +6559,72 @@ function luKorrektur(von,bis){
     if(isNaN(h)||h<=0){ toast("Stunden angeben","x"); return; }
     closeModal(); luFertig(von,Math.min(bis,von+h*3600000)); };
   document.getElementById("luWeg").onclick=()=>{ S.lernUhr=null; save(); closeModal(); toast("Timer verworfen","x"); luNachher(); };
+}
+/* Gegenstück zu luBuchen: nimmt eine Einheit wieder aus den Tageswerten */
+function luAbbuchen(von,bis){
+  let t=von;
+  while(t<bis){
+    const d=new Date(t), k=dk(d), nacht=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime();
+    const ende=Math.min(bis,nacht), m=Object.assign({},S.metrics[k]);
+    if(nv(m.study)) m.study=Math.max(0,Math.round((m.study-(ende-t)/3600000)*100)/100);
+    S.metrics[k]=m; t=ende;
+  }
+  S.lernSitz=(S.lernSitz||[]).filter(x=>!(x.von===von&&x.bis===bis));
+}
+/* "1,5", "1.5", "1:30", "90 min" oder "90m" → Stunden */
+function luDauerLesen(v){
+  v=String(v||"").trim().toLowerCase().replace(",",".");
+  let m=/^(\d+)\s*(?::|h)\s*(\d{1,2})\s*(?:m|min)?$/.exec(v); if(m) return +m[1]+ +m[2]/60;
+  m=/^(\d+(?:\.\d+)?)\s*(m|min)$/.exec(v); if(m) return +m[1]/60;
+  m=/^(\d+(?:\.\d+)?)\s*h?$/.exec(v); return m?+m[1]:NaN;
+}
+/* Vergessen, den Timer anzumachen? Zeit für einen der letzten 7 Tage nachtragen. */
+let luNachTag=null;
+function luNachtragen(tag){
+  const tage=[...Array(7)].map((_,i)=>dk(addD(new Date(),-i)));
+  luNachTag=tag||luNachTag&&tage.includes(luNachTag)&&luNachTag||tage[0];
+  const k=luNachTag, istHeute=k===today(), jetzt=new Date();
+  const bisVor=istHeute?`${p2(jetzt.getHours())}:${p2(Math.floor(jetzt.getMinutes()/5)*5)}`:"18:00";
+  const label=x=>x===today()?"Heute":x===dk(addD(new Date(),-1))?"Gestern":`${TWD[wtagIdx(parsedk(x))]} ${parsedk(x).getDate()}.`;
+  const bisher=(S.metrics[k]||{}).study;
+  const sitz=(S.lernSitz||[]).filter(x=>dk(new Date(x.bis))===k||dk(new Date(x.von))===k).sort((a,b)=>a.von-b.von);
+  const uhr=t=>{ const d=new Date(t); return `${p2(d.getHours())}:${p2(d.getMinutes())}`; };
+  modal(`<h3>Lernzeit nachtragen</h3>
+    <label>Tag</label>
+    <div class="chips" id="luNT">${tage.map(x=>`<button class="chip${x===k?" on":""}" data-t="${x}">${label(x)}</button>`).join("")}</div>
+    <label for="luNH">Wie lange?</label>
+    <div class="chips" id="luNQ" style="margin-bottom:8px">${[[.5,"30 min"],[1,"1 h"],[1.5,"1,5 h"],[2,"2 h"],[3,"3 h"]].map(([h,t])=>`<button class="chip" data-h="${h}">${t}</button>`).join("")}</div>
+    <div class="lu-dauer">
+      <div><input type="text" inputmode="decimal" autocomplete="off" id="luNH" placeholder="Stunden"></div>
+      <div><input type="time" id="luNB" value="${bisVor}" aria-label="Ende ungefähr" title="Ende ungefähr"></div>
+    </div>
+    <p class="p-note" style="margin-top:6px">Rechts: wann du ungefähr aufgehört hast.</p>
+    <label>An diesem Tag${nv(bisher)?` · ${f(bisher)} h`:""}</label>
+    ${sitz.length?`<div class="lu-sitz">${sitz.map(x=>`<div class="lu-sitz-z"><b>${luHM((x.bis-x.von)/60000)}</b><span>${uhr(x.von)}–${uhr(x.bis)}${x.nach?" · nachgetragen":""}</span>
+        <button data-weg="${x.von}_${x.bis}" aria-label="Einheit entfernen">${ico("trash")}</button></div>`).join("")}</div>`
+      :`<p class="p-note">${nv(bisher)&&bisher>0?"Ohne einzelne Einheiten eingetragen.":"Noch nichts gelernt."}</p>`}
+    <div class="mo-act"><button class="b" onclick="closeModal()">Abbrechen</button><button class="b b-1" id="luNOk">Eintragen</button></div>`);
+  const m=document.getElementById("modal"), feld=m.querySelector("#luNH");
+  m.querySelectorAll("#luNT [data-t]").forEach(b=>b.onclick=()=>{ const v=feld.value; luNachtragen(b.dataset.t); document.getElementById("luNH").value=v; });
+  m.querySelectorAll("#luNQ [data-h]").forEach(b=>b.onclick=()=>{
+    feld.value=String(b.dataset.h).replace(".",",");
+    m.querySelectorAll("#luNQ .chip").forEach(c=>c.classList.toggle("on",c===b)); });
+  feld.oninput=()=>m.querySelectorAll("#luNQ .chip").forEach(c=>c.classList.remove("on"));
+  m.querySelectorAll("[data-weg]").forEach(b=>b.onclick=()=>{
+    const [von,bis]=b.dataset.weg.split("_").map(Number);
+    luAbbuchen(von,bis); save(); toast(`${luHM((bis-von)/60000)} h entfernt`,"trash"); luNachher(); paintOrb(); luNachtragen(); });
+  const ok=()=>{
+    const h=luDauerLesen(feld.value);
+    if(!(h>0)||h>16){ toast("Dauer angeben, z. B. 1,5 oder 1:30","x"); feld.focus(); return; }
+    const [hh,mm]=(m.querySelector("#luNB").value||"18:00").split(":").map(Number);
+    const tg0=parsedk(k); let bis=new Date(tg0.getFullYear(),tg0.getMonth(),tg0.getDate(),hh||0,mm||0).getTime();
+    if(istHeute) bis=Math.min(bis,Date.now());
+    const von=Math.round(bis-h*3600000);
+    luBuchen(von,bis); S.lernSitz[S.lernSitz.length-1].nach=1; save(); closeModal();
+    const tg=(S.metrics[k]||{}).study;
+    toast(`${luHM(h*60)} h nachgetragen · ${label(k).replace(/^(Heute|Gestern)$/,w=>w.toLowerCase())} ${f(tg)} h`,"check"); luNachher(); paintOrb(); };
+  m.querySelector("#luNOk").onclick=ok;
+  feld.onkeydown=e=>{ if(e.key==="Enter") ok(); };
 }
 setInterval(()=>{ if(!document.hidden) luZeichnen(); },1000);
 
@@ -6712,6 +6799,7 @@ R.uni=function(){
 
   el.querySelector("#unNeu").onclick=()=>terminModal();
   el.querySelector("#luGross").onclick=()=>luLaeuft()?luStopp():luStart();
+  el.querySelector("#luNach").onclick=()=>luNachtragen(today());
   lernplanWiring(el); klausurJahrWiring(el);
   el.querySelectorAll("[data-unweg]").forEach(b=>b.onclick=()=>{
     S.uniTermine=(S.uniTermine||[]).filter(t=>t.id!==b.dataset.unweg);

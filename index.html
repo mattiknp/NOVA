@@ -1742,6 +1742,13 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 .lp-null-t span{ font-size:var(--t-xs); color:var(--text-faint); }
 .lp-null.an{ border-color:color-mix(in srgb, var(--good) 40%, transparent); background:color-mix(in srgb, var(--good) 8%, transparent); }
 .lp-null.an .lp-box{ background:var(--good); border-color:var(--good); color:#08131a; }
+.lp-null-w{ display:flex; align-items:center; gap:6px; margin-top:6px; }
+.lp-null-w .lp-null{ flex:1; min-width:0; }
+.lp-null-w .lp-null .lp-box{ border-color:color-mix(in srgb, var(--lf) 60%, var(--line-2)); }
+.lp-null-w .lp-null.an{ border-color:color-mix(in srgb, var(--lf) 45%, transparent); background:color-mix(in srgb, var(--lf) 10%, transparent); }
+.lp-null-w .lp-null.an .lp-box{ background:var(--lf); border-color:var(--lf); }
+.lp-null-w .lp-punkte i.an{ background:var(--lf); }
+.lp-null-e{ flex:0 0 auto; opacity:.7; }
 .lp-punkte{ display:flex; gap:3px; }
 .lp-punkte i{ width:7px; height:7px; border-radius:2px; background:rgba(255,255,255,.09); }
 .lp-punkte i.an{ background:var(--good); }
@@ -3738,10 +3745,11 @@ R.heute=function(){
       <div class="p-head" style="margin-bottom:10px">
         <div class="p-title">${ico("cal")}Plan für heute</div>
         <button class="b b-sm" onclick="go('planer')">Öffnen</button></div>
-      ${(()=>{ const em=lpHeute(); if(!em.length&&!ankiAktiv()) return "";
+      ${(()=>{ const em=lpHeute(); if(!em.length&&!ankiAktiv()&&!tgl().length) return "";
         const an=lp().ankiNull[today()];
         return `<div class="hd-uni"><div class="hd-uni-k">${ico("cap")}Uni heute<button class="hd-uni-l" onclick="go('uni')">Lernplan</button></div>
           ${ankiAktiv()?`<button class="hd-uni-z${an?" fertig":""}" id="hdAnkiNull"><span class="lp-box">${ico("check")}</span><span>Anki-Wiederholungen auf 0</span></button>`:""}
+          ${tgl().map(x=>`<button class="hd-uni-z${(x.erledigt||{})[today()]?" fertig":""}" data-tgl="${x.id}" style="--lf:${x.modul?lpFarbe(x.modul):"var(--c1)"}"><span class="lp-box">${ico("check")}</span><span>${esc(tglName(x))}</span></button>`).join("")}
           ${em.map(h=>`<button class="hd-uni-z${h.alt?" alt":""}" data-lpalle="${h.typ==="anki"?h.schritte.map(x=>x.id).join(","):h.schritt.id}" style="--lf:${lpFarbe(h.modul)}">
             <span class="lp-box">${ico("check")}</span>
             <span>${h.typ==="anki"?`<b>${h.heute}</b> neue Ankis ${esc(lpKurz(h.modul))}${h.alt?" nachholen":""}${h.rest>0?` <em>· Rest ${h.rest} später</em>`:""}`
@@ -3899,6 +3907,7 @@ R.heute=function(){
   const V=document.getElementById("v-heute");
   V.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>checkinOeffnen(b.dataset.ck));
   lpHakWiring(V,()=>{ R.heute(); paintOrb(); });
+  tglWiring(V,()=>{ R.heute(); paintOrb(); });
   V.querySelector("#hdAnkiNull")?.addEventListener("click",()=>{ const a=lp().ankiNull, t=today();
     if(a[t]) delete a[t]; else a[t]=Date.now(); save(); R.heute(); });
   V.querySelectorAll("[data-fdone]").forEach(r=>r.onclick=()=>{
@@ -5794,11 +5803,49 @@ function lpWochenSerie(){
   }
   return n;
 }
-function ankiNullSerie(){
-  const a=lp().ankiNull; let n=0, d=new Date();
+function ankiNullSerie(){ return tagSerie(lp().ankiNull); }
+/* Tage in Folge aus einer Map {Datum: Zeitstempel}; heute zählt erst, wenn abgehakt */
+function tagSerie(a){
+  let n=0, d=new Date();
   if(!a[dk(d)]) d=addD(d,-1);
   while(a[dk(d)]){ n++; d=addD(d,-1); }
   return n;
+}
+/* ── Eigene tägliche Aufgaben (wie „Anki-Wiederholungen auf 0“):
+   S.lernplan.taeglich = [{id, titel, modul|null, erledigt:{Datum:Zeitstempel}}] ── */
+const tgl=()=>{ const l=lp(); l.taeglich=l.taeglich||[]; return l.taeglich; };
+const tglName=x=>x.modul?`${lpKurz(x.modul)} · ${x.titel}`:x.titel;
+function tglZeile(x,tage){
+  const an=x.erledigt||{}, sr=tagSerie(an);
+  return `<div class="lp-null-w"><button class="lp-null${an[today()]?" an":""}" data-tgl="${x.id}" style="--lf:${x.modul?lpFarbe(x.modul):"var(--c1)"}">
+      <span class="lp-box">${ico("check")}</span>
+      <span class="lp-null-t"><b>${esc(tglName(x))}</b><span>${sr?`${sr} ${sr===1?"Tag":"Tage"} in Folge`:"jeden Tag"}</span></span>
+      <span class="lp-punkte">${tage.map(k=>`<i class="${an[k]?"an":""}${k===today()?" heute":""}" title="${tagLang(k)}"></i>`).join("")}</span>
+    </button><button class="b b-i b-xs lp-null-e" data-tged="${x.id}" aria-label="${esc(tglName(x))} bearbeiten">${ico("edit")}</button></div>`;
+}
+function tglModal(id){
+  const x=id?tgl().find(t=>t.id===id):null;
+  const mods=STUDIENPLAN.filter(m=>modStatus(m)==="laeuft"||(x&&m.id===x.modul));
+  let modul=x?x.modul:null;
+  modal(`<h3>${x?"Tägliche Aufgabe":"Neue tägliche Aufgabe"}</h3>
+    <label>Was jeden Tag?</label><input id="tgT" value="${x?esc(x.titel):""}" placeholder="z. B. Ankis" autocomplete="off">
+    <label>Modul (optional)</label><div class="chips" id="tgM">${mods.map(m=>`<button class="chip${m.id===modul?" on":""}" data-m="${m.id}">${esc(lpKurz(m.id))}</button>`).join("")}</div>
+    <p class="p-note" style="margin-top:10px">Steht jeden Tag im Lernplan und bei „Plan für heute“, zum Abhaken, mit Serie wie bei Anki auf 0.</p>
+    <div class="mo-act">${x?`<button class="b" id="tgDel" style="margin-right:auto;color:var(--bad)">Löschen</button>`:""}
+      <button class="b" onclick="closeModal()">Abbrechen</button><button class="b b-1" id="tgOk">${x?"Speichern":"Anlegen"}</button></div>`);
+  document.querySelectorAll("#tgM [data-m]").forEach(b=>b.onclick=()=>{ modul=modul===b.dataset.m?null:b.dataset.m;
+    document.querySelectorAll("#tgM [data-m]").forEach(c=>c.classList.toggle("on",c.dataset.m===modul)); });
+  document.getElementById("tgOk").onclick=()=>{ const t=document.getElementById("tgT").value.trim(); if(!t){ toast("Was soll es sein?","x"); return; }
+    if(x) Object.assign(x,{titel:t,modul}); else tgl().push({id:"tg_"+uid(),titel:t,modul,erledigt:{}});
+    save(); closeModal(); toast(x?"Gespeichert":"Tägliche Aufgabe angelegt","check"); go(VIEW); };
+  document.getElementById("tgDel")?.addEventListener("click",()=>{ if(!confirm(`„${tglName(x)}“ löschen? Die Serie geht dabei verloren.`)) return;
+    lp().taeglich=tgl().filter(t=>t.id!==x.id); save(); closeModal(); toast("Gelöscht","check"); go(VIEW); });
+}
+function tglWiring(el,neu){
+  el.querySelectorAll("[data-tgl]").forEach(b=>b.onclick=()=>{ const x=tgl().find(t=>t.id===b.dataset.tgl); if(!x) return;
+    x.erledigt=x.erledigt||{}; const t=today(); if(x.erledigt[t]) delete x.erledigt[t]; else x.erledigt[t]=Date.now();
+    save(); if(x.erledigt[t]) toast(`${tglName(x)} erledigt`,"check"); neu(); });
+  el.querySelectorAll("[data-tged]").forEach(b=>b.onclick=()=>tglModal(b.dataset.tged));
 }
 
 /* Heute empfohlen: Fälliges, Rückstand (auf die Tage bis zur nächsten
@@ -5855,7 +5902,8 @@ function lernplanHtml(){
     <div class="lp-leer"><p>Hier steht Woche für Woche, was für die Uni dran ist — zum Abhaken.
       Lade einen Lernplan als Tabelle (wie deinen Mikro-Plan) oder leg eine wöchentliche Aufgabe an, etwa das Übungsblatt in TM3.</p>
       <div class="lp-akt"><button class="b b-1" id="lpImport">${ico("up")}Lernplan laden</button>
-        <button class="b" id="lpWoche">${ico("plus")}Wöchentliche Aufgabe</button></div></div></div>`;
+        <button class="b" id="lpWoche">${ico("plus")}Wöchentliche Aufgabe</button>
+        <button class="b" id="lpTgl">${ico("plus")}Täglich</button></div></div></div>`;
 
   return `<div class="p lp" style="margin-bottom:14px">
     <div class="lp-kopf">
@@ -5882,6 +5930,7 @@ function lernplanHtml(){
           <span class="lp-null-t"><b>Anki-Wiederholungen auf 0</b><span>${ankiNullSerie()?`${ankiNullSerie()} ${ankiNullSerie()===1?"Tag":"Tage"} in Folge`:"jeden Tag"}</span></span>
           <span class="lp-punkte">${tage.map(k=>`<i class="${an[k]?"an":""}${k===today()?" heute":""}" title="${tagLang(k)}"></i>`).join("")}</span>
         </button>`:""}
+        ${tgl().map(x=>tglZeile(x,tage)).join("")}
         ${heute.length?heute.map(h=>h.typ==="anki"?`<div class="lp-emp${h.alt?" alt":""}" style="--lf:${lpFarbe(h.modul)}">
             <span class="lp-emp-z"><b>${h.heute}</b><span>neue</span></span>
             <span class="lp-emp-t"><b>${esc(lpKurz(h.modul))} · Ankis${h.alt?" nachholen":""}</b>
@@ -5917,6 +5966,7 @@ function lernplanHtml(){
     <div class="lp-fuss">
       <button class="b b-sm" id="lpImport">${ico("up")}Lernplan laden</button>
       <button class="b b-sm" id="lpWoche">${ico("plus")}Wöchentliche Aufgabe</button>
+      <button class="b b-sm" id="lpTgl">${ico("plus")}Täglich</button>
       <button class="b b-sm" id="lpVerw">Pläne & Ferien</button>
     </div>
   </div>`;
@@ -5930,6 +5980,8 @@ function lernplanWiring(el){
   el.querySelector("#lpImport")?.addEventListener("click",lpImportStart);
   el.querySelector("#lpWoche")?.addEventListener("click",()=>lpWocheModal());
   el.querySelector("#lpVerw")?.addEventListener("click",lpVerwalten);
+  el.querySelector("#lpTgl")?.addEventListener("click",()=>tglModal(null));
+  tglWiring(el,neu);
   el.querySelector("#lpNull")?.addEventListener("click",()=>{ const a=lp().ankiNull, t=today();
     if(a[t]) delete a[t]; else a[t]=Date.now(); save(); if(a[t]) toast("Anki auf 0 — sauber","check"); neu(); });
   lpHakWiring(el,neu);
@@ -5984,6 +6036,10 @@ function lpKorrekturen(){
         titel:`Blatt ${nr} rechnen`,detail:`zur Übung ${nr}`,neu:null,gesamt:null,fertig:null}));
     S.lernplan.mikBlatt=1; geaendert=true;
   }
+  /* Tägliche Aufgabe „MM I · Ankis“, einmalig angelegt (danach frei lösch- und änderbar) */
+  if(!S.lernplan.tgMm1){ S.lernplan.taeglich=S.lernplan.taeglich||[];
+    if(!S.lernplan.taeglich.some(t=>t.id==="tg_mm1_anki")) S.lernplan.taeglich.push({id:"tg_mm1_anki",titel:"Ankis",modul:"mm1",erledigt:{}});
+    S.lernplan.tgMm1=1; geaendert=true; }
   return geaendert;
 }
 

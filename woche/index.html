@@ -105,6 +105,10 @@ input:focus,select:focus,textarea:focus{ border-color:var(--sec-text); box-shado
 .leer{ color:var(--leise); font-size:14px; padding:4px 0; line-height:1.55; }
 .raster2{ display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:18px; align-items:start; }
 .stapel{ display:flex; flex-direction:column; gap:18px; min-width:0; }
+.heute-raster{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+.heute-raster .spalte{ display:flex; flex-direction:column; gap:18px; min-width:0; }
+.heute-raster .spalte:empty{ display:none; }
+
 /* Linierte Felder wie im Planer */
 .liniert{ background-color:transparent; border:0; border-radius:0; padding:4px 2px; line-height:32px; min-height:136px; box-shadow:none;
   background-image:repeating-linear-gradient(to bottom, transparent 0 31px, color-mix(in srgb, var(--rose) 45%, transparent) 31px 32px); }
@@ -868,7 +872,28 @@ function zeige(s,anim){
   const m=document.getElementById("main");
   m.innerHTML=`<div class="view${neuSeite?" neu-seite":""}">${({heute:vHeute,kalender:vKalender,uni:vUni,geschenke:vGeschenke})[SEITE]()}</div>`;
   if(SEITE==="kalender") kalNachher();
+  if(SEITE==="heute") heuteAusgleich();
 }
+/* Heute am Laptop: die Karten der Reihe nach immer in die gerade kürzere
+   Spalte legen, damit keine Seite leer bleibt und nichts unten vergammelt. */
+const breit=matchMedia("(min-width:821px)");
+function heuteAusgleich(){
+  const r=document.querySelector(".heute-raster"); if(!r) return;
+  const [a,b]=r.querySelectorAll(".spalte");
+  /* die ursprüngliche Reihenfolge merken, sonst verdreht ein zweiter Durchlauf sie */
+  if(!r.dataset.n){ [...a.children].forEach((k,i)=>k.dataset.n=i); r.dataset.n=1; }
+  const karten=[...r.querySelectorAll(".spalte > *")].sort((x,y)=>x.dataset.n-y.dataset.n);
+  karten.forEach(k=>a.appendChild(k));
+  if(!breit.matches) return;
+  const hoehe=karten.map(k=>k.getBoundingClientRect().height), gap=18;
+  let ha=0, hb=0;
+  karten.forEach((k,i)=>{ if(ha<=hb){ a.appendChild(k); ha+=hoehe[i]+gap; } else { b.appendChild(k); hb+=hoehe[i]+gap; } });
+}
+breit.addEventListener("change",()=>{ if(SEITE==="heute") heuteAusgleich(); });
+/* Neue Fensterbreite (auch beim Drehen): neu verteilen, weil sich die Kartenhöhen ändern */
+let ausgleichT, ausgleichB=innerWidth;
+addEventListener("resize",()=>{ if(innerWidth===ausgleichB) return; ausgleichB=innerWidth;
+  clearTimeout(ausgleichT); ausgleichT=setTimeout(()=>{ if(SEITE==="heute") heuteAusgleich(); },120); });
 const kopf=(titel,unter,rechts,lang)=>`<header class="kopf">${rechts?`<div class="kopf-r">${rechts}</div>`:""}
   <h1 class="titel${lang?" lang":""}">${titel}</h1>${unter?`<p class="unter">${unter}</p>`:""}</header>`;
 
@@ -922,35 +947,43 @@ function vHeute(){
   const fristen=S.termine.filter(t=>!t.erledigt&&tageBis(t.datum)>=0&&tageBis(t.datum)<=21).sort((a,b)=>a.datum.localeCompare(b.datum));
   const geb=gebBald(14);
   const k2=dk(addD(d,1)), morgen=eintraegeAm(k2), gMorgen=ganzAm(k2);
+  const morgenZeilen=(morgen.length||gMorgen.length)?`
+        ${gMorgen.map(x=>`<div class="mo-z" style="--kc:${x.c}"><i></i><span>ganztags</span>${esc(x.titel)}</div>`).join("")}
+        ${morgen.slice(0,4).map(b=>`<div class="mo-z" style="--kc:${farbeVon(b)}"><i></i><span>${b.start}</span>${esc(titelVon(b))}</div>`).join("")}
+        ${morgen.length>4?`<div class="mo-z" style="--kc:transparent"><i></i><span></span>und ${morgen.length-4} weitere</div>`:""}`:"";
+  const morgenHtml=morgenZeilen?`<div class="morgen"><div class="lab" style="--kc:#9a4c4f">morgen:</div>${morgenZeilen}</div>`:"";
+  /* Ein leerer Tag braucht keinen Tagesablauf (die Karte oben sagt es schon):
+     dann rücken die Aufgaben nach oben, und nur „morgen“ steht am Ende. */
+  const tagLeer=!l.length&&!g.length;
+  const ablaufKarte=`<div class="karte">
+      <div class="k-kopf"><h3 class="lab" style="--kc:#9a4c4f">tagesablauf:</h3><button class="btn klein ghost" data-go="kalender">Kalender ${ic("rechts")}</button></div>
+      ${g.length?`<div class="ganz-liste">${g.map(pilleHtml).join("")}</div>`:""}
+      ${l.length?ablaufHtml(l,k,jetzt):""}
+      ${morgenHtml}
+    </div>`;
+  const morgenKarte=morgenZeilen?`<div class="karte"><div class="k-kopf"><h3 class="lab" style="--kc:#9a4c4f">morgen:</h3><button class="btn klein ghost" data-go="kalender">Kalender ${ic("rechts")}</button></div>${morgenZeilen}</div>`:"";
+  const offenN=aufg.filter(t=>!t.done).length;
+  const karten=[
+    tagLeer?"":ablaufKarte,
+    `<div class="karte">
+        <div class="k-kopf"><h3 class="lab" style="--kc:${P.Oliv}">zu erledigen:</h3>${offenN?`<span class="hinweis">${offenN} offen</span>`:""}</div>
+        <div class="neu-a"><input id="schnellA" placeholder="Neue Aufgabe" autocomplete="off" enterkeyhint="done" aria-label="Neue Aufgabe">
+          <button class="btn rund" data-act="schnellA" aria-label="Hinzufügen" style="background:var(--oliv);color:var(--puder);box-shadow:none">${ic("plus")}</button></div>
+        ${aufg.map(t=>aZeile(t,true)).join("")}
+      </div>`,
+    uniMini(),
+    fristen.length?`<div class="karte"><div class="k-kopf"><h3 class="lab" style="--kc:#8f6200">fristen:</h3><button class="btn klein ghost" data-go="uni">Uni ${ic("rechts")}</button></div>
+        ${fristen.slice(0,5).map(terZeile).join("")}</div>`:"",
+    geb.length?`<div class="kasten"><div class="k-kopf"><h3 class="lab" style="--kc:${P.Wein}">geburtstage:</h3><button class="btn klein ghost" data-go="geschenke">Geschenke ${ic("rechts")}</button></div>
+        ${geb.map(({p,n})=>`<div class="geb-z"><b>${n.d.getDate()}.</b>${esc(p.name)}${n.alter?` wird ${n.alter}`:""}<span>${bisText(n.tage)}</span></div>`).join("")}</div>`:"",
+    tagLeer?morgenKarte:""
+  ].filter(Boolean);
   return `
   ${kopf(`${gruss()}${name?`, <em>${esc(name)}</em>`:""}.`,
     `${langD(d)}${sem&&sem.w?` · <b>Semesterwoche ${sem.w}${sem.gesamt?` von ${sem.gesamt}`:""}</b>`:""}`,
     `<button class="btn nur-desk" data-act="neuEintrag">${ic("plus")}Eintrag</button><button class="btn rund nur-handy" data-act="einst" aria-label="Einstellungen">${ic("gear")}</button>`, true)}
   ${karte}
-  <div class="raster2">
-    <div class="karte">
-      <div class="k-kopf"><h3 class="lab" style="--kc:#9a4c4f">tagesablauf:</h3><button class="btn klein ghost" data-go="kalender">Kalender ${ic("rechts")}</button></div>
-      ${g.length?`<div class="ganz-liste">${g.map(pilleHtml).join("")}</div>`:""}
-      ${l.length?ablaufHtml(l,k,jetzt):(g.length?"":`<div class="leer">Nichts im Plan.</div>`)}
-      ${(morgen.length||gMorgen.length)?`<div class="morgen"><div class="lab" style="--kc:#9a4c4f">morgen:</div>
-        ${gMorgen.map(x=>`<div class="mo-z" style="--kc:${x.c}"><i></i><span>ganztags</span>${esc(x.titel)}</div>`).join("")}
-        ${morgen.slice(0,4).map(b=>`<div class="mo-z" style="--kc:${farbeVon(b)}"><i></i><span>${b.start}</span>${esc(titelVon(b))}</div>`).join("")}
-        ${morgen.length>4?`<div class="mo-z" style="--kc:transparent"><i></i><span></span>und ${morgen.length-4} weitere</div>`:""}</div>`:""}
-    </div>
-    <div class="stapel">
-      <div class="karte">
-        <div class="k-kopf"><h3 class="lab" style="--kc:${P.Oliv}">zu erledigen:</h3>${aufg.filter(t=>!t.done).length?`<span class="hinweis">${aufg.filter(t=>!t.done).length} offen</span>`:""}</div>
-        <div class="neu-a"><input id="schnellA" placeholder="Neue Aufgabe" autocomplete="off" enterkeyhint="done" aria-label="Neue Aufgabe">
-          <button class="btn rund" data-act="schnellA" aria-label="Hinzufügen" style="background:var(--oliv);color:var(--puder);box-shadow:none">${ic("plus")}</button></div>
-        ${aufg.map(t=>aZeile(t,true)).join("")}
-      </div>
-      ${uniMini()}
-      ${fristen.length?`<div class="karte"><div class="k-kopf"><h3 class="lab" style="--kc:#8f6200">fristen:</h3><button class="btn klein ghost" data-go="uni">Uni ${ic("rechts")}</button></div>
-        ${fristen.slice(0,5).map(terZeile).join("")}</div>`:""}
-      ${geb.length?`<div class="kasten"><div class="k-kopf"><h3 class="lab" style="--kc:${P.Wein}">geburtstage:</h3><button class="btn klein ghost" data-go="geschenke">Geschenke ${ic("rechts")}</button></div>
-        ${geb.map(({p,n})=>`<div class="geb-z"><b>${n.d.getDate()}.</b>${esc(p.name)}${n.alter?` wird ${n.alter}`:""}<span>${bisText(n.tage)}</span></div>`).join("")}</div>`:""}
-    </div>
-  </div>`;
+  <div class="raster2 heute-raster"><div class="spalte">${karten.join("")}</div><div class="spalte"></div></div>`;
 }
 
 /* ============================================================

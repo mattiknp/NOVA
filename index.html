@@ -1774,6 +1774,10 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 .lp-gruppe.rueck .lp-g-k svg{ width:14px; height:14px; }
 .lp-gruppe.rueck .lp-g-k span{ color:var(--warn); }
 .lp-anki{ display:flex; align-items:center; gap:10px; margin:0 0 6px; font-size:var(--t-xs); color:var(--text-faint); }
+.lp-strahl{ display:flex; flex-direction:column; gap:2px; margin:0 0 6px; }
+.lp-strahl .lp-anki{ margin:0; }
+.lp-s-l{ font-style:normal; width:52px; flex:0 0 auto; color:var(--text-dim); }
+.lp-strahl .lp-anki > span{ min-width:118px; text-align:right; font-variant-numeric:tabular-nums; }
 .lp-anki b{ color:var(--text); font-variant-numeric:tabular-nums; }
 .lp-anki-bar{ position:relative; flex:1; height:6px; border-radius:var(--r-pill); background:var(--track); overflow:visible; }
 .lp-anki-bar i{ display:block; height:100%; border-radius:var(--r-pill); background:var(--lf); }
@@ -5780,21 +5784,24 @@ function lpVorschlag(x){
 /* Der Strahl: abgehakt, Soll-Strich bis heute, gesamt. Mit Anki-Zahlen in Karten,
    sonst in Schritten (Vorlesungen, Blätter, Aufgaben). */
 function lpStrahl(m,st){
-  let ist=st.ist, soll=st.soll, ges=st.gesamt, einheit="Ankis";
-  if(!ges){
-    const l=lpAlle().filter(x=>x.modul===m), t=today();
-    ges=l.length; ist=l.filter(x=>x.fertig).length; soll=l.filter(x=>lpFristWoche(x)<=t||x.datum<=t).length;
-    einheit=l.every(x=>x.art==="anki")?"Vorlesungen":l.every(x=>x.art==="woche"||x.art==="blatt")?"Blätter":"Aufgaben";
-  }
-  if(!ges) return "";
-  return `<div class="lp-anki" title="Abgehakt ${ist} · Soll bis heute ${soll} · Gesamt ${ges}">
+  const t=today(), l=lpAlle().filter(x=>x.modul===m);
+  const schiene=(lab,ist,soll,ges,einheit,titel)=>`<div class="lp-anki" title="${titel}">
+    <em class="lp-s-l">${lab}</em>
     <div class="lp-anki-bar"><i style="width:${ist/ges*100}%"></i><em style="left:${soll/ges*100}%"></em></div>
-    <span><b>${ist}</b> / ${ges} ${einheit} · Soll heute ${soll}</span></div>`;
+    <span><b>${ist}</b> / ${ges} ${einheit} · Soll ${soll}</span></div>`;
+  let out="";
+  if(st.gesamt) out+=schiene("Ankis",st.ist,st.soll,st.gesamt,"",`Ankis: abgehakt ${st.ist} · Soll bis heute ${st.soll} · Gesamt ${st.gesamt}`);
+  else { const v=l.filter(x=>x.art==="anki"); if(v.length) out+=schiene("Vorl.",v.filter(x=>x.fertig).length,v.filter(x=>x.datum<=t).length,v.length,"","Vorlesungen"); }
+  const ue=l.filter(x=>x.art!=="anki");
+  if(ue.length){ const ist=ue.filter(x=>x.fertig).length, soll=ue.filter(x=>lpFristWoche(x)<=t).length;
+    const nurBl=ue.every(x=>/blatt/i.test(x.basis||x.titel));
+    out+=schiene(nurBl?"Blätter":"Übungen",ist,soll,ue.length,"",`${nurBl?"Blätter":"Übungen, Blätter und HÜs"}: erledigt ${ist} · Soll bis heute ${soll} · Gesamt ${ue.length}`); }
+  return out?`<div class="lp-strahl">${out}</div>`:"";
 }
 /* Stand je Modul */
 function lpStand(modul){
   const l=lpAlle().filter(x=>x.modul===modul), t=today();
-  const offen=l.filter(x=>!x.fertig&&x.datum<t);
+  const offen=l.filter(x=>!x.fertig&&x.datum<t&&!(x.art==="anki"&&x.neu===0));
   const anki=l.filter(x=>x.art==="anki");
   const soll=Math.max(0,...anki.filter(x=>x.datum<=t).map(x=>x.gesamt||0));
   const ist=anki.filter(x=>x.fertig).reduce((a,x)=>a+(x.neu||0),0);
@@ -5870,13 +5877,13 @@ function lpHeute(){
   const mods=[...new Set(lpAlle().map(x=>x.modul))];
   mods.forEach(m=>{
     const l=lpAlle().filter(x=>x.modul===m&&!x.fertig);
-    const anki=l.filter(x=>x.art==="anki"&&x.datum<=t).sort((a,b)=>a.datum.localeCompare(b.datum));
+    const anki=l.filter(x=>x.art==="anki"&&x.datum<=t&&x.neu!==0).sort((a,b)=>a.datum.localeCompare(b.datum));
     if(anki.length){
       const karten=anki.reduce((a,x)=>a+(x.neu||0),0);
       const naechste=lpAlle().filter(x=>x.modul===m&&x.art==="anki"&&x.datum>t).sort((a,b)=>a.datum.localeCompare(b.datum))[0];
       const tage=naechste?Math.max(1,Math.round((parsedk(naechste.datum)-parsedk(t))/86400000)):1;
       const alt=anki.some(x=>x.datum<t);
-      const heute=alt&&tage>1&&karten>25?Math.ceil(karten/tage):karten;
+      const heute=karten;   /* der ganze Rückstand, nicht über die Tage verteilt */
       raus.push({typ:"anki", modul:m, schritte:anki, karten, heute, rest:karten-heute, alt, tage, naechste});
     }
     l.filter(x=>x.art!=="anki"&&(x.datum<t||lpVorschlag(x)===t)).forEach(x=>raus.push({typ:"woche",modul:m,schritt:x,alt:x.datum<t}));
@@ -5894,7 +5901,7 @@ function lpZeile(x,opt={}){
     <button class="lp-box" data-lphak="${x.id}" aria-label="${x.fertig?"Wieder öffnen":"Abhaken"}" aria-pressed="${!!x.fertig}">${ico("check")}</button>
     <button class="lp-t" data-lpedit="${x.id}">
       <b>${opt.mitModul?`<i>${esc(lpKurz(x.modul))}</i> `:""}${esc(x.titel)}</b>
-      <span>${[x.art==="anki"?(x.neu!=null?`${x.neu} neue Ankis · Soll ${x.gesamt}`:`Ankis zur Vorlesung${x.detail?` · ${esc(x.detail)}`:""}`):esc(x.detail||""), x.takt===2&&!x.fertig?"2 Wochen Zeit":"",
+      <span>${[x.art==="anki"?(x.neu!=null?`${x.schaetzung?"ca. ":""}${x.neu} neue Ankis · Soll ${x.gesamt}`:`Ankis zur Vorlesung${x.detail?` · ${esc(x.detail)}`:""}`):esc(x.detail||""), x.takt===2&&!x.fertig?"2 Wochen Zeit":"",
         vor&&vor!==x.datum?(x.plan?`geplant ${lpTagLabel(vor)}`:`Vorschlag ${lpTagLabel(vor)} · ruhigster Tag`):""].filter(Boolean).join(" · ")}</span></button>
     <span class="lp-d${spaet?" rot":""}">${spaet?"seit ":x.art==="anki"?"":"bis "}${lpTagLabel(x.datum)}</span>
   </div>`;
@@ -5947,14 +5954,14 @@ function lernplanHtml(){
         </button>`:""}
         ${tgl().map(x=>tglZeile(x,tage)).join("")}
         ${heute.length?heute.map(h=>h.typ==="anki"?`<div class="lp-emp${h.alt?" alt":""}" style="--lf:${lpFarbe(h.modul)}">
-            <span class="lp-emp-z"><b>${h.karten?h.heute:h.schritte.length}</b><span>${h.karten?"neue":"VL"}</span></span>
+            <span class="lp-emp-z"><b>${h.karten?h.heute:h.schritte.length}</b><span>${h.karten?(h.schritte.some(x=>x.schaetzung)?"ca. neue":"neue"):"VL"}</span></span>
             <span class="lp-emp-t"><b>${esc(lpKurz(h.modul))} · Ankis${h.alt?" nachholen":""}</b>
               <span>${h.schritte.map(s=>esc(s.titel.replace(/^VL \d+ · /,""))).filter((v,i,a)=>a.indexOf(v)===i).join(", ")}${
                 h.rest>0?` · Rest ${h.rest} bis ${lpTagLabel(dk(addD(new Date(),h.tage-1)))}`:""}</span></span>
             <button class="b b-sm" data-lpalle="${h.schritte.map(s=>s.id).join(",")}">${h.rest>0?"Alles geschafft":"Geschafft"}</button>
           </div>`
           :`<div class="lp-emp${h.alt?" alt":""}" style="--lf:${lpFarbe(h.modul)}">
-            <span class="lp-emp-z">${ico("check")}</span>
+            <span class="lp-emp-z"><b>${parsedk(h.schritt.datum).getDate()}</b><span>${h.alt?"war fällig":TWD[wtagIdx(parsedk(h.schritt.datum))]}</span></span>
             <span class="lp-emp-t"><b>${esc(lpKurz(h.modul))} · ${esc(h.schritt.titel)}</b><span>${h.alt?`seit ${lpTagLabel(h.schritt.datum)} offen`
               :h.schritt.empf===today()?`laut Plan heute · fällig ${lpTagLabel(h.schritt.datum)}`:`fällig ${lpTagLabel(h.schritt.datum)} — heute ist dein ruhigster Tag dafür`}</span></span>
             <button class="b b-sm" data-lpalle="${h.schritt.id}">Geschafft</button></div>`).join("")
@@ -6075,6 +6082,16 @@ function lpKorrekturen(){
     lpGesamtNeu("mm1");
     S.lernplan.mm1Kap=1; geaendert=true;
   }
+  /* MM I gesamt ca. 560 Ankis: Kap. 2 hat 125; VL 7–25 je ca. 23 (geschätzt); VL 1 ohne Ankis */
+  if(!S.lernplan.mm1Schaetz){
+    lpAlle().filter(x=>x.modul==="mm1"&&x.art==="anki").forEach(x=>{
+      const m=/^la_mm1_.*_vl-(\d+)$/.exec(x.id); if(!m) return; const n=+m[1];
+      if(n===1&&x.neu==null) x.neu=0;
+      if(n>=7&&n<=25&&x.neu==null){ x.neu=23; x.schaetzung=1; }
+    });
+    lpGesamtNeu("mm1");
+    S.lernplan.mm1Schaetz=1; geaendert=true;
+  }
   /* Ergänzungen vom 23.10.2026 (einmalig, danach frei bearbeitbar) */
   if(!S.lernplan.plan2310){
     const l=S.lernplan.schritte, hat=id=>l.some(x=>x.id===id);
@@ -6126,7 +6143,7 @@ function lpSchrittModal(id){
     if(plan&&plan<=x.datum) x.plan=plan; else delete x.plan;
     const n=document.getElementById("lsN"); if(n) x.detail=n.value.trim();
     const a=document.getElementById("lsA");
-    if(a){ const v=parseInt(a.value,10); if(v>=0&&v!==x.neu){ x.neu=v; x.korr=1; lpGesamtNeu(x.modul); } }
+    if(a){ const v=parseInt(a.value,10); if(v>=0&&v!==x.neu){ x.neu=v; x.korr=1; delete x.schaetzung; lpGesamtNeu(x.modul); } }
     save(); closeModal(); R.uni(); };
   document.getElementById("lsDel").onclick=()=>{ S.lernplan.schritte=lpAlle().filter(s=>s.id!==id); save(); closeModal(); toast("Gelöscht"); R.uni(); };
 }
@@ -6204,7 +6221,7 @@ function lpEditor(modul){
       const d=document.querySelector(`[data-led="${x.id}"]`)?.value, t=document.querySelector(`[data-let="${x.id}"]`)?.value.trim(),
             n=document.querySelector(`[data-len="${x.id}"]`)?.value;
       if(d){ x.datum=d; if(x.takt===2) x.ab=lpZweiAb(d); } if(t) x.titel=t;
-      if(n!==undefined&&n!==null&&n!==""&&+n!==x.neu){ x.neu=parseInt(n,10)||0; x.korr=1; } });
+      if(n!==undefined&&n!==null&&n!==""&&+n!==x.neu){ x.neu=parseInt(n,10)||0; x.korr=1; delete x.schaetzung; } });
     /* Reihen: Name und Wochentag */
     reihen.forEach(r=>{ const neuName=document.querySelector(`[data-rname="${CSS.escape(r)}"]`)?.value.trim()||r,
         tag=+document.querySelector(`[data-rtag="${CSS.escape(r)}"]`)?.value;

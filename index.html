@@ -3752,7 +3752,8 @@ R.heute=function(){
           ${tgl().map(x=>`<button class="hd-uni-z${(x.erledigt||{})[today()]?" fertig":""}" data-tgl="${x.id}" style="--lf:${x.modul?lpFarbe(x.modul):"var(--c1)"}"><span class="lp-box">${ico("check")}</span><span>${esc(tglName(x))}</span></button>`).join("")}
           ${em.map(h=>`<button class="hd-uni-z${h.alt?" alt":""}" data-lpalle="${h.typ==="anki"?h.schritte.map(x=>x.id).join(","):h.schritt.id}" style="--lf:${lpFarbe(h.modul)}">
             <span class="lp-box">${ico("check")}</span>
-            <span>${h.typ==="anki"?`<b>${h.heute}</b> neue Ankis ${esc(lpKurz(h.modul))}${h.alt?" nachholen":""}${h.rest>0?` <em>· Rest ${h.rest} später</em>`:""}`
+            <span>${h.typ==="anki"?(h.karten?`<b>${h.heute}</b> neue Ankis ${esc(lpKurz(h.modul))}${h.alt?" nachholen":""}${h.rest>0?` <em>· Rest ${h.rest} später</em>`:""}`
+                :`${esc(lpKurz(h.modul))} · Ankis zu ${esc(h.schritte.map(x=>x.titel).join(", "))}${h.alt?" nachholen":""}`)
               :`${esc(lpKurz(h.modul))} · ${esc(h.schritt.titel)}`}</span></button>`).join("")}</div>`; })()}
       ${(()=>{ const x=gsXmas(), dabei=gsPersonen().filter(gsXmasDabei); if(x.tage>28||!dabei.length) return "";
         const fehlt=dabei.filter(p=>gsXmasStand(p)!=="gekauft").length; if(!fehlt) return "";
@@ -5776,6 +5777,20 @@ function lpVorschlag(x){
   return best;
 }
 
+/* Der Strahl: abgehakt, Soll-Strich bis heute, gesamt. Mit Anki-Zahlen in Karten,
+   sonst in Schritten (Vorlesungen, Blätter, Aufgaben). */
+function lpStrahl(m,st){
+  let ist=st.ist, soll=st.soll, ges=st.gesamt, einheit="Ankis";
+  if(!ges){
+    const l=lpAlle().filter(x=>x.modul===m), t=today();
+    ges=l.length; ist=l.filter(x=>x.fertig).length; soll=l.filter(x=>lpFristWoche(x)<=t||x.datum<=t).length;
+    einheit=l.every(x=>x.art==="anki")?"Vorlesungen":l.every(x=>x.art==="woche"||x.art==="blatt")?"Blätter":"Aufgaben";
+  }
+  if(!ges) return "";
+  return `<div class="lp-anki" title="Abgehakt ${ist} · Soll bis heute ${soll} · Gesamt ${ges}">
+    <div class="lp-anki-bar"><i style="width:${ist/ges*100}%"></i><em style="left:${soll/ges*100}%"></em></div>
+    <span><b>${ist}</b> / ${ges} ${einheit} · Soll heute ${soll}</span></div>`;
+}
 /* Stand je Modul */
 function lpStand(modul){
   const l=lpAlle().filter(x=>x.modul===modul), t=today();
@@ -5879,7 +5894,7 @@ function lpZeile(x,opt={}){
     <button class="lp-box" data-lphak="${x.id}" aria-label="${x.fertig?"Wieder öffnen":"Abhaken"}" aria-pressed="${!!x.fertig}">${ico("check")}</button>
     <button class="lp-t" data-lpedit="${x.id}">
       <b>${opt.mitModul?`<i>${esc(lpKurz(x.modul))}</i> `:""}${esc(x.titel)}</b>
-      <span>${[x.art==="anki"?`${x.neu} neue Ankis · Soll ${x.gesamt}`:esc(x.detail||""), x.takt===2&&!x.fertig?"2 Wochen Zeit":"",
+      <span>${[x.art==="anki"?(x.neu!=null?`${x.neu} neue Ankis · Soll ${x.gesamt}`:`Ankis zur Vorlesung${x.detail?` · ${esc(x.detail)}`:""}`):esc(x.detail||""), x.takt===2&&!x.fertig?"2 Wochen Zeit":"",
         vor&&vor!==x.datum?(x.plan?`geplant ${lpTagLabel(vor)}`:`Vorschlag ${lpTagLabel(vor)} · ruhigster Tag`):""].filter(Boolean).join(" · ")}</span></button>
     <span class="lp-d${spaet?" rot":""}">${spaet?"seit ":x.art==="anki"?"":"bis "}${lpTagLabel(x.datum)}</span>
   </div>`;
@@ -5932,7 +5947,7 @@ function lernplanHtml(){
         </button>`:""}
         ${tgl().map(x=>tglZeile(x,tage)).join("")}
         ${heute.length?heute.map(h=>h.typ==="anki"?`<div class="lp-emp${h.alt?" alt":""}" style="--lf:${lpFarbe(h.modul)}">
-            <span class="lp-emp-z"><b>${h.heute}</b><span>neue</span></span>
+            <span class="lp-emp-z"><b>${h.karten?h.heute:h.schritte.length}</b><span>${h.karten?"neue":"VL"}</span></span>
             <span class="lp-emp-t"><b>${esc(lpKurz(h.modul))} · Ankis${h.alt?" nachholen":""}</b>
               <span>${h.schritte.map(s=>esc(s.titel.replace(/^VL \d+ · /,""))).filter((v,i,a)=>a.indexOf(v)===i).join(", ")}${
                 h.rest>0?` · Rest ${h.rest} bis ${lpTagLabel(dk(addD(new Date(),h.tage-1)))}`:""}</span></span>
@@ -5955,9 +5970,7 @@ function lernplanHtml(){
           return `<div class="lp-gruppe" style="--lf:${lpFarbe(m)}">
             <div class="lp-g-k"><i></i>${esc(lpName(m))}
               <span class="${st.rueck?"rot":"gut"}">${st.rueck?`${st.rueck} im Rückstand`:"im Plan"}</span></div>
-            ${st.gesamt?`<div class="lp-anki" title="Abgehakt ${st.ist} · Soll bis heute ${st.soll} · Gesamt ${st.gesamt}">
-              <div class="lp-anki-bar"><i style="width:${st.ist/st.gesamt*100}%"></i><em style="left:${st.soll/st.gesamt*100}%"></em></div>
-              <span><b>${st.ist}</b> / ${st.gesamt} Ankis · Soll heute ${st.soll}</span></div>`:""}
+            ${lpStrahl(m,st)}
             ${l.map(x=>lpZeile(x)).join("")}</div>`;}).join("")}
         ${!woche.length&&!rueck.length?`<div class="lp-ruhe">In dieser Woche ist nichts geplant.</div>`:""}
       </div>
@@ -5990,7 +6003,7 @@ function lpHakWiring(el,neu){
   el.querySelectorAll("[data-lphak]").forEach(b=>b.onclick=()=>{
     const x=lpAlle().find(s=>s.id===b.dataset.lphak); if(!x) return;
     x.fertig=x.fertig?null:Date.now(); save();
-    if(x.fertig) toast(x.art==="anki"?`${x.neu} Ankis abgehakt`:"Abgehakt","check"); neu(); });
+    if(x.fertig) toast(x.art==="anki"&&x.neu?`${x.neu} Ankis abgehakt`:"Abgehakt","check"); neu(); });
   el.querySelectorAll("[data-lpalle]").forEach(b=>b.onclick=()=>{
     const ids=b.dataset.lpalle.split(","); let n=0;
     lpAlle().forEach(x=>{ if(ids.includes(x.id)&&!x.fertig){ x.fertig=Date.now(); n+=x.neu||0; } });
@@ -6036,6 +6049,20 @@ function lpKorrekturen(){
         titel:`Blatt ${nr} rechnen`,detail:`zur Übung ${nr}`,neu:null,gesamt:null,fertig:null}));
     S.lernplan.mikBlatt=1; geaendert=true;
   }
+  /* MM-I-Plan aus dem Ablaufplan WiSe 26/27: je Vorlesung eine Anki-Einheit (Kartenzahl offen) */
+  if(!S.lernplan.mm1Plan){
+    if(!lpAlle().some(x=>x.modul==="mm1"&&x.art==="anki")){
+      [["1","2026-10-15"],["2","2026-10-19"],["3","2026-10-22"],["4","2026-10-26"],["5","2026-10-26","nachmittags"],["6","2026-10-29"],
+       ["7","2026-11-02"],["8","2026-11-02","nachmittags"],["9","2026-11-05"],["10","2026-11-16"],["11","2026-11-16","nachmittags"],["12","2026-11-19"],
+       ["13","2026-11-23","n. MKSV"],["14","2026-11-30","nachmittags · n. MKSV"],["15","2026-12-03","n. MKSV"],["16","2026-12-07","n. MKSV"],
+       ["17","2026-12-10","n. MKSV"],["18","2026-12-14","n. MKSV"],["19","2027-01-18"],["20","2027-01-18","nachmittags · n. SMKA"],
+       ["21","2027-01-21","n. SMKA"],["22","2027-01-25","n. SMKA"],["23","2027-01-28","n. MKSV & SMKA"],["24","2027-02-01","n. MKSV & SMKA"],
+       ["25","2027-02-04"],["26","2027-02-11","Backup"]].forEach(([n,d,detail])=>
+        S.lernplan.schritte.push({id:`la_mm1_${d}_vl-${n}`,modul:"mm1",datum:d,art:"anki",titel:`VL ${n}`,detail:detail||"",neu:null,gesamt:null,fertig:null}));
+      lpGesamtNeu("mm1");
+    }
+    S.lernplan.mm1Plan=1; geaendert=true;
+  }
   /* Tägliche Aufgabe „MM I · Ankis“, einmalig angelegt (danach frei lösch- und änderbar) */
   if(!S.lernplan.tgMm1){ S.lernplan.taeglich=S.lernplan.taeglich||[];
     if(!S.lernplan.taeglich.some(t=>t.id==="tg_mm1_anki")) S.lernplan.taeglich.push({id:"tg_mm1_anki",titel:"Ankis",modul:"mm1",erledigt:{}});
@@ -6056,7 +6083,7 @@ function lpSchrittModal(id){
       return tage.length?`<label>Wann willst du es machen?</label>
         <div class="chips" id="lsP">${tage.map(k=>`<button class="chip${(x.plan||auto)===k?" on":""}" data-p="${k}">${lpTagLabel(k)}${k===auto?" ·&nbsp;ruhig":""}</button>`).join("")}</div>
         <div class="p-note" style="margin-top:6px">„ruhig“ ist der Tag mit dem wenigsten im Planer — NOVAs Vorschlag. Tipp einen anderen Tag an, um selbst zu planen.</div>`:""; })():""}
-    ${x.art==="anki"?`<label>Neue Ankis</label><input type="text" inputmode="numeric" id="lsA" value="${x.neu}" autocomplete="off">`:""}
+    ${x.art==="anki"?`<label>Neue Ankis</label><input type="text" inputmode="numeric" id="lsA" value="${x.neu??""}" autocomplete="off">`:""}
     ${x.art==="woche"?`<label>Notiz</label><input id="lsN" value="${esc(x.detail||"")}">`:""}
     <div class="mo-act"><button class="b" id="lsDel" style="margin-right:auto;color:var(--bad)">Löschen</button>
       <button class="b" onclick="closeModal()">Abbrechen</button><button class="b b-1" id="lsOk">Speichern</button></div>`);
@@ -6132,7 +6159,7 @@ function lpEditor(modul){
       <span class="lpe-a ${x.art}">${artName[x.art]||x.art}</span>
       <input type="date" data-led="${x.id}" value="${x.datum}">
       <input data-let="${x.id}" value="${esc(x.titel)}">
-      ${x.art==="anki"?`<input data-len="${x.id}" value="${x.neu}" inputmode="numeric" class="lpe-n" title="neue Ankis">`:`<span class="lpe-n"></span>`}
+      ${x.art==="anki"?`<input data-len="${x.id}" value="${x.neu??""}" inputmode="numeric" class="lpe-n" title="neue Ankis">`:`<span class="lpe-n"></span>`}
       <button class="b b-i b-xs" data-lex="${x.id}" aria-label="Schritt löschen">${ico("x")}</button></div>`).join("")}</div>
     <div class="lpe-neu"><input type="date" id="leNd" value="${today()}"><input id="leNt" placeholder="Neue Aufgabe, z. B. Altklausur 2019">
       <button class="b" id="leNok">${ico("plus")}</button></div>

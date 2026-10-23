@@ -6063,6 +6063,26 @@ function lpKorrekturen(){
     }
     S.lernplan.mm1Plan=1; geaendert=true;
   }
+  /* Ergänzungen vom 23.10.2026 (einmalig, danach frei bearbeitbar) */
+  if(!S.lernplan.plan2310){
+    const l=S.lernplan.schritte, hat=id=>l.some(x=>x.id===id);
+    const woche=(modul,basis,d,extra)=>{ const id=`lw_${modul}_${lpSlug(basis)}_${d}`; if(!hat(id))
+      l.push(Object.assign({id,modul,datum:d,art:"woche",basis,titel:basis,detail:"",neu:null,gesamt:null,fertig:null},extra||{})); };
+    /* Mathe III: 14 Blätter, das letzte am 21.02. */
+    if(l.some(x=>x.modul==="ma3"&&x.art==="woche"&&x.basis==="Übungsblatt")) woche("ma3","Übungsblatt","2027-02-21");
+    /* Statistik: 7 Blätter alle 2 Wochen, das siebte bis 14.02. */
+    if(l.some(x=>x.modul==="sta"&&x.art==="woche"&&x.basis==="Übungsblatt")) woche("sta","Übungsblatt","2027-02-14",{takt:2,ab:"2027-02-01"});
+    /* MM I: 5 Gruppenübungen mit je einer Woche Zeit, in den Übungswochen des Ablaufplans (Block A) */
+    ["2026-11-20","2026-12-04","2026-12-18","2027-01-29","2027-02-12"].forEach(d=>woche("mm1","Übung",d,{detail:"Gruppenübung, Block A"}));
+    /* MM I: Hörsaalübungen vorbereiten (Ablaufplan; am 08.02. zwei) */
+    [["1","2026-10-19","13:30"],["2","2026-11-09","13:30"],["3","2026-11-23","13:30"],["4","2026-12-07","13:30"],["5","2026-12-14","13:30"],
+     ["6","2027-01-25","13:30"],["7","2027-02-01","13:30"],["8","2027-02-08","08:00"],["9","2027-02-08","13:30"]].forEach(([n,d,uhr])=>{
+      const id=`le_mm1_hue-${n}`; if(!hat(id)) l.push({id,modul:"mm1",datum:d,art:"einzel",titel:`HÜ ${n} vorbereiten`,detail:`Hörsaalübung ${uhr}`,neu:null,gesamt:null,fertig:null}); });
+    /* TM III: Hörsaalübungen ab der 3. Vorlesungswoche, jeden Donnerstag vorbereiten (ohne Ferien) */
+    for(let d=parsedk("2026-10-29"); dk(d)<="2027-02-11"; d=addD(d,7)) if(!istVlfrei(dk(d))) woche("tm3","Hörsaalübung",dk(d),{detail:"vorbereiten"});
+    lpWochenNummern();
+    S.lernplan.plan2310=1; geaendert=true;
+  }
   /* Tägliche Aufgabe „MM I · Ankis“, einmalig angelegt (danach frei lösch- und änderbar) */
   if(!S.lernplan.tgMm1){ S.lernplan.taeglich=S.lernplan.taeglich||[];
     if(!S.lernplan.taeglich.some(t=>t.id==="tg_mm1_anki")) S.lernplan.taeglich.push({id:"tg_mm1_anki",titel:"Ankis",modul:"mm1",erledigt:{}});

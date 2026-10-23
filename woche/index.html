@@ -188,6 +188,22 @@ input:focus,select:focus,textarea:focus{ border-color:var(--sec-text); box-shado
 .a-anh{ flex:0 0 auto; align-self:center; display:inline-flex; align-items:center; gap:3px; height:28px; padding:0 9px; border-radius:999px;
   background:var(--weiss); color:var(--wein); font-size:12px; font-weight:700; box-shadow:0 0 0 1.5px color-mix(in srgb, var(--wein) 30%, transparent) inset; }
 .a-anh .ic{ width:14px; height:14px; }
+/* Zu erledigen auf Heute: zwei Stufen derselben Farbe, wichtig dunkel oben, der Rest hell darunter */
+.a-z.stufe{ align-items:center; gap:10px; padding:9px 6px 9px 12px; margin-bottom:6px; border-bottom:0; border-radius:10px; background:var(--kc); color:var(--ki); }
+.a-z.stufe:last-child{ margin-bottom:0; }
+.a-z.stufe + .a-z.fertig{ margin-top:6px; }
+.a-z.stufe .a-box{ border-color:var(--ki); }
+.a-z.stufe .a-t{ padding-top:0; font-weight:600; }
+.a-z.stufe .a-meta, .a-z.stufe .notiz-vor{ color:var(--ki); }
+.a-z.stufe .a-meta .rot{ color:var(--ki); text-decoration:underline; text-underline-offset:3px; }
+.a-z.stufe .alter{ background:color-mix(in srgb, var(--ki) 18%, transparent); color:var(--ki); }
+.a-z.stufe .alter.alt{ background:var(--ki); color:var(--kc); }
+.a-stufe{ flex:0 0 auto; width:36px; height:36px; display:grid; place-items:center; border-radius:50%; color:var(--ki); transition:transform 160ms cubic-bezier(.23,1,.32,1), background-color 160ms ease; }
+.a-stufe .ic{ width:18px; height:18px; }
+.a-stufe[aria-pressed="false"] .ic{ opacity:.6; }
+.a-stufe[aria-pressed="true"] .ic path{ fill:currentColor; }
+.a-stufe:active{ transform:scale(.9); }
+@media (hover:hover){ .a-stufe:hover{ background:color-mix(in srgb, var(--ki) 14%, transparent); } }
 .u-neu{ display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
 .weg-chip{ padding:0 4px 0 13px; gap:4px; background:var(--kc); color:var(--ki); box-shadow:none; }
 .weg-chip .weg-n{ display:inline-flex; align-items:center; gap:7px; color:inherit; font:inherit; height:100%; }
@@ -926,7 +942,7 @@ function vHeute(){
         <div class="k-kopf"><h3 class="lab" style="--kc:${P.Oliv}">zu erledigen:</h3>${aufg.filter(t=>!t.done).length?`<span class="hinweis">${aufg.filter(t=>!t.done).length} offen</span>`:""}</div>
         <div class="neu-a"><input id="schnellA" placeholder="Neue Aufgabe" autocomplete="off" enterkeyhint="done" aria-label="Neue Aufgabe">
           <button class="btn rund" data-act="schnellA" aria-label="Hinzufügen" style="background:var(--oliv);color:var(--puder);box-shadow:none">${ic("plus")}</button></div>
-        ${aufg.map(aZeile).join("")}
+        ${aufg.map(t=>aZeile(t,true)).join("")}
       </div>
       ${uniMini()}
       ${fristen.length?`<div class="karte"><div class="k-kopf"><h3 class="lab" style="--kc:#8f6200">fristen:</h3><button class="btn klein ghost" data-go="uni">Uni ${ic("rechts")}</button></div>
@@ -1170,19 +1186,24 @@ function alterChip(t){
 const heuteErledigt=t=>t.done&&t.doneAt&&dk(new Date(t.doneAt))===heute();
 /* Offenes zuerst, das Älteste oben; heute Abgehaktes bleibt bis Mitternacht durchgestrichen stehen */
 const aufSort=(a,b)=>(a.done?1:0)-(b.done?1:0)||(a.t||0)-(b.t||0);
-const alltagListe=()=>S.todos.filter(t=>!istUni(t)&&(!t.done||heuteErledigt(t))).sort(aufSort);
+/* Zu erledigen: Offenes vor Erledigtem, darin Wichtiges zuerst, sonst das Älteste oben */
+const STUFE={wichtig:"#333700", leicht:"#dcdcbc"};
+const stufenSort=(a,b)=>(a.done?1:0)-(b.done?1:0)||(b.wichtig?1:0)-(a.wichtig?1:0)||(a.t||0)-(b.t||0);
+const alltagListe=()=>S.todos.filter(t=>!istUni(t)&&(!t.done||heuteErledigt(t))).sort(stufenSort);
 const groesse=b=>b<1048576?`${Math.max(1,Math.round(b/1024))} KB`:`${(b/1048576).toFixed(1).replace(".",",")} MB`;
-function aZeile(t){
-  const m=t.modul&&modVon(t.modul), c=m?m.farbe:P.Oliv, n=(t.dateien||[]).length, uni=istUni(t);
+function aZeile(t,stufen){
+  const st=stufen&&!t.done;
+  const m=t.modul&&modVon(t.modul), c=st?(t.wichtig?STUFE.wichtig:STUFE.leicht):m?m.farbe:P.Oliv, n=(t.dateien||[]).length, uni=istUni(t);
   const meta=[uni&&t.art&&t.text?`<span>${esc(t.art)}</span>`:"",
     uni&&!m?"":m&&uni?"":m?`<span class="tag" style="--kc:${m.farbe}"><i></i>${esc(m.kurz||m.name)}</span>`:"",
     t.due&&!t.done?`<span class="${t.due<heute()?"rot":""}">bis ${t.due===heute()?"heute":kurzD(pk(t.due))}</span>`:"",
     t.notiz?`<span class="notiz-vor">${esc(t.notiz.split("\n")[0].slice(0,70))}</span>`:""].filter(Boolean).join("");
-  return `<div class="a-z${t.done?" fertig":""}" style="${kv(c)}">
+  return `<div class="a-z${t.done?" fertig":""}${st?` stufe${t.wichtig?" wichtig":""}`:""}" style="${kv(c)}">
     <button class="a-box" data-act="aHaken" data-id="${t.id}" aria-label="${t.done?"Wieder öffnen":"Erledigt"}">${ic("check")}</button>
     <button class="a-t" data-act="aEdit" data-id="${t.id}"><span class="a-zeile"><span>${esc(uni?uniTitel(t):t.text)}</span>${alterChip(t)}</span>
       ${meta?`<span class="a-meta">${meta}</span>`:""}</button>
-    ${n?`<button class="a-anh" data-act="aEdit" data-id="${t.id}" aria-label="${n} ${n===1?"Datei":"Dateien"}">${ic("clip")}<span>${n}</span></button>`:""}</div>`;
+    ${n?`<button class="a-anh" data-act="aEdit" data-id="${t.id}" aria-label="${n} ${n===1?"Datei":"Dateien"}">${ic("clip")}<span>${n}</span></button>`:""}
+    ${st?`<button class="a-stufe" data-act="aStufe" data-id="${t.id}" aria-pressed="${!!t.wichtig}" aria-label="${t.wichtig?"Nicht mehr wichtig":"Als wichtig markieren"}">${ic("flagge")}</button>`:""}</div>`;
 }
 function aufgabeNeu(text,extra){ text=(text||"").trim(); if(!text) return false;
   S.todos.push(Object.assign({id:uid(),text,done:false,t:Date.now()},extra||{})); sichern(); return true; }
@@ -1215,12 +1236,15 @@ function aufgabeBlatt(id,entwurf){
   const t=entwurf||S.todos.find(x=>x.id===id); if(!t) return;
   const uni=istUni(t), neu=!!entwurf;
   if(neu) beimZu=async()=>{ for(const d of (t.dateien||[])) await DB.del(d.id).catch(()=>{}); };
-  const e={text:t.text, modul:t.modul||null, art:t.art||"Nachbereitung", due:t.due||"", notiz:t.notiz||""};
+  const e={text:t.text, modul:t.modul||null, art:t.art||"Nachbereitung", due:t.due||"", notiz:t.notiz||"", wichtig:!!t.wichtig};
   const zeichne=()=>{
     const ds=t.dateien||[];
     const artenHier=[...new Set([...uniArten(),e.art,"Sonstiges"])];
     blatt(`<h2>${uni?(neu?`${esc(e.art)}${e.modul&&modVon(e.modul)?` <span class="h2-mod" style="${kv(modVon(e.modul).farbe)}">${esc(modVon(e.modul).kurz||modVon(e.modul).name)}</span>`:""}`:"Uni-Aufgabe"):"Aufgabe"}</h2>
       <div class="feld"><label for="aT">${uni?"Titel (optional)":"Was"}</label><input id="aT" value="${esc(e.text)}" autocomplete="off"></div>
+      ${uni?"":`<div class="feld"><label>Wie wichtig</label><div class="wahl" role="radiogroup" aria-label="Wie wichtig">
+        <button class="chip${e.wichtig?" on":""}" data-stufe="1" role="radio" aria-checked="${e.wichtig}" style="${kv(STUFE.wichtig)}">${ic("flagge")}Wichtig</button>
+        <button class="chip${e.wichtig?"":" on"}" data-stufe="0" role="radio" aria-checked="${!e.wichtig}" style="${kv(STUFE.leicht)}">Kann warten</button></div></div>`}
       ${uni?`
       <div class="feld"><label>Art</label><div class="wahl">${artenHier.map(a=>`<button class="chip${e.art===a?" on":""}" data-uart="${esc(a)}" style="${kv(P.Pflaume)}">${esc(a)}</button>`).join("")}</div></div>
       ${S.module.length?`<div class="feld"><label>Modul</label><div class="wahl">${S.module.map(m=>`<button class="chip${e.modul===m.id?" on":""}" data-m="${m.id}" style="${kv(m.farbe)}"><i class="pkt"></i>${esc(m.kurz||m.name)}</button>`).join("")}</div></div>`:""}
@@ -1235,6 +1259,7 @@ function aufgabeBlatt(id,entwurf){
     const q=s=>document.getElementById(s);
     const merke=()=>{ e.text=q("aT").value; if(uni){ e.due=q("aD").value; e.notiz=q("aN").value; } };
     document.querySelectorAll("#blatt [data-uart]").forEach(c=>c.onclick=()=>{ merke(); e.art=c.dataset.uart; zeichne(); });
+    document.querySelectorAll("#blatt [data-stufe]").forEach(c=>c.onclick=()=>{ merke(); e.wichtig=c.dataset.stufe==="1"; zeichne(); });
     document.querySelectorAll("#blatt [data-m]").forEach(c=>c.onclick=()=>{ merke(); e.modul=e.modul===c.dataset.m?null:c.dataset.m; zeichne(); });
     document.querySelectorAll("#blatt [data-dauf]").forEach(c=>c.onclick=()=>oeffneDatei(c.dataset.dauf));
     document.querySelectorAll("#blatt [data-dweg]").forEach(c=>c.onclick=async()=>{ merke(); const did=c.dataset.dweg;
@@ -1250,7 +1275,7 @@ function aufgabeBlatt(id,entwurf){
       try{ navigator.storage&&navigator.storage.persist&&navigator.storage.persist(); }catch(_){}
       sichern(); zeichne(); });
     q("aOk").onclick=()=>{ merke(); if(!uni&&!e.text.trim()){ toast("Was ist zu tun?"); return; }
-      Object.assign(t,{text:e.text.trim()}, uni?{modul:e.modul,art:e.art,due:e.due||null,notiz:e.notiz.trim(),bereich:"uni"}:{});
+      Object.assign(t,{text:e.text.trim()}, uni?{}:{wichtig:e.wichtig}, uni?{modul:e.modul,art:e.art,due:e.due||null,notiz:e.notiz.trim(),bereich:"uni"}:{});
       if(neu){ S.todos.push(t); beimZu=null; } sichern(); zu(); zeige(); if(neu) toast(`${uniTitel(t)} angelegt`); };
     q("aDel")?.addEventListener("click",async()=>{ for(const d of (t.dateien||[])) await DB.del(d.id).catch(()=>{});
       S.todos=S.todos.filter(x=>x.id!==t.id); sichern(); zu(); toast("Gelöscht"); zeige(); });
@@ -1644,6 +1669,7 @@ document.addEventListener("click",e=>{
     case "kalVor": kalSchritt(1); break;
     case "kalHeute": { const alt=pk(kalDatum).getMonth(); kalDatum=heute(); monWahl=heute(); zeige(null,pk(kalDatum).getMonth()!==alt); break; }
     case "schnellA": { const i=document.getElementById("schnellA"); if(aufgabeNeu(i.value,{bereich:"alltag"})){ zeige(); document.getElementById("schnellA")?.focus(); } break; }
+    case "aStufe": { const t=S.todos.find(x=>x.id===id); if(!t) break; t.wichtig=!t.wichtig; sichern(); zeige(); break; }
     case "aHaken": { const t=S.todos.find(x=>x.id===id); if(!t) break; t.done=!t.done; t.doneAt=t.done?Date.now():null; sichern(); zeige(); if(t.done) toast("Erledigt"); break; }
     case "aEdit": aufgabeBlatt(id); break;
     case "terHaken": { const t=S.termine.find(x=>x.id===id); if(!t) break; t.erledigt=!t.erledigt; sichern(); zeige(); if(t.erledigt) toast(t.art==="klausur"?"Geschrieben. Stark!":"Abgegeben. Stark!"); break; }

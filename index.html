@@ -1760,6 +1760,8 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 .lp-emp-z b{ font-family:var(--f-disp); font-size:var(--t-xl); font-weight:700; font-variant-numeric:tabular-nums; }
 .lp-emp-z span{ font-size:10px; color:var(--text-faint); margin-top:2px; }
 .lp-emp-z svg{ width:18px; height:18px; }
+.lp-emp-z.blatt svg{ width:24px; height:24px; }
+.lp-emp-z.blatt span{ margin-top:4px; }
 .lp-emp-t{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; line-height:1.3; }
 .lp-emp-t b{ font-size:var(--t-sm); }
 .lp-emp-t span{ font-size:var(--t-xs); color:var(--text-faint); }
@@ -5783,6 +5785,11 @@ function lpVorschlag(x){
 
 /* Der Strahl: abgehakt, Soll-Strich bis heute, gesamt. Mit Anki-Zahlen in Karten,
    sonst in Schritten (Vorlesungen, Blätter, Aufgaben). */
+/* Kurzname der Aufgabenart für das Symbol auf der Empfehlungskarte */
+function lpArtKurz(x){
+  const t=(x.basis||x.titel||"");
+  return /hörsaal|^HÜ/i.test(t)?"HÜ":/blatt/i.test(t)?"Blatt":/übung/i.test(t)?"Übung":"Aufgabe";
+}
 function lpStrahl(m,st){
   const t=today(), l=lpAlle().filter(x=>x.modul===m);
   const schiene=(lab,ist,soll,ges,einheit,titel)=>`<div class="lp-anki" title="${titel}">
@@ -5961,7 +5968,7 @@ function lernplanHtml(){
             <button class="b b-sm" data-lpalle="${h.schritte.map(s=>s.id).join(",")}">${h.rest>0?"Alles geschafft":"Geschafft"}</button>
           </div>`
           :`<div class="lp-emp${h.alt?" alt":""}" style="--lf:${lpFarbe(h.modul)}">
-            <span class="lp-emp-z"><b>${parsedk(h.schritt.datum).getDate()}</b><span>${h.alt?"war fällig":TWD[wtagIdx(parsedk(h.schritt.datum))]}</span></span>
+            <span class="lp-emp-z blatt">${ico("note")}<span>${lpArtKurz(h.schritt)}</span></span>
             <span class="lp-emp-t"><b>${esc(lpKurz(h.modul))} · ${esc(h.schritt.titel)}</b><span>${h.alt?`seit ${lpTagLabel(h.schritt.datum)} offen`
               :h.schritt.empf===today()?`laut Plan heute · fällig ${lpTagLabel(h.schritt.datum)}`:`fällig ${lpTagLabel(h.schritt.datum)} — heute ist dein ruhigster Tag dafür`}</span></span>
             <button class="b b-sm" data-lpalle="${h.schritt.id}">Geschafft</button></div>`).join("")

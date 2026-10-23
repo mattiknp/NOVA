@@ -6063,6 +6063,18 @@ function lpKorrekturen(){
     }
     S.lernplan.mm1Plan=1; geaendert=true;
   }
+  /* MM I: Kapitel je Vorlesung (Einführung, Folie 15) und 125 Ankis zu Kapitel 2 → je 25 für VL 2–6 */
+  if(!S.lernplan.mm1Kap){
+    const kap=n=>n===1?"Kap. 1 Moderne Lehre":n<=6?"Kap. 2 Systemmodellierung":n<=11?"Kap. 3 Mech. Komponenten & Energiespeicher":
+      n<=19?"Kap. 4 Aktorik":n<=21?"Kap. 5 Sensorik":n<=24?"Kap. 6 Steuerung & Regelung":n===25?"Kap. 7/8 Systemintegration, Entwicklung":"Backup";
+    lpAlle().filter(x=>x.modul==="mm1"&&x.art==="anki").forEach(x=>{
+      const m=/^la_mm1_.*_vl-(\d+)$/.exec(x.id); if(!m) return; const n=+m[1];
+      if(x.titel===`VL ${n}`) x.titel=`VL ${n} · ${kap(n)}`;
+      if(n>=2&&n<=6&&x.neu==null) x.neu=25;
+    });
+    lpGesamtNeu("mm1");
+    S.lernplan.mm1Kap=1; geaendert=true;
+  }
   /* Ergänzungen vom 23.10.2026 (einmalig, danach frei bearbeitbar) */
   if(!S.lernplan.plan2310){
     const l=S.lernplan.schritte, hat=id=>l.some(x=>x.id===id);

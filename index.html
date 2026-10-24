@@ -688,6 +688,26 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 .lu-nach svg{ width:17px; height:17px; }
 .lu-nach:active{ transform:scale(.96); }
 @media (hover:hover){ .lu-nach:hover{ color:var(--text); background:rgba(255,255,255,.08); } }
+/* Fachwahl beim Start und Übersicht je Fach */
+.lu-faecher{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.lu-fach{ display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0; padding:12px 13px; border-radius:var(--r); text-align:left;
+  background:rgba(255,255,255,.035); border:1px solid var(--line); transition:transform var(--d2) var(--ez), background-color var(--d2), border-color var(--d2); }
+.lu-fach span{ display:flex; align-items:center; gap:8px; font-weight:650; color:var(--text); font-size:var(--t-md); }
+.lu-fach span i{ width:10px; height:10px; border-radius:50%; background:var(--fc); flex:0 0 auto; }
+.lu-fach em{ font-style:normal; font-size:var(--t-xs); color:var(--text-faint); padding-left:18px; }
+.lu-fach.on{ border-color:color-mix(in srgb, var(--fc) 70%, transparent); background:color-mix(in srgb, var(--fc) 14%, transparent); }
+.lu-fach:active{ transform:scale(.97); }
+@media (hover:hover){ .lu-fach:hover{ background:rgba(255,255,255,.07); } }
+.lu-fach-name{ color:var(--fc); }
+.lf-z{ display:grid; grid-template-columns:12px minmax(70px,auto) minmax(0,1fr) auto; gap:10px; align-items:center; padding:7px 0; }
+.lf-z + .lf-z{ border-top:1px solid var(--line); }
+.lf-z i{ width:10px; height:10px; border-radius:50%; }
+.lf-n{ font-weight:600; font-size:var(--t-sm); color:var(--text); white-space:nowrap; }
+.lf-bar{ height:8px; border-radius:4px; background:rgba(255,255,255,.05); overflow:hidden; }
+.lf-bar b{ display:block; height:100%; border-radius:4px; }
+.lf-h{ font-size:var(--t-sm); font-variant-numeric:tabular-nums; color:var(--text); text-align:right; white-space:nowrap; }
+.lf-h small{ color:var(--text-faint); margin-left:6px; }
+.lf-z.ohne .lf-n, .lf-z.ohne .lf-h{ color:var(--text-dim); font-weight:500; }
 .lu-dauer{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; }
 .lu-dauer input{ font-variant-numeric:tabular-nums; }
 .lu-sitz{ display:flex; flex-direction:column; gap:6px; }
@@ -1722,6 +1742,11 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
   .tb-clock,.kbtn span{ display:none; }
   /* Läuft der Lern-Timer, weicht ⌘K der Pille — sonst bricht die Kopfleiste um */
   .tb-date{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* Lange Tage („Samstag, 24. Oktober …“) kürzen statt die Knöpfe umzubrechen */
+  .topbar{ flex-wrap:nowrap; }
+  .topbar > div:first-of-type{ min-width:0; flex:0 1 auto; }
+  .tb-title{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .topbar > .b-i, .topbar > .kbtn, .topbar > .orb{ flex:0 0 auto; }
   .lu-leiste{ padding:7px 14px; gap:8px; }
   .lu-l-label{ display:none; }
   .lu-l-zeit{ font-size:20px; }
@@ -6526,7 +6551,7 @@ function luKarte(){
       </div>
     </div>
     <div class="lu-rechts">
-      <div class="lu-titel">${an?"Du lernst gerade":"Lernzeit"}</div>
+      <div class="lu-titel">${an?(S.lernUhr.modul?`Du lernst <span class="lu-fach-name" style="--fc:${luFachFarbe(S.lernUhr.modul)}">${esc(luFachName(S.lernUhr.modul))}</span>`:"Du lernst gerade"):"Lernzeit"}</div>
       <div class="lu-unter">${an?`seit ${p2(d.getHours())}:${p2(d.getMinutes())} Uhr · der Timer läuft auch bei geschlossener App weiter`
         :anteil>=1?"Tagesziel geschafft — alles ab jetzt ist Bonus.":`Noch ${luHM(Math.max(0,ziel-h)*60)} h bis zu deinem Ziel von ${f(ziel)} h.`}</div>
       <div class="lu-zahlen">
@@ -6537,9 +6562,34 @@ function luKarte(){
       </div>
       <div class="lu-knoepfe">
         <button class="lu-knopf" id="luGross">${an?`${ico("stop")}Stoppen`:`${ico("play")}Lernen starten`}</button>
-        <button class="lu-nach" id="luNach">${ico("plus")}Zeit nachtragen</button>
+        ${an?`<button class="lu-nach" id="luFach">${ico("orbit")}Fach wechseln</button>`:`<button class="lu-nach" id="luNach">${ico("plus")}Zeit nachtragen</button>`}
       </div>
     </div>
+  </div>`;
+}
+/* Wie viel für welches Fach: diese Woche oder seit Semesterbeginn */
+let luFachZeit="woche";
+function luFachKarte(){
+  const sem=semesterWoche(), jetzt=Date.now();
+  const von=luFachZeit==="woche"?sow(new Date()).getTime():(sem?sem.start.getTime():addD(new Date(),-120).getTime());
+  const min=luFachMinuten(von,jetzt);
+  /* Alles, was nur als Tageswert eingetragen ist, ohne Fach */
+  let gesamt=0; for(let t=new Date(von); dk(t)<=today(); t=addD(t,1)){ const v=(S.metrics[dk(t)]||{}).study; if(nv(v)) gesamt+=v*60; }
+  if(luLaeuft()) gesamt+=Math.max(0,jetzt-Math.max(S.lernUhr.start,parsedk(today()).getTime()))/60000;
+  const zugeordnet=Object.entries(min).filter(([k])=>k).reduce((a,[,v])=>a+v,0);
+  const ohne=Math.max(0,gesamt-zugeordnet);
+  const zeilen=Object.entries(min).filter(([k,v])=>k&&v>=1).map(([id,v])=>({id,v})).sort((a,b)=>b.v-a.v);
+  if(ohne>=3) zeilen.push({id:"",v:ohne});
+  const summe=zeilen.reduce((a,z)=>a+z.v,0), max=Math.max(1,...zeilen.map(z=>z.v));
+  return `<div class="p">
+    <div class="p-head"><div><div class="p-title">${ico("book")}Lernzeit nach Fach</div>
+      <div class="p-note">${luFachZeit==="woche"?"diese Woche":sem?`seit Semesterbeginn (${fmtShort(sem.start)})`:"letzte 4 Monate"} · ${luHM(summe)} h</div></div>
+      <div class="seg">${[["woche","Woche"],["semester","Semester"]].map(([k,l])=>`<button data-lfz="${k}" class="${luFachZeit===k?"on":""}">${l}</button>`).join("")}</div></div>
+    ${zeilen.length?zeilen.map(z=>`<div class="lf-z${z.id?"":" ohne"}"><i style="background:${luFachFarbe(z.id)}"></i>
+      <span class="lf-n">${esc(luFachName(z.id))}</span>
+      <span class="lf-bar"><b style="width:${(z.v/max*100).toFixed(1)}%;background:${luFachFarbe(z.id)}"></b></span>
+      <span class="lf-h">${luHM(z.v)} h<small>${Math.round(z.v/summe*100)} %</small></span></div>`).join("")
+      :`<p class="p-note">${luFachZeit==="woche"?"Diese Woche noch keine Lernzeit.":"Noch keine Lernzeit."} Beim Start wählst du ab jetzt das Fach.</p>`}
   </div>`;
 }
 const NOVA_TITEL=document.title;
@@ -6548,6 +6598,8 @@ function luZeichnen(){
   /* Lernmodus: ganz NOVA wird blau, atmet und zeigt oben die Zeit */
   root.classList.toggle("lernt",an);
   const lst=document.getElementById("luLeiste"); if(lst) lst.hidden=!an||VIEW==="uni";
+  const lab=document.querySelector(".lu-l-label");
+  if(lab){ const t=an&&S.lernUhr.modul?`Lernmodus · ${luFachName(S.lernUhr.modul)}`:"Lernmodus"; if(lab.textContent!==t) lab.textContent=t; }
   if(an){ const a=Math.min(1,luHeuteH()/(G().study||3));
     root.style.setProperty("--lu-anteil",a.toFixed(4));
     const pz=document.querySelector("[data-luprozent2]"); if(pz) pz.textContent=`${Math.round(a*100)} %`;
@@ -6567,11 +6619,47 @@ function luNachher(){
   luZeichnen();
   if(VIEW==="uni"||VIEW==="heute"){ const v=document.getElementById("views"), y=v.scrollTop; R[VIEW](); v.scrollTop=y; }
 }
-function luStart(){
-  if(luLaeuft()) return;
-  S.lernUhr={start:Date.now()}; save(); toast("Lernmodus an — viel Erfolg","play"); luNachher();
+/* Fächer zum Auswählen: was im Lernplan steht und anstehende Klausuren, dazu „Anderes“ */
+const LU_ANDERS="anders";
+function luFaecher(){
+  const ids=[], dazu=id=>{ if(id&&lpMod(id)&&!ids.includes(id)) ids.push(id); };
+  lpAlle().forEach(x=>dazu(x.modul));
+  (S.uniTermine||[]).filter(t=>t.datum>=today()).forEach(t=>dazu(t.modul));
+  return ids;
 }
-function luBuchen(von,bis){
+const luFachName=id=>id===LU_ANDERS?"Anderes":id?lpKurz(id):"Ohne Fach";
+const luFachFarbe=id=>id&&id!==LU_ANDERS?lpFarbe(id):"#8a93a6";
+/* Minuten je Fach in einem Zeitraum, aus den Einheiten (die laufende zählt mit) */
+function luFachMinuten(von,bis){
+  const out={}, dazu=(a,b,m)=>{ const x=Math.max(a,von), y=Math.min(b,bis); if(y>x) out[m||""]=(out[m||""]||0)+(y-x)/60000; };
+  (S.lernSitz||[]).forEach(x=>dazu(x.von,x.bis,x.modul));
+  if(luLaeuft()) dazu(S.lernUhr.start,Date.now(),S.lernUhr.modul);
+  return out;
+}
+function luFachWahl(wechsel){
+  const ids=[...luFaecher(),LU_ANDERS], akt=wechsel&&luLaeuft()?S.lernUhr.modul:S.lernZuletzt;
+  const woche=luFachMinuten(sow(new Date()).getTime(),Date.now());
+  modal(`<h3>${wechsel?"Fach wechseln":"Was lernst du?"}</h3>
+    <div class="lu-faecher">${ids.map(id=>`<button class="lu-fach${id===akt?" on":""}" data-fach="${id}" style="--fc:${luFachFarbe(id)}">
+      <span><i></i>${esc(luFachName(id))}</span><em>${woche[id]?`${luHM(woche[id])} h diese Woche`:"diese Woche noch nichts"}</em></button>`).join("")}</div>
+    <div class="mo-act"><button class="b" onclick="closeModal()">Abbrechen</button></div>`);
+  document.querySelectorAll("#modal [data-fach]").forEach(b=>b.onclick=()=>{ closeModal(); wechsel?luWechsel(b.dataset.fach):luStartMit(b.dataset.fach); });
+}
+function luStart(){ if(!luLaeuft()) luFachWahl(false); }
+function luStartMit(modul){
+  if(luLaeuft()) return;
+  S.lernUhr={start:Date.now(),modul}; S.lernZuletzt=modul; save();
+  toast(`Lernmodus an · ${luFachName(modul)}`,"play"); luNachher();
+}
+/* Fach wechseln, ohne die Uhr anzuhalten: das Bisherige zählt fürs alte Fach */
+function luWechsel(neu){
+  if(!luLaeuft()||neu===S.lernUhr.modul) return;
+  const alt=S.lernUhr.modul, jetzt=Date.now();
+  if(jetzt-S.lernUhr.start>=60000) luBuchen(S.lernUhr.start,jetzt,alt);
+  S.lernUhr={start:jetzt,modul:neu}; S.lernZuletzt=neu; save();
+  toast(`Weiter mit ${luFachName(neu)}`,"play"); luNachher(); paintOrb();
+}
+function luBuchen(von,bis,modul){
   let t=von, h=0;
   while(t<bis){
     const d=new Date(t), k=dk(d), nacht=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime();
@@ -6579,13 +6667,13 @@ function luBuchen(von,bis){
     m.study=Math.round(((nv(m.study)?m.study:0)+dh)*100)/100; S.metrics[k]=m;
     h+=dh; t=ende;
   }
-  S.lernSitz=(S.lernSitz||[]).concat([{von,bis}]).slice(-400);
+  S.lernSitz=(S.lernSitz||[]).concat([{von,bis,...(modul?{modul}:{})}]).slice(-400);
   return h;
 }
 function luFertig(von,bis){
-  const h=luBuchen(von,bis); S.lernUhr=null; save();
+  const modul=S.lernUhr&&S.lernUhr.modul, h=luBuchen(von,bis,modul); S.lernUhr=null; save();
   const hh=(S.metrics[today()]||{}).study;
-  toast(`${luHM(h*60)} h gelernt${nv(hh)?` · heute ${f(hh)} h`:""}`,"check"); luNachher(); paintOrb();
+  toast(`${luHM(h*60)} h${modul?` ${luFachName(modul)}`:""} gelernt${nv(hh)?` · heute ${f(hh)} h`:""}`,"check"); luNachher(); paintOrb();
 }
 function luStopp(){
   if(!luLaeuft()) return;
@@ -6626,7 +6714,7 @@ function luDauerLesen(v){
   m=/^(\d+(?:\.\d+)?)\s*h?$/.exec(v); return m?+m[1]:NaN;
 }
 /* Vergessen, den Timer anzumachen? Zeit für einen der letzten 7 Tage nachtragen. */
-let luNachTag=null;
+let luNachTag=null, luNachFach=null;
 function luNachtragen(tag){
   const tage=[...Array(7)].map((_,i)=>dk(addD(new Date(),-i)));
   luNachTag=tag||luNachTag&&tage.includes(luNachTag)&&luNachTag||tage[0];
@@ -6636,7 +6724,11 @@ function luNachtragen(tag){
   const bisher=(S.metrics[k]||{}).study;
   const sitz=(S.lernSitz||[]).filter(x=>dk(new Date(x.bis))===k||dk(new Date(x.von))===k).sort((a,b)=>a.von-b.von);
   const uhr=t=>{ const d=new Date(t); return `${p2(d.getHours())}:${p2(d.getMinutes())}`; };
+  const faecher=[...luFaecher(),LU_ANDERS];
+  if(!faecher.includes(luNachFach)) luNachFach=faecher.includes(S.lernZuletzt)?S.lernZuletzt:faecher[0];
   modal(`<h3>Lernzeit nachtragen</h3>
+    <label>Fach</label>
+    <div class="chips" id="luNF" style="margin-bottom:4px">${faecher.map(id=>`<button class="chip${id===luNachFach?" on":""}" data-f="${id}"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:${luFachFarbe(id)}"></i>${esc(luFachName(id))}</button>`).join("")}</div>
     <label>Tag</label>
     <div class="chips" id="luNT">${tage.map(x=>`<button class="chip${x===k?" on":""}" data-t="${x}">${label(x)}</button>`).join("")}</div>
     <label for="luNH">Wie lange?</label>
@@ -6647,12 +6739,13 @@ function luNachtragen(tag){
     </div>
     <p class="p-note" style="margin-top:6px">Rechts: wann du ungefähr aufgehört hast.</p>
     <label>An diesem Tag${nv(bisher)?` · ${f(bisher)} h`:""}</label>
-    ${sitz.length?`<div class="lu-sitz">${sitz.map(x=>`<div class="lu-sitz-z"><b>${luHM((x.bis-x.von)/60000)}</b><span>${uhr(x.von)}–${uhr(x.bis)}${x.nach?" · nachgetragen":""}</span>
+    ${sitz.length?`<div class="lu-sitz">${sitz.map(x=>`<div class="lu-sitz-z"><b>${luHM((x.bis-x.von)/60000)}</b><span>${uhr(x.von)}–${uhr(x.bis)}${x.modul?` · ${esc(luFachName(x.modul))}`:""}${x.nach?" · nachgetragen":""}</span>
         <button data-weg="${x.von}_${x.bis}" aria-label="Einheit entfernen">${ico("trash")}</button></div>`).join("")}</div>`
       :`<p class="p-note">${nv(bisher)&&bisher>0?"Ohne einzelne Einheiten eingetragen.":"Noch nichts gelernt."}</p>`}
     <div class="mo-act"><button class="b" onclick="closeModal()">Abbrechen</button><button class="b b-1" id="luNOk">Eintragen</button></div>`);
   const m=document.getElementById("modal"), feld=m.querySelector("#luNH");
   m.querySelectorAll("#luNT [data-t]").forEach(b=>b.onclick=()=>{ const v=feld.value; luNachtragen(b.dataset.t); document.getElementById("luNH").value=v; });
+  m.querySelectorAll("#luNF [data-f]").forEach(b=>b.onclick=()=>{ luNachFach=b.dataset.f; m.querySelectorAll("#luNF .chip").forEach(c=>c.classList.toggle("on",c===b)); });
   m.querySelectorAll("#luNQ [data-h]").forEach(b=>b.onclick=()=>{
     feld.value=String(b.dataset.h).replace(".",",");
     m.querySelectorAll("#luNQ .chip").forEach(c=>c.classList.toggle("on",c===b)); });
@@ -6667,7 +6760,7 @@ function luNachtragen(tag){
     const tg0=parsedk(k); let bis=new Date(tg0.getFullYear(),tg0.getMonth(),tg0.getDate(),hh||0,mm||0).getTime();
     if(istHeute) bis=Math.min(bis,Date.now());
     const von=Math.round(bis-h*3600000);
-    luBuchen(von,bis); S.lernSitz[S.lernSitz.length-1].nach=1; save(); closeModal();
+    luBuchen(von,bis,luNachFach); S.lernSitz[S.lernSitz.length-1].nach=1; S.lernZuletzt=luNachFach; save(); closeModal();
     const tg=(S.metrics[k]||{}).study;
     toast(`${luHM(h*60)} h nachgetragen · ${label(k).replace(/^(Heute|Gestern)$/,w=>w.toLowerCase())} ${f(tg)} h`,"check"); luNachher(); paintOrb(); };
   m.querySelector("#luNOk").onclick=ok;
@@ -6797,6 +6890,8 @@ R.uni=function(){
 
   ${luKarte()}
 
+  ${luFachKarte()}
+
   ${lernplanHtml()}
 
   <div class="un-oben">
@@ -6846,7 +6941,9 @@ R.uni=function(){
 
   el.querySelector("#unNeu").onclick=()=>terminModal();
   el.querySelector("#luGross").onclick=()=>luLaeuft()?luStopp():luStart();
-  el.querySelector("#luNach").onclick=()=>luNachtragen(today());
+  el.querySelector("#luNach")?.addEventListener("click",()=>luNachtragen(today()));
+  el.querySelector("#luFach")?.addEventListener("click",()=>luFachWahl(true));
+  el.querySelectorAll("[data-lfz]").forEach(b=>b.onclick=()=>{ luFachZeit=b.dataset.lfz; luNachher(); });
   lernplanWiring(el); klausurJahrWiring(el);
   el.querySelectorAll("[data-unweg]").forEach(b=>b.onclick=()=>{
     S.uniTermine=(S.uniTermine||[]).filter(t=>t.id!==b.dataset.unweg);

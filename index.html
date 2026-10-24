@@ -699,6 +699,11 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 .lu-fach:active{ transform:scale(.97); }
 @media (hover:hover){ .lu-fach:hover{ background:rgba(255,255,255,.07); } }
 .lu-fach-name{ color:var(--fc); }
+.lf-balken{ height:190px; margin-top:4px; }
+.lf-balken .un-b-s{ max-width:46px; }
+.lf-balken .un-b-t{ color:var(--text); font-weight:600; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lf-balken .un-b.ohne .un-b-t{ color:var(--text-dim); font-weight:500; }
+.lf-pz{ font-size:10.5px; color:var(--text-faint); margin-top:-3px; font-variant-numeric:tabular-nums; }
 .lf-z{ display:grid; grid-template-columns:12px minmax(70px,auto) minmax(0,1fr) auto; gap:10px; align-items:center; padding:7px 0; }
 .lf-z + .lf-z{ border-top:1px solid var(--line); }
 .lf-z i{ width:10px; height:10px; border-radius:50%; }
@@ -6585,10 +6590,10 @@ function luFachKarte(){
     <div class="p-head"><div><div class="p-title">${ico("book")}Lernzeit nach Fach</div>
       <div class="p-note">${luFachZeit==="woche"?"diese Woche":sem?`seit Semesterbeginn (${fmtShort(sem.start)})`:"letzte 4 Monate"} · ${luHM(summe)} h</div></div>
       <div class="seg">${[["woche","Woche"],["semester","Semester"]].map(([k,l])=>`<button data-lfz="${k}" class="${luFachZeit===k?"on":""}">${l}</button>`).join("")}</div></div>
-    ${zeilen.length?zeilen.map(z=>`<div class="lf-z${z.id?"":" ohne"}"><i style="background:${luFachFarbe(z.id)}"></i>
-      <span class="lf-n">${esc(luFachName(z.id))}</span>
-      <span class="lf-bar"><b style="width:${(z.v/max*100).toFixed(1)}%;background:${luFachFarbe(z.id)}"></b></span>
-      <span class="lf-h">${luHM(z.v)} h<small>${Math.round(z.v/summe*100)} %</small></span></div>`).join("")
+    ${zeilen.length?`<div class="un-balken lf-balken" style="grid-template-columns:repeat(${zeilen.length},minmax(0,1fr))">${zeilen.map(z=>`<div class="un-b${z.id?"":" ohne"}" title="${esc(luFachName(z.id))} · ${luHM(z.v)} h · ${Math.round(z.v/summe*100)} %">
+        <span class="un-b-v">${luHM(z.v)}</span>
+        <div class="un-b-s"><i style="height:${Math.max(3,z.v/max*100).toFixed(1)}%;background:${luFachFarbe(z.id)}"></i></div>
+        <span class="un-b-t">${esc(luFachName(z.id))}</span><span class="lf-pz">${Math.round(z.v/summe*100)} %</span></div>`).join("")}</div>`
       :`<p class="p-note">${luFachZeit==="woche"?"Diese Woche noch keine Lernzeit.":"Noch keine Lernzeit."} Beim Start wählst du ab jetzt das Fach.</p>`}
   </div>`;
 }
@@ -6880,9 +6885,9 @@ R.uni=function(){
 
   ${luKarte()}
 
-  ${luFachKarte()}
-
   ${lernplanHtml()}
+
+  ${luFachKarte()}
 
   <div class="un-zwei">
   ${klausurJahrHtml()}

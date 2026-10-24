@@ -699,6 +699,13 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 .lu-fach:active{ transform:scale(.97); }
 @media (hover:hover){ .lu-fach:hover{ background:rgba(255,255,255,.07); } }
 .lu-fach-name{ color:var(--fc); }
+.lf-zwei{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.lf-teil{ min-width:0; padding:14px 14px 10px; border-radius:var(--r); background:rgba(255,255,255,.025); border:1px solid var(--line); }
+.lf-kopf{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:10px; }
+.lf-kopf span{ font-size:var(--t-sm); color:var(--text-dim); }
+.lf-kopf b{ font-family:var(--f-disp); font-size:var(--t-lg); font-weight:650; font-variant-numeric:tabular-nums; color:var(--text); }
+.lf-leer{ min-height:120px; display:grid; place-items:center; text-align:center; }
+@media (max-width:640px){ .lf-zwei{ grid-template-columns:minmax(0,1fr); gap:10px; } }
 .lf-balken{ height:190px; margin-top:4px; }
 .lf-balken .un-b-s{ max-width:46px; }
 .lf-balken .un-b-t{ color:var(--text); font-weight:600; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -6572,41 +6579,49 @@ function luKarte(){
     </div>
   </div>`;
 }
-/* Wie viel für welches Fach: diese Woche oder seit Semesterbeginn */
-let luFachZeit="woche";
-function luFachKarte(){
-  const sem=semesterWoche(), jetzt=Date.now();
-  const von=luFachZeit==="woche"?sow(new Date()).getTime():(sem?sem.start.getTime():addD(new Date(),-120).getTime());
-  const min=luFachMinuten(von,jetzt);
-  /* Alles, was nur als Tageswert eingetragen ist, ohne Fach */
+/* Lernzeit je Fach ab einem Zeitpunkt. Zeit ohne Fach wird auf die Fächer verteilt:
+   nach den Aufgaben, die im selben Zeitraum je Fach erledigt wurden (Lernplan-Schritte
+   und tägliche Aufgaben). Gibt es keine, nach den fälligen, sonst nach der gemessenen Zeit. */
+function luFachStand(von){
+  const jetzt=Date.now(), min=luFachMinuten(von,jetzt);
   let gesamt=0; for(let t=new Date(von); dk(t)<=today(); t=addD(t,1)){ const v=(S.metrics[dk(t)]||{}).study; if(nv(v)) gesamt+=v*60; }
   if(luLaeuft()) gesamt+=Math.max(0,jetzt-Math.max(S.lernUhr.start,parsedk(today()).getTime()))/60000;
   const zugeordnet=Object.entries(min).filter(([k])=>k).reduce((a,[,v])=>a+v,0);
-  const ohne=Math.max(0,gesamt-zugeordnet);
-  /* Zeit ohne Fach wird auf die Fächer verteilt: nach den Aufgaben, die im selben
-     Zeitraum je Fach erledigt wurden (Lernplan-Schritte und tägliche Aufgaben).
-     Gibt es keine, nach den fälligen Aufgaben, sonst nach der gemessenen Zeit. */
-  const schaetz={};
+  const ohne=Math.max(0,gesamt-zugeordnet), verteilt={};
   if(ohne>=1){
     const gew={}, plus=(m,w)=>{ if(m&&lpMod(m)) gew[m]=(gew[m]||0)+w; }, summeG=()=>Object.values(gew).reduce((a,b)=>a+b,0);
     lpAlle().forEach(x=>{ if(x.fertig&&x.fertig>=von&&x.fertig<=jetzt) plus(x.modul,1); });
     tgl().forEach(t=>Object.values(t.erledigt||{}).forEach(ts=>{ if(ts>=von&&ts<=jetzt) plus(t.modul,1); }));
     if(!summeG()) lpAlle().forEach(x=>{ const t=parsedk(x.datum).getTime(); if(t>=von&&t<=jetzt) plus(x.modul,1); });
     if(!summeG()) Object.entries(min).forEach(([k,v])=>plus(k,v));
-    const g=summeG(); if(g) Object.entries(gew).forEach(([k,w])=>schaetz[k]=ohne*w/g);
+    const g=summeG(); if(g) Object.entries(gew).forEach(([k,w])=>verteilt[k]=ohne*w/g);
   }
-  const ids=[...new Set([...Object.keys(min).filter(k=>k),...Object.keys(schaetz)])];
-  const zeilen=ids.map(id=>({id,gem:min[id]||0,ge:schaetz[id]||0})).map(z=>({...z,v:z.gem+z.ge})).filter(z=>z.v>=1).sort((a,b)=>b.v-a.v);
-  const summe=zeilen.reduce((a,z)=>a+z.v,0), max=Math.max(1,...zeilen.map(z=>z.v));
+  const out={};
+  [...new Set([...Object.keys(min).filter(k=>k),...Object.keys(verteilt)])].forEach(id=>{ const v=(min[id]||0)+(verteilt[id]||0); if(v>=1) out[id]=v; });
+  return out;
+}
+/* Woche und Semester nebeneinander, die Fächer in beiden in derselben Reihenfolge */
+function luFachKarte(){
+  const sem=semesterWoche();
+  const woche=luFachStand(sow(new Date()).getTime());
+  const semester=luFachStand(sem?sem.start.getTime():addD(new Date(),-120).getTime());
+  const reihe=Object.keys(semester).sort((a,b)=>semester[b]-semester[a]);
+  Object.keys(woche).forEach(id=>{ if(!reihe.includes(id)) reihe.push(id); });
+  const diagramm=(werte,titel,leer)=>{
+    const ids=reihe.filter(id=>werte[id]), summe=ids.reduce((a,id)=>a+werte[id],0), max=Math.max(1,...ids.map(id=>werte[id]));
+    return `<div class="lf-teil"><div class="lf-kopf"><span>${titel}</span><b>${luHM(summe)} h</b></div>
+      ${ids.length?`<div class="un-balken lf-balken" style="grid-template-columns:repeat(${ids.length},minmax(0,1fr))">${ids.map(id=>`<div class="un-b" title="${esc(luFachName(id))} · ${luHM(werte[id])} h · ${Math.round(werte[id]/summe*100)} %">
+        <span class="un-b-v">${luHM(werte[id])}</span>
+        <div class="un-b-s"><i style="height:${Math.max(3,werte[id]/max*100).toFixed(1)}%;background:${luFachFarbe(id)}"></i></div>
+        <span class="un-b-t">${esc(luFachName(id))}</span><span class="lf-pz">${Math.round(werte[id]/summe*100)} %</span></div>`).join("")}</div>`
+      :`<p class="p-note lf-leer">${leer}</p>`}</div>`;
+  };
   return `<div class="p">
-    <div class="p-head"><div><div class="p-title">${ico("book")}Lernzeit nach Fach</div>
-      <div class="p-note">${luFachZeit==="woche"?"diese Woche":sem?`seit Semesterbeginn (${fmtShort(sem.start)})`:"letzte 4 Monate"} · ${luHM(summe)} h</div></div>
-      <div class="seg">${[["woche","Woche"],["semester","Semester"]].map(([k,l])=>`<button data-lfz="${k}" class="${luFachZeit===k?"on":""}">${l}</button>`).join("")}</div></div>
-    ${zeilen.length?`<div class="un-balken lf-balken" style="grid-template-columns:repeat(${zeilen.length},minmax(0,1fr))">${zeilen.map(z=>`<div class="un-b" title="${esc(luFachName(z.id))} · ${luHM(z.v)} h · ${Math.round(z.v/summe*100)} %">
-        <span class="un-b-v">${luHM(z.v)}</span>
-        <div class="un-b-s"><i style="height:${Math.max(3,z.v/max*100).toFixed(1)}%;background:${luFachFarbe(z.id)}"></i></div>
-        <span class="un-b-t">${esc(luFachName(z.id))}</span><span class="lf-pz">${Math.round(z.v/summe*100)} %</span></div>`).join("")}</div>`
-      :`<p class="p-note">${luFachZeit==="woche"?"Diese Woche noch keine Lernzeit.":"Noch keine Lernzeit."} Beim Start wählst du ab jetzt das Fach.</p>`}
+    <div class="p-head"><div class="p-title">${ico("book")}Lernzeit nach Fach</div></div>
+    <div class="lf-zwei">
+      ${diagramm(woche,"Diese Woche","Diese Woche noch keine Lernzeit.")}
+      ${diagramm(semester,sem?`Semester · seit ${fmtShort(sem.start)}`:"Letzte 4 Monate","Noch keine Lernzeit.")}
+    </div>
   </div>`;
 }
 const NOVA_TITEL=document.title;
@@ -6919,7 +6934,6 @@ R.uni=function(){
   el.querySelector("#luGross").onclick=()=>luLaeuft()?luStopp():luStart();
   el.querySelector("#luNach")?.addEventListener("click",()=>luNachtragen(today()));
   el.querySelector("#luFach")?.addEventListener("click",()=>luFachWahl(true));
-  el.querySelectorAll("[data-lfz]").forEach(b=>b.onclick=()=>{ luFachZeit=b.dataset.lfz; luNachher(); });
   lernplanWiring(el); klausurJahrWiring(el);
   el.querySelectorAll("[data-unweg]").forEach(b=>b.onclick=()=>{
     S.uniTermine=(S.uniTermine||[]).filter(t=>t.id!==b.dataset.unweg);

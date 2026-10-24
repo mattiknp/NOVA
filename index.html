@@ -703,10 +703,6 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 .lf-balken .un-b-s{ max-width:46px; }
 .lf-balken .un-b-t{ color:var(--text); font-weight:600; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .lf-balken .un-b.ohne .un-b-t{ color:var(--text-dim); font-weight:500; }
-.lf-saeule{ display:flex; flex-direction:column; width:100%; min-height:3px; border-radius:6px; overflow:hidden; }
-.un-b-s .lf-saeule i{ display:block; width:100%; flex:0 0 auto; border-radius:0; transition:none; }
-.un-b-s .lf-saeule i.lf-gem{ background:var(--fc); }
-.un-b-s .lf-saeule i.lf-ge{ background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--fc) 45%, transparent) 0 4px, color-mix(in srgb, var(--fc) 28%, transparent) 4px 8px); }
 .lf-pz{ font-size:10.5px; color:var(--text-faint); margin-top:-3px; font-variant-numeric:tabular-nums; }
 .lf-z{ display:grid; grid-template-columns:12px minmax(70px,auto) minmax(0,1fr) auto; gap:10px; align-items:center; padding:7px 0; }
 .lf-z + .lf-z{ border-top:1px solid var(--line); }
@@ -6587,7 +6583,7 @@ function luFachKarte(){
   if(luLaeuft()) gesamt+=Math.max(0,jetzt-Math.max(S.lernUhr.start,parsedk(today()).getTime()))/60000;
   const zugeordnet=Object.entries(min).filter(([k])=>k).reduce((a,[,v])=>a+v,0);
   const ohne=Math.max(0,gesamt-zugeordnet);
-  /* Zeit ohne Fach wird geschätzt: verteilt nach den Aufgaben, die im selben
+  /* Zeit ohne Fach wird auf die Fächer verteilt: nach den Aufgaben, die im selben
      Zeitraum je Fach erledigt wurden (Lernplan-Schritte und tägliche Aufgaben).
      Gibt es keine, nach den fälligen Aufgaben, sonst nach der gemessenen Zeit. */
   const schaetz={};
@@ -6601,15 +6597,14 @@ function luFachKarte(){
   }
   const ids=[...new Set([...Object.keys(min).filter(k=>k),...Object.keys(schaetz)])];
   const zeilen=ids.map(id=>({id,gem:min[id]||0,ge:schaetz[id]||0})).map(z=>({...z,v:z.gem+z.ge})).filter(z=>z.v>=1).sort((a,b)=>b.v-a.v);
-  const summe=zeilen.reduce((a,z)=>a+z.v,0), max=Math.max(1,...zeilen.map(z=>z.v)), mitSchaetzung=zeilen.some(z=>z.ge>=1);
+  const summe=zeilen.reduce((a,z)=>a+z.v,0), max=Math.max(1,...zeilen.map(z=>z.v));
   return `<div class="p">
     <div class="p-head"><div><div class="p-title">${ico("book")}Lernzeit nach Fach</div>
-      <div class="p-note">${luFachZeit==="woche"?"diese Woche":sem?`seit Semesterbeginn (${fmtShort(sem.start)})`:"letzte 4 Monate"} · ${luHM(summe)} h${mitSchaetzung?" · heller Teil geschätzt nach erledigten Aufgaben":""}</div></div>
+      <div class="p-note">${luFachZeit==="woche"?"diese Woche":sem?`seit Semesterbeginn (${fmtShort(sem.start)})`:"letzte 4 Monate"} · ${luHM(summe)} h</div></div>
       <div class="seg">${[["woche","Woche"],["semester","Semester"]].map(([k,l])=>`<button data-lfz="${k}" class="${luFachZeit===k?"on":""}">${l}</button>`).join("")}</div></div>
-    ${zeilen.length?`<div class="un-balken lf-balken" style="grid-template-columns:repeat(${zeilen.length},minmax(0,1fr))">${zeilen.map(z=>`<div class="un-b" title="${esc(luFachName(z.id))} · ${luHM(z.v)} h${z.ge>=1?` (davon ca. ${luHM(z.ge)} h geschätzt)`:""} · ${Math.round(z.v/summe*100)} %">
-        <span class="un-b-v">${z.ge>=1&&z.gem<1?"ca. ":""}${luHM(z.v)}</span>
-        <div class="un-b-s"><span class="lf-saeule" style="height:${Math.max(3,z.v/max*100).toFixed(1)}%;--fc:${luFachFarbe(z.id)}">
-          ${z.ge>=1?`<i class="lf-ge" style="height:${(z.ge/z.v*100).toFixed(1)}%"></i>`:""}<i class="lf-gem" style="height:${(z.gem/z.v*100).toFixed(1)}%"></i></span></div>
+    ${zeilen.length?`<div class="un-balken lf-balken" style="grid-template-columns:repeat(${zeilen.length},minmax(0,1fr))">${zeilen.map(z=>`<div class="un-b" title="${esc(luFachName(z.id))} · ${luHM(z.v)} h · ${Math.round(z.v/summe*100)} %">
+        <span class="un-b-v">${luHM(z.v)}</span>
+        <div class="un-b-s"><i style="height:${Math.max(3,z.v/max*100).toFixed(1)}%;background:${luFachFarbe(z.id)}"></i></div>
         <span class="un-b-t">${esc(luFachName(z.id))}</span><span class="lf-pz">${Math.round(z.v/summe*100)} %</span></div>`).join("")}</div>`
       :`<p class="p-note">${luFachZeit==="woche"?"Diese Woche noch keine Lernzeit.":"Noch keine Lernzeit."} Beim Start wählst du ab jetzt das Fach.</p>`}
   </div>`;

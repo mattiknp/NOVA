@@ -6843,22 +6843,12 @@ function kjZeige(k){
 
 R.uni=function(){
   const el=document.getElementById("v-uni");
-  const g=G(), mk=wochenSchluessel(new Date()), mo=sow(new Date());
+  const mo=sow(new Date());
   const akt=aktSemester();
   const mods=uniModule();
   /* Farbe eines Planer-Moduls: die Kategorie aus dem Studienplan */
   const modFarbe=key=>{ const pm=planModul(key); return pm?STUDIUM_KAT[pm.kat].c:"var(--m-study)"; };
-  const sem=semesterWoche(), naechst=uniNaechster();
-  const heuteIdx=wtagIdx(new Date());
-  const heuteUni=uniBloecke(mk).filter(b=>b.tag===heuteIdx).sort((a,b)=>a.start.localeCompare(b.start));
-  const nowMin=new Date().getHours()*60+new Date().getMinutes();
-
-  /* Lernzeit diese Woche */
-  const woche=[...Array(7)].map((_,i)=>{ const k=dk(addD(mo,i)), v=(S.metrics[k]||{}).study;
-    return {k,v:nv(v)?v:null,i}; });
-  const summe=woche.reduce((a,x)=>a+(x.v||0),0);
-  const maxV=Math.max(g.study*1.5,...woche.map(x=>x.v||0));
-  const gelernt=buildGoals().find(x=>x.key==="study");
+  const sem=semesterWoche();
 
   /* Lernzeit je Woche: ab Semesterwoche 1 (oder dieser Woche) nach rechts,
      sechzehn Wochen — die Ferien davor spielen keine Rolle. */
@@ -6893,37 +6883,6 @@ R.uni=function(){
   ${luFachKarte()}
 
   ${lernplanHtml()}
-
-  <div class="un-oben">
-    <div class="p un-jetzt">
-      <div class="un-label">Als Nächstes</div>
-      ${naechst?`<div class="un-next" style="--uf:${modFarbe(modulKey(modulName(naechst.note)||""))}">
-          <b>${esc(naechst.note||blockById(naechst.type).label)}</b>
-          <span>${wannText(naechst)}–${naechst.end} · ${uniArt(naechst)}</span>
-          ${naechst.raum?`<span class="un-raum">${ico("pin")}${esc(naechst.raum)}</span>`:""}</div>`
-        :`<div class="un-leer">Diese und nächste Woche steht nichts mehr an.</div>`}
-      <div class="un-label" style="margin-top:16px">Heute</div>
-      ${heuteUni.length?`<div class="un-heute">${heuteUni.map(b=>{
-          const vorbeiB=hm2min(b.end)<=nowMin, live=hm2min(b.start)<=nowMin&&!vorbeiB;
-          return `<div class="un-h${vorbeiB?" vorbei":""}${live?" live":""}" style="--uf:${modFarbe(modulKey(modulName(b.note)||""))}">
-            <span class="un-h-z">${b.start}</span><span class="un-h-n">${esc(b.note||blockById(b.type).label)}${b.raum?` <em>${esc(b.raum)}</em>`:""}</span>
-            ${live?`<span class="un-live">läuft</span>`:""}</div>`;}).join("")}</div>`
-        :`<div class="un-leer">Heute keine Veranstaltung.</div>`}
-    </div>
-
-    <div class="p">
-      <div class="p-head"><div class="p-title">${ico("book")}Lernzeit diese Woche</div>
-        <span class="p-note">${f(summe)} h · Ziel ${f(g.study)} h am Tag</span></div>
-      <div class="un-balken">${woche.map(x=>`<div class="un-b${x.k===today()?" heute":""}" title="${tagLang(x.k)}${x.v!==null?` · ${f(x.v)} h`:""}">
-          <span class="un-b-v">${x.v!==null?f(x.v):""}</span>
-          <div class="un-b-s"><i style="height:${x.v?clamp(x.v/maxV*100,3,100):0}%" class="${x.v!==null&&x.v>=g.study?"voll":""}"></i>
-            <em style="bottom:${g.study/maxV*100}%"></em></div>
-          <span class="un-b-t">${TWD[x.i]}</span></div>`).join("")}</div>
-      <div class="sl-serie"><span style="color:var(--m-study)">${ico("book")}</span><b>${gelernt.serie}</b>
-        ${gelernt.serie===1?"Tag":"Tage"} in Folge über ${f(g.study)} h
-        <em>${gelernt.best>0?(gelernt.serie>=gelernt.best&&gelernt.serie>0?"Bestwert":"Rekord "+gelernt.best):""}</em></div>
-    </div>
-  </div>
 
   <div class="un-zwei">
   ${klausurJahrHtml()}

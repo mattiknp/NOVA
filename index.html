@@ -151,6 +151,24 @@
 .sl-nacht-v span{ font-size:var(--t-lg); color:var(--text-faint); margin-left:4px; }
 .sl-nacht-s{ font-size:var(--t-sm); color:var(--text-dim); margin-top:4px; font-variant-numeric:tabular-nums; }
 .sl-felder{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.sl-zeiten{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+.sl-zeit{ display:flex; flex-direction:column; gap:7px; min-width:0; padding:10px; border-radius:var(--r); background:rgba(255,255,255,.03); border:1px solid var(--line); }
+.sl-zeit-l{ font-size:var(--t-xs); color:var(--text-faint); }
+.sl-zeit-r{ display:grid; grid-template-columns:32px minmax(0,1fr) 32px; gap:6px; align-items:center; }
+.sl-zeit-r input{ min-width:0; width:100%; text-align:center; font-size:20px; font-weight:650; font-variant-numeric:tabular-nums; padding:6px 0; -webkit-appearance:none; appearance:none; }
+.sl-zeit-r input::-webkit-calendar-picker-indicator{ display:none; }
+.sl-zeit-r input::-webkit-date-and-time-value{ text-align:center; }
+.sl-zeit-r input::-webkit-datetime-edit{ padding:0; }
+.sl-zeit-r input::-webkit-datetime-edit-fields-wrapper{ display:flex; justify-content:center; }
+@media (max-width:640px){ .sl-zeit{ padding:9px 8px; } .sl-zeit-r{ grid-template-columns:28px minmax(0,1fr) 28px; gap:4px; } .sl-pm{ width:28px; height:28px; } .sl-zeit-r input{ font-size:18px; } }
+.sl-pm{ width:32px; height:32px; display:grid; place-items:center; border-radius:50%; background:rgba(255,255,255,.05); border:1px solid var(--line); color:var(--text-dim);
+  transition:transform var(--d2) var(--ez), background-color var(--d2); }
+.sl-pm svg{ width:15px; height:15px; stroke-width:2; }
+.sl-pm:active{ transform:scale(.9); }
+@media (hover:hover){ .sl-pm:hover{ background:rgba(255,255,255,.1); color:var(--text); } }
+.sl-schnell{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+.sl-schnell button{ padding:4px 0; border-radius:999px; font-size:11.5px; font-variant-numeric:tabular-nums; color:var(--text-dim); background:rgba(255,255,255,.03); border:1px solid var(--line); }
+.sl-schnell button.on{ color:var(--m-sleep); border-color:color-mix(in srgb, var(--m-sleep) 55%, transparent); background:color-mix(in srgb, var(--m-sleep) 14%, transparent); font-weight:600; }
 .sl-serie{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:14px; padding-top:12px;
   border-top:1px solid var(--line); font-size:var(--t-sm); color:var(--text-dim); }
 .sl-serie span{ color:var(--m-sleep); display:grid; }
@@ -5333,6 +5351,30 @@ const slEintragTag=()=>slEintrag&&slEintrag<today()?slEintrag:today();
 const schlafAusZeiten=(von,bis)=>Math.round(((hm2min(bis)-hm2min(von)+1440)%1440)/15)/4;
 /* Sobald beide Zeiten stehen, rechnet das Stundenfeld sofort mit — sichtbar,
    statt erst beim Speichern und nur, wenn das Feld leer war. */
+/* Uhrzeit fürs Nachtragen: vorausgefüllt, mit −/+ in 15 Minuten, Schnellwahl darunter.
+   Das Feld selbst bleibt eintippbar. */
+const slVorschlag=(nachtMinuten,ersatz)=>nachtMinuten===null||nachtMinuten===undefined?ersatz:nachtUhr(Math.round(nachtMinuten/15)*15);
+function slZeitHtml(id,label,wert,schnell){
+  return `<div class="sl-zeit">
+    <label class="sl-zeit-l" for="${id}">${label}</label>
+    <div class="sl-zeit-r">
+      <button type="button" class="sl-pm" data-zid="${id}" data-schritt="-15" aria-label="${label}: 15 Minuten früher">${ico("left")}</button>
+      <input type="time" id="${id}" value="${wert}" step="300">
+      <button type="button" class="sl-pm" data-zid="${id}" data-schritt="15" aria-label="${label}: 15 Minuten später">${ico("right")}</button>
+    </div>
+    <div class="sl-schnell">${schnell.map(z=>`<button type="button" data-zid="${id}" data-zset="${z}" class="${z===wert?"on":""}">${z.replace(/^0(\d)/,"$1")}</button>`).join("")}</div>
+  </div>`;
+}
+function slZeitWiring(el){
+  const setze=(id,wert)=>{ const i=el.querySelector("#"+id); if(!i) return; i.value=wert; i.dispatchEvent(new Event("input",{bubbles:true}));
+    el.querySelectorAll(`[data-zset][data-zid="${id}"]`).forEach(b=>b.classList.toggle("on",b.dataset.zset===wert)); };
+  el.querySelectorAll(".sl-pm").forEach(b=>b.onclick=()=>{ const i=el.querySelector("#"+b.dataset.zid);
+    const basis=i.value?hm2min(i.value):(b.dataset.zid==="slVon"?23*60+30:7*60+30);
+    const neu=((Math.round(basis/15)*15+ +b.dataset.schritt)%1440+1440)%1440; setze(b.dataset.zid,min2hm(neu)); });
+  el.querySelectorAll("[data-zset]").forEach(b=>b.onclick=()=>setze(b.dataset.zid,b.dataset.zset));
+  el.querySelectorAll(".sl-zeit input").forEach(i=>i.addEventListener("input",()=>
+    el.querySelectorAll(`[data-zset][data-zid="${i.id}"]`).forEach(b=>b.classList.toggle("on",b.dataset.zset===i.value))));
+}
 function schlafFelder(vonId,bisId,hId){
   const v=document.getElementById(vonId), b=document.getElementById(bisId), h=document.getElementById(hId);
   if(!v||!b||!h) return;
@@ -5531,9 +5573,11 @@ R.schlaf=function(){
           return `<button class="${ek===t?"on":""}" data-sle="${t}" title="${da?"schon eingetragen":"noch leer"}"><small>${n===0?"heute":n===1?"gestern":WD[wtagIdx(d)]}</small><b>${d.getDate()}</b><i class="${da?"da":""}"></i></button>`; }).join("")}</div>
         <label>Aufgewacht am<input type="date" id="slTag" value="${ek}" max="${k}"></label>
       </div>
+      <div class="sl-zeiten">
+        ${slZeitHtml("slVon","Ins Bett",m.sleepFrom||slVorschlag(r.bett,"23:30"),["22:30","23:00","23:30","00:00","00:30","01:00"])}
+        ${slZeitHtml("slBis","Aufgewacht",m.sleepTo||slVorschlag(r.auf,"07:30"),["06:30","07:00","07:30","08:00","08:30","09:00"])}
+      </div>
       <div class="sl-felder">
-        <label>Ins Bett<input type="time" id="slVon" value="${m.sleepFrom||""}"></label>
-        <label>Aufgewacht<input type="time" id="slBis" value="${m.sleepTo||""}"></label>
         <label>Stunden<input type="text" inputmode="decimal" autocomplete="off" id="slH" value="${nv(m.sleepHours)?String(m.sleepHours).replace(".",","):""}" placeholder="aus den Zeiten"></label>
         <label>Score<input type="text" inputmode="numeric" autocomplete="off" id="slS" value="${nv(m.sleepScore)?m.sleepScore:""}" placeholder="optional"></label>
       </div>
@@ -5553,6 +5597,8 @@ R.schlaf=function(){
     slNacht = slNacht===b.dataset.sln ? null : b.dataset.sln;
     const top=document.getElementById("views").scrollTop; R.schlaf(); document.getElementById("views").scrollTop=top; });
   schlafFelder("slVon","slBis","slH");
+  slZeitWiring(el);
+  if(!el.querySelector("#slH").value){ const v=el.querySelector("#slVon").value, b=el.querySelector("#slBis").value; if(v&&b) el.querySelector("#slH").value=String(schlafAusZeiten(v,b)).replace(".",","); }
   const slWechsel=t=>{ if(!t) return; if(t>today()){ toast("Diese Nacht kommt noch","x"); R.schlaf(); return; }
     slEintrag=t===today()?null:t; const top=document.getElementById("views").scrollTop; R.schlaf(); document.getElementById("views").scrollTop=top; };
   el.querySelectorAll("[data-sle]").forEach(b=>b.onclick=()=>slWechsel(b.dataset.sle));
@@ -6805,8 +6851,9 @@ setInterval(()=>{ if(!document.hidden) luZeichnen(); },1000);
    zeigt die Lernzeit, rote Punkte die Klausuren, orange die Abgaben,
    der weiß umrandete Tag ist heute. */
 function klausurJahrHtml(){
-  /* Von dieser Woche bis Ende April — davor ist vorbei, danach Sommer */
-  const h=parsedk(today()), start=sow(h);
+  /* Von der letzten Woche bis Ende April: die vergangene Woche bleibt sichtbar,
+     damit man sieht, wie viel man gelernt hat; danach ist Sommer */
+  const h=parsedk(today()), start=addD(sow(h),-7);
   let ende=new Date(h.getMonth()>=4?h.getFullYear()+1:h.getFullYear(),3,30);
   const ter=uniTermine(), proTag={};
   /* Liegt eine Klausur später (Sommersemester), wächst das Raster bis zu

@@ -5936,7 +5936,7 @@ function lpVorschlag(x){
 /* Kurzname der Aufgabenart für das Symbol auf der Empfehlungskarte */
 function lpArtKurz(x){
   const t=(x.basis||x.titel||"");
-  return /hörsaal|^HÜ/i.test(t)?"HÜ":/blatt/i.test(t)?"Blatt":/übung/i.test(t)?"Übung":"Aufgabe";
+  return /hörsaal|^HÜ/i.test(t)?"HÜ":/blatt/i.test(t)?"Blatt":/^video/i.test(t)?"Video":/übung/i.test(t)?"Übung":"Aufgabe";
 }
 function lpStrahl(m,st){
   const t=today(), l=lpAlle().filter(x=>x.modul===m);
@@ -5947,7 +5947,10 @@ function lpStrahl(m,st){
   let out="";
   if(st.gesamt) out+=schiene("Ankis",st.ist,st.soll,st.gesamt,"",`Ankis: abgehakt ${st.ist} · Soll bis heute ${st.soll} · Gesamt ${st.gesamt}`);
   else { const v=l.filter(x=>x.art==="anki"); if(v.length) out+=schiene("Vorl.",v.filter(x=>x.fertig).length,v.filter(x=>x.datum<=t).length,v.length,"","Vorlesungen"); }
-  const ue=l.filter(x=>x.art!=="anki");
+  const vid=l.filter(x=>x.basis==="Video");
+  if(vid.length){ const ist=vid.filter(x=>x.fertig).length, soll=vid.filter(x=>lpFristWoche(x)<=t).length;
+    out+=schiene("Videos",ist,soll,vid.length,"",`Videos: geschaut ${ist} · Soll bis heute ${soll} · Gesamt ${vid.length}`); }
+  const ue=l.filter(x=>x.art!=="anki"&&x.basis!=="Video");
   if(ue.length){ const ist=ue.filter(x=>x.fertig).length, soll=ue.filter(x=>lpFristWoche(x)<=t).length;
     const nurBl=ue.every(x=>/blatt/i.test(x.basis||x.titel));
     out+=schiene(nurBl?"Blätter":"Übungen",ist,soll,ue.length,"",`${nurBl?"Blätter":"Übungen, Blätter und HÜs"}: erledigt ${ist} · Soll bis heute ${soll} · Gesamt ${ue.length}`); }
@@ -6178,7 +6181,7 @@ function lpHakWiring(el,neu){
 function lpWochenNummern(){
   const l=lp(); let geaendert=false;
   const vorher=l.schritte.length;
-  l.schritte=l.schritte.filter(x=>!(x.art==="woche"&&!x.fertig&&istVlfrei(x.datum)));
+  l.schritte=l.schritte.filter(x=>!(x.art==="woche"&&!x.fertig&&!x.fest&&istVlfrei(x.datum)));
   if(l.schritte.length!==vorher) geaendert=true;
   const reihen={};
   l.schritte.filter(x=>x.art==="woche").forEach(x=>{
@@ -6266,6 +6269,44 @@ function lpKorrekturen(){
     for(let d=parsedk("2026-10-29"); dk(d)<="2027-02-11"; d=addD(d,7)) if(!istVlfrei(dk(d))) woche("tm3","Hörsaalübung",dk(d),{detail:"vorbereiten"});
     lpWochenNummern();
     S.lernplan.plan2310=1; geaendert=true;
+  }
+  /* Statistik-Lernplan vom 28.10.2026 (einmalig, danach frei bearbeitbar): 59 Videos in
+     7 Doppelwochen, je Doppelwoche ein Übungsblatt am Ende, dazu Lernstandschecks und
+     Probeklausur. Die 5. Doppelwoche liegt bewusst in den Winterferien. */
+  if(!S.lernplan.staPlan){
+    const l=S.lernplan.schritte, hat=id=>l.some(x=>x.id===id);
+    const DW=[
+      [["2026-10-19",[["I.1 Grundbegriffe",10],["I.2.1 Absolute & relative Häufigkeiten",25],["I.2.2 Kumulierte Häufigkeitsverteilung",7]]],
+       ["2026-10-26",[["I.2.3 Lagemaße",23],["I.2.4 Quantile & Box-Plots",11],["I.2.5 Streuungsmaße",11],["I.2.6 Konzentration",10]]]],
+      [["2026-11-02",[["I.3.1",14],["I.3.2",7],["I.3.3",13],["I.3.4",15],["I.3.5",7]]],
+       ["2026-11-09",[["II.1.1",12],["II.1.2",9],["II.1.3",10],["II.1.4 Teil 1",6],["II.1.4 Teil 2",13]]]],
+      [["2026-11-16",[["II.1.5",13],["II.1.6",8],["II.2.1",8],["II.2.2",9]]],
+       ["2026-11-23",[["II.2.3",10],["II.2.4 Teil 1",13],["II.2.4 Teil 2",8],["II.2.5",5]]]],
+      [["2026-11-30",[["II.3.1",13],["II.3.2",11],["II.3.3",7],["II.3.4",10]]],
+       ["2026-12-07",[["II.4.1 Teil 1",9],["II.4.1 Teil 2",8],["II.4.2",7],["II.4.3",10],["II.4.4",11]]]],
+      [["2026-12-14",[["II.4.5 Eigenschaften Normalverteilung",7],["II.4.6 Anwendungen Normalverteilung",9],["II.4.7 Abgeleitete Verteilungen",9],["II.5.1",8]]],
+       ["2027-01-04",[["II.5.2",5],["II.5.3",9],["II.5.4",9],["III.1.1 Teil 1",10],["III.1.1 Teil 2",9]]]],
+      [["2027-01-11",[["III.1.1 Teil 3",13],["III.1.2 Teil 1",11],["III.1.2 Teil 2",9]]],
+       ["2027-01-18",[["III.1.3 Teil 1",11],["III.1.3 Teil 2",13]]]],
+      [["2027-01-25",[["III.2.1 Teil 1",11],["III.2.1 Teil 2",12],["III.2.2 Teil 1",12],["III.2.2 Teil 2",10],["III.2.2 Teil 3",14]]],
+       ["2027-02-01",[["III.2.3 Teil 1",11],["III.2.3 Teil 2",10],["III.2.4",16],["III.2.5",14],["III.2.6",12],["III.2.7",14]]]]];
+    const sonntag=mo=>dk(addD(parsedk(mo),6));
+    const blaetter=l.filter(x=>x.modul==="sta"&&x.art==="woche"&&x.basis==="Übungsblatt").sort((a,b)=>a.datum.localeCompare(b.datum));
+    DW.forEach((wochen,i)=>{
+      wochen.forEach(([mo,videos])=>videos.forEach(([name,folien])=>{ const id=`lv_sta_${lpSlug(name)}`;
+        if(!hat(id)) l.push({id,modul:"sta",datum:sonntag(mo),art:"einzel",basis:"Video",titel:`Video ${name}`,
+          detail:`${folien} Folien · Doppelwoche ${i+1}`,neu:null,gesamt:null,fertig:null}); }));
+      /* Blatt i+1 gehört ans Ende der Doppelwoche */
+      const b=blaetter[i]; if(b&&!b.fertig){ b.ab=wochen[0][0]; b.datum=sonntag(wochen[wochen.length-1][0]); b.takt=2; b.fest=1; delete b.empf; delete b.plan; }
+    });
+    S.uniTermine=S.uniTermine||[];
+    /* doppelte Klausur mit falschem Jahr (2026 statt 2027) entfernen, die richtige bleibt */
+    if(S.uniTermine.some(t=>t.modul==="sta"&&t.art==="klausur"&&t.datum==="2027-02-16"))
+      S.uniTermine=S.uniTermine.filter(t=>!(t.modul==="sta"&&t.art==="klausur"&&t.datum==="2026-02-16"));
+    [["Lernstandscheck 1","2026-11-20"],["Lernstandscheck 2","2026-12-18"],["Probeklausur Statistik","2027-02-05"]].forEach(([titel,datum])=>{
+      if(!S.uniTermine.some(t=>t.modul==="sta"&&t.datum===datum)) S.uniTermine.push({id:uid(),titel,datum,art:"termin",modul:"sta",zeit:""}); });
+    lpWochenNummern();
+    S.lernplan.staPlan=1; geaendert=true;
   }
   /* Tägliche Aufgabe „MM I · Ankis“, einmalig angelegt (danach frei lösch- und änderbar) */
   if(!S.lernplan.tgMm1){ S.lernplan.taeglich=S.lernplan.taeglich||[];

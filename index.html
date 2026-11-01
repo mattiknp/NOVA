@@ -2522,7 +2522,29 @@ function habitSerie(h){
 function toggleHabit(k,id){
   if(!S.habitLog[k]) S.habitLog[k]={};
   S.habitLog[k][id]?delete S.habitLog[k][id]:S.habitLog[k][id]=true;
+  if(id===STRETCH_ID) stretchTraining(k);
   save();
+}
+/* ── Daily Stretches ──
+   Jeder Haken bei dieser Gewohnheit ist zugleich eine Einheit von 15
+   Minuten Mobility im Training; Haken weg, Einheit weg. Die Kennung der
+   Einheit hängt am Datum, so kann sie beim Abgleich zweier Geräte nie
+   doppelt entstehen. */
+const STRETCH_ID="h_stretch", STRETCH_MIN=15;
+function stretchTraining(k){
+  const an=!!(S.habitLog[k]||{})[STRETCH_ID], sid="stretch_"+k, liste=S.sport[k]||[];
+  const da=liste.some(e=>e.id===sid);
+  if(an&&!da){ if(!S.sport[k]) S.sport[k]=[];
+    S.sport[k].push({id:sid,type:"mobility",duration:STRETCH_MIN,hr:null,rpe:null,notes:"Daily Stretches",kraftSubtype:null}); }
+  if(!an&&da){ S.sport[k]=liste.filter(e=>e.id!==sid); if(!S.sport[k].length) delete S.sport[k]; }
+}
+/* Einmal anlegen; wer die Gewohnheit später löscht, bekommt sie nicht zurück */
+function stretchAnlegen(){
+  if(S.stretchAngelegt) return false;
+  S.habits=S.habits||[];
+  if(!S.habits.some(h=>h.id===STRETCH_ID))
+    S.habits.push({id:STRETCH_ID,name:"Daily Stretches",color:"#d488b8",createdAt:today(),archived:false});
+  S.stretchAngelegt=1; return true;
 }
 function streak(h){
   let n=0,d=new Date();
@@ -4160,19 +4182,67 @@ R.heute=function(){
   </div>
 
   <div class="grid hd-top">
-    <div class="p hd-nexus">
-      <div class="hd-nx-head">
-        <div>
-          <div class="hd-nx-t">Tageswert${nm}</div>
-          <div class="hd-sub">${total?`${done} von ${total} Gewohnheiten`:"Noch keine Gewohnheiten"}${sp.length?` · ${Math.round(sportMin(k))} min Training`:""}</div>
+    <div class="p hd-haken">
+        <div class="p-head">
+          <div class="p-title">${ico("check")}Gewohnheiten</div>
+          <div style="display:flex;gap:7px;align-items:center">
+            <input type="date" id="hDate" value="${k}" style="width:auto;padding:6px 9px;font-size:var(--t-sm)">
+            ${!isT?`<button class="b b-sm" id="hToday">Heute</button>`:""}
+          </div>
         </div>
-        <div style="display:flex;gap:6px">
-
+        ${gs!==null?`<div class="gs">
+          <div class="gs-kopf">
+            <span class="gs-l">Gesamtstärke</span>
+            <span class="gs-z">${gs} %</span>
+            ${gsAlt!==null&&gs!==gsAlt?`<span class="gs-d ${gs>gsAlt?"auf":"ab"}">
+              ${gs>gsAlt?"+":""}${gs-gsAlt} seit letzter Woche</span>`:""}
+          </div>
+          <div class="gs-bar"><i style="width:${gs}%"></i></div>
+        </div>`:""}
+        ${hs.length?`
+        <div class="hb-kopf">
+          <span class="hb-kopf-n">Gewohnheit</span>
+          <span class="hb-tage">${LETZTE7.map(d=>
+            `<span class="ht-l${dk(d)===today()?" heute":""}">${WD[(d.getDay()+6)%7]}</span>`).join("")}</span>
+          <span class="hb-kopf-s">Stärke</span>
         </div>
+        <div style="display:flex;flex-direction:column;gap:2px">${hs.map(h=>{
+          const on=!!log[h.id];
+          const soll=habitSoll(h), wo=rollTreffer(h,k);
+          /* An welcher Stelle im Fenster wurde das Ziel voll? Die leeren
+             Tage links davon hast du nicht gebraucht — sie bekommen den
+             Anzeige-Haken. Rechts davon bleibt es offen. */
+          let vollAb=-1;
+          if(soll<7){
+            let n=0;
+            for(let i=0;i<LETZTE7.length;i++){
+              if(S.habitLog[dk(LETZTE7[i])]?.[h.id]){ n++; if(n>=soll){ vollAb=i; break; } }
+            }
+          }
+          const geschafft = vollAb>=0;
+          const erledigt = geschafft && !on;
+          const kraft=habitStaerke(h,k), se=habitSerie(h);
+          return `<div class="hb2${on?" on":""}${erledigt?" fertig":""}"
+            title="Stärke ${kraft} %${se.n?` · ${se.n} ${se.e} in Folge`:""}">
+            <span class="hb-dot" style="background:${h.color}"></span>
+            <span class="hb-n">${esc(h.name)}</span>
+            ${soll<7?`<span class="hb-w${geschafft?" voll":""}" title="in den letzten 7 Tagen">${wo}/${soll}</span>`:""}
+            <span class="hb-tage">${LETZTE7.map((d,idx)=>{
+              const t2=dk(d), an=!!S.habitLog[t2]?.[h.id];
+              const vorher=t2<h.createdAt, kuenftig=t2>today();
+              /* Nur links von der Erfüllung: diese Tage hast du ausgelassen,
+                 und es hat trotzdem gereicht. */
+              const schein = geschafft && idx<vollAb && !an && !vorher && !kuenftig;
+              return `<button class="ht${an?" an":""}${schein?" schein":""}${t2===today()?" heute":""}${vorher||kuenftig?" aus":""}"
+                ${vorher||kuenftig?"disabled":`data-hd="${h.id}|${t2}"`}
+                style="--hc:${h.color}" aria-pressed="${an}"
+                aria-label="${esc(h.name)}, ${fmtShort(d)}${schein?", Ziel bereits erreicht":""}"
+                title="${fmtShort(d)}${schein?" · Ziel erreicht, dieser Tag zählt nicht gegen dich":""}"
+                >${an||schein?ico("check"):""}</button>`;}).join("")}</span>
+            <span class="hb-s" style="--kf:${kraft}%">${kraft} %</span>
+          </div>`;}).join("")}</div>`
+        :`<div class="empty">${ico("list")}<div>Noch keine Gewohnheiten.<br>Lege unter „Gewohnheiten“ die erste an.</div></div>`}
       </div>
-      <div class="hd-nx-stage"><canvas id="nxMini" style="display:block;width:100%"></canvas></div>
-      <div class="nx-werte" id="nxWerte"></div>
-    </div>
 
     <div class="p hd-plan">
       <div class="p-head" style="margin-bottom:10px">
@@ -4247,67 +4317,6 @@ R.heute=function(){
         </div>
       </div>
 
-      <div class="p">
-        <div class="p-head">
-          <div class="p-title">${ico("check")}Gewohnheiten</div>
-          <div style="display:flex;gap:7px;align-items:center">
-            <input type="date" id="hDate" value="${k}" style="width:auto;padding:6px 9px;font-size:var(--t-sm)">
-            ${!isT?`<button class="b b-sm" id="hToday">Heute</button>`:""}
-          </div>
-        </div>
-        ${gs!==null?`<div class="gs">
-          <div class="gs-kopf">
-            <span class="gs-l">Gesamtstärke</span>
-            <span class="gs-z">${gs} %</span>
-            ${gsAlt!==null&&gs!==gsAlt?`<span class="gs-d ${gs>gsAlt?"auf":"ab"}">
-              ${gs>gsAlt?"+":""}${gs-gsAlt} seit letzter Woche</span>`:""}
-          </div>
-          <div class="gs-bar"><i style="width:${gs}%"></i></div>
-        </div>`:""}
-        ${hs.length?`
-        <div class="hb-kopf">
-          <span class="hb-kopf-n">Gewohnheit</span>
-          <span class="hb-tage">${LETZTE7.map(d=>
-            `<span class="ht-l${dk(d)===today()?" heute":""}">${WD[(d.getDay()+6)%7]}</span>`).join("")}</span>
-          <span class="hb-kopf-s">Stärke</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:2px">${hs.map(h=>{
-          const on=!!log[h.id];
-          const soll=habitSoll(h), wo=rollTreffer(h,k);
-          /* An welcher Stelle im Fenster wurde das Ziel voll? Die leeren
-             Tage links davon hast du nicht gebraucht — sie bekommen den
-             Anzeige-Haken. Rechts davon bleibt es offen. */
-          let vollAb=-1;
-          if(soll<7){
-            let n=0;
-            for(let i=0;i<LETZTE7.length;i++){
-              if(S.habitLog[dk(LETZTE7[i])]?.[h.id]){ n++; if(n>=soll){ vollAb=i; break; } }
-            }
-          }
-          const geschafft = vollAb>=0;
-          const erledigt = geschafft && !on;
-          const kraft=habitStaerke(h,k), se=habitSerie(h);
-          return `<div class="hb2${on?" on":""}${erledigt?" fertig":""}"
-            title="Stärke ${kraft} %${se.n?` · ${se.n} ${se.e} in Folge`:""}">
-            <span class="hb-dot" style="background:${h.color}"></span>
-            <span class="hb-n">${esc(h.name)}</span>
-            ${soll<7?`<span class="hb-w${geschafft?" voll":""}" title="in den letzten 7 Tagen">${wo}/${soll}</span>`:""}
-            <span class="hb-tage">${LETZTE7.map((d,idx)=>{
-              const t2=dk(d), an=!!S.habitLog[t2]?.[h.id];
-              const vorher=t2<h.createdAt, kuenftig=t2>today();
-              /* Nur links von der Erfüllung: diese Tage hast du ausgelassen,
-                 und es hat trotzdem gereicht. */
-              const schein = geschafft && idx<vollAb && !an && !vorher && !kuenftig;
-              return `<button class="ht${an?" an":""}${schein?" schein":""}${t2===today()?" heute":""}${vorher||kuenftig?" aus":""}"
-                ${vorher||kuenftig?"disabled":`data-hd="${h.id}|${t2}"`}
-                style="--hc:${h.color}" aria-pressed="${an}"
-                aria-label="${esc(h.name)}, ${fmtShort(d)}${schein?", Ziel bereits erreicht":""}"
-                title="${fmtShort(d)}${schein?" · Ziel erreicht, dieser Tag zählt nicht gegen dich":""}"
-                >${an||schein?ico("check"):""}</button>`;}).join("")}</span>
-            <span class="hb-s" style="--kf:${kraft}%">${kraft} %</span>
-          </div>`;}).join("")}</div>`
-        :`<div class="empty">${ico("list")}<div>Noch keine Gewohnheiten.<br>Lege unter „Gewohnheiten“ die erste an.</div></div>`}
-      </div>
     </div>
 
     <div class="grid">
@@ -4368,18 +4377,6 @@ R.heute=function(){
   cap.onkeydown=e=>{ if(e.key==="Enter") run(); };
 
   beleben(V);
-  /* Kleiner Nexus auf der Startseite */
-  const mini=V.querySelector("#nxMini");
-  if(mini){
-    /* Handy: etwas flacher, damit die Kugel ruhig im Block sitzt */
-    const schmal=window.innerWidth<700;
-    NEXUS_MINI=makeNexus(mini,{mini:true,ratio:schmal?.68:.86,maxH:schmal?270:440,minH:schmal?220:260});
-    NEXUS_MINI.start();
-    const wl=V.querySelector("#nxWerte");
-    if(wl) wl.innerHTML=NEXUS_MINI.nodes.map(n=>
-      `<span class="nx-wert"><i style="background:${n.color}"></i>
-        <b>${n.sub}</b><em>${n.key}</em></span>`).join("");
-  }
   ZULETZT.set("voll",SO.voll);
   if(feiern) setTimeout(()=>V.querySelector(".hd-ziele")?.classList.remove("feiern"),1900);
 };
@@ -8404,6 +8401,7 @@ load();
 garminNeu=mergeGarmin();
 if(garminNeu) persist();
 if(typeof lpKorrekturen==="function"&&lpKorrekturen()) save();
+if(stretchAnlegen()) save();
 shell();
 /* Auftakt: die Blöcke fallen einmal nacheinander ein */
 function auftakt(){ if(BEWEG_ARM) return; const v=document.getElementById("views"); if(!v) return;

@@ -594,6 +594,93 @@ select option{ background:#141a26; }
 .tb-title{ font-family:var(--f-disp); font-size:var(--t-lg); font-weight:600; letter-spacing:-.01em; }
 .tb-date{ font-size:var(--t-sm); color:var(--text-dim); }
 .tb-spacer{ flex:1; }
+/* ── Geschenke (aufgeräumt nach dem Vorbild der Woche-App) ── */
+.gk-kopf{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:16px; }
+.gk-titel{ font-family:var(--f-disp); font-size:var(--t-2xl); font-weight:700; letter-spacing:-.02em; line-height:1.1; }
+.gk-xmas{ position:relative; overflow:hidden; border-radius:var(--r-xl); padding:20px 22px; margin-bottom:16px;
+  background:linear-gradient(135deg, color-mix(in srgb, var(--gift) 30%, #141a26), color-mix(in srgb, var(--gold) 14%, #141a26));
+  border:1px solid color-mix(in srgb, var(--gift) 30%, transparent); }
+.gk-xmas::after{ content:""; position:absolute; right:0; top:0; bottom:0; width:110px; opacity:.12; pointer-events:none;
+  background:repeating-linear-gradient(90deg, var(--gold) 0 13px, transparent 13px 26px); }
+.gk-xmas > *{ position:relative; z-index:1; }
+.gk-xk{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:14px; padding-right:90px; }
+.gk-xic{ width:44px; height:44px; border-radius:50%; display:grid; place-items:center; background:var(--gold); color:#2a1d00; flex:0 0 auto; }
+.gk-xic svg{ width:20px; height:20px; fill:currentColor; }
+.gk-xk > div{ display:flex; flex-direction:column; }
+.gk-xk b{ font-family:var(--f-disp); font-size:var(--t-2xl); font-weight:700; line-height:1.05; color:#fff; }
+.gk-xk span{ font-size:var(--t-sm); color:var(--text-dim); margin-top:3px; }
+.gk-xbar{ flex:1; min-width:140px; height:6px; border-radius:6px; background:rgba(255,255,255,.12); overflow:hidden; }
+.gk-xbar i{ display:block; height:100%; border-radius:6px; background:var(--gold); }
+.gk-xp{ display:flex; flex-wrap:wrap; gap:6px; }
+.gk-xpe{ display:inline-flex; align-items:center; gap:7px; padding:5px 12px 5px 5px; border-radius:var(--r-pill); font-size:var(--t-sm);
+  background:rgba(255,255,255,.07); color:var(--text); }
+.gk-xpe > i{ width:22px; height:22px; border-radius:50%; display:grid; place-items:center; border:2px dashed rgba(255,255,255,.3); }
+.gk-xpe > i svg{ width:12px; height:12px; stroke-width:2.6; }
+.gk-xpe.s-idee > i{ border-style:solid; border-color:var(--gold); color:var(--gold); }
+.gk-xpe.s-gekauft{ background:var(--gold); color:#2a1d00; font-weight:600; }
+.gk-xpe.s-gekauft > i{ border:0; background:#2a1d00; color:var(--gold); }
+.gk-bald{ display:flex; gap:10px; overflow-x:auto; padding:2px 2px 8px; margin-bottom:12px; scrollbar-width:none; }
+.gk-bald::-webkit-scrollbar{ display:none; }
+.gk-gb{ flex:0 0 auto; display:flex; align-items:center; gap:11px; padding:7px 18px 7px 7px; border-radius:var(--r-pill); text-align:left;
+  background:var(--panel); border:1px solid var(--glass-edge); transition:transform var(--d1) var(--ez); }
+.gk-gb:active{ transform:scale(.97); }
+.gk-gbn{ display:grid; place-items:center; width:42px; height:42px; border-radius:50%; font-family:var(--f-disp); font-size:var(--t-lg); font-weight:700;
+  background:rgba(232,121,157,.14); color:var(--gift); }
+.gk-gbn svg{ width:18px; height:18px; }
+.gk-gb.nah{ background:color-mix(in srgb, var(--gift) 22%, var(--panel)); border-color:color-mix(in srgb, var(--gift) 45%, transparent); }
+.gk-gb.nah .gk-gbn{ background:var(--gift); color:#1a0d12; }
+.gk-gb span{ display:flex; flex-direction:column; line-height:1.25; font-size:var(--t-xs); color:var(--text-dim); }
+.gk-gb span b{ font-size:var(--t-base); color:var(--text); }
+.gk-pers{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; align-items:start; }
+.gk-per{ display:flex; flex-direction:column; gap:10px; padding:18px; border-radius:var(--r-xl); background:var(--panel); border:1px solid var(--glass-edge);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); transition:box-shadow .4s var(--ez); }
+.gk-per.blink{ box-shadow:0 0 0 2px var(--gift); }
+.gk-pk{ display:flex; align-items:center; gap:12px; }
+.gk-av{ width:46px; height:46px; flex:0 0 auto; border-radius:50%; display:grid; place-items:center; font-family:var(--f-disp); font-size:var(--t-xl); font-weight:700;
+  background:color-mix(in srgb, var(--gift) 85%, #000); color:#fff; }
+.gk-pn{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.gk-pn b{ font-family:var(--f-disp); font-size:var(--t-lg); font-weight:700; line-height:1.15; }
+.gk-pn span{ font-size:var(--t-xs); color:var(--text-dim); }
+.gk-pn i{ font-style:normal; color:var(--gift); font-weight:650; }
+.gk-rund{ width:34px; height:34px; flex:0 0 auto; border-radius:50%; display:grid; place-items:center; color:var(--text-dim);
+  background:rgba(255,255,255,.05); border:1px solid var(--line); transition:transform var(--d1) var(--ez), color var(--d2); }
+.gk-rund:active{ transform:scale(.92); }
+.gk-rund svg{ width:15px; height:15px; }
+.gk-rund.voll{ background:var(--gift); color:#1a0d12; border-color:transparent; width:40px; height:40px; }
+.gk-warn{ display:inline-flex; align-items:center; gap:7px; align-self:flex-start; font-size:var(--t-xs); font-weight:650;
+  padding:5px 12px; border-radius:var(--r-pill); color:#2a1d00; background:var(--gold); }
+.gk-warn svg{ width:13px; height:13px; }
+.gk-lab{ font-size:var(--t-xs); font-weight:600; color:var(--text-faint); letter-spacing:.02em; margin-top:2px; }
+.gk-notiz{ background:transparent; border:0; border-radius:0; padding:2px 2px; resize:vertical; min-height:62px; font-size:var(--t-sm); line-height:30px;
+  background-image:linear-gradient(transparent 29px, var(--line) 29px); background-size:100% 30px; box-shadow:none; }
+.gk-notiz:focus{ box-shadow:none; background-color:transparent; }
+.gk-ideen{ display:flex; flex-direction:column; gap:5px; }
+.gk-idee{ display:flex; align-items:center; gap:10px; padding:6px 6px 6px 7px; border-radius:var(--r); background:rgba(255,255,255,.035); }
+.gk-st{ width:30px; height:30px; flex:0 0 auto; border-radius:50%; display:grid; place-items:center; color:var(--warn);
+  box-shadow:inset 0 0 0 1.5px var(--line-2); transition:transform var(--d1) var(--ez); }
+.gk-st:active{ transform:scale(.9); }
+.gk-st svg{ width:15px; height:15px; }
+.gk-idee.gekauft .gk-st{ background:var(--good); color:#08131a; box-shadow:none; }
+.gk-idee.verschenkt .gk-st{ background:color-mix(in srgb, var(--gift) 28%, transparent); color:var(--gift); box-shadow:none; }
+.gk-idee.verschenkt{ opacity:.7; }
+.gk-it{ flex:1; min-width:0; font-size:var(--t-sm); line-height:1.4; overflow-wrap:anywhere; }
+.gk-it em{ font-style:normal; color:var(--text-faint); font-size:var(--t-xs); margin-left:6px; font-variant-numeric:tabular-nums; }
+.gk-anl{ font-size:10.5px; font-weight:650; padding:2px 8px; border-radius:var(--r-pill); margin-left:6px; white-space:nowrap; }
+.gk-anl.x{ background:color-mix(in srgb, var(--gold) 20%, transparent); color:var(--gold); }
+.gk-anl.g{ background:color-mix(in srgb, var(--gift) 20%, transparent); color:var(--gift); }
+.gk-anl.o{ background:color-mix(in srgb, var(--c2) 22%, transparent); color:#b9afff; }
+.gk-is{ font-size:10.5px; color:var(--text-faint); white-space:nowrap; }
+.gk-weg{ width:26px; height:26px; flex:0 0 auto; border-radius:50%; display:grid; place-items:center; color:var(--text-faint); }
+.gk-weg svg{ width:12px; height:12px; }
+@media (hover:hover){ .gk-weg:hover{ color:var(--bad); background:rgba(224,105,124,.1); } }
+.gk-anlw{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; font-size:var(--t-xs); color:var(--text-faint); }
+.gk-anlw .chip{ height:28px; font-size:var(--t-xs); padding:0 11px; }
+.gk-plus svg{ width:12px; height:12px; margin-right:3px; }
+.gk-anlin{ width:140px; height:28px; padding:0 10px; border-radius:var(--r-pill); font-size:var(--t-xs); }
+.gk-neu{ display:flex; gap:8px; align-items:center; }
+.gk-neu input{ flex:1; min-width:0; border-radius:var(--r-pill); padding:9px 14px; }
+.gk-alt summary{ cursor:pointer; font-size:var(--t-xs); color:var(--text-faint); margin-bottom:6px; }
+@media(max-width:560px){ .gk-pers{ grid-template-columns:minmax(0,1fr); } .gk-xk{ padding-right:0; } }
 /* ── Ihre Woche: ihr Planer im Zeitraster, nur zum Ansehen. Lücken = freie Zeit ── */
 .pw-kal{ --pwh:46px; border:1px solid var(--line); border-radius:var(--r); overflow:clip; background:rgba(255,255,255,.015); }
 .pw-kopf, .pw-body, .pw-ganz{ display:grid; grid-template-columns:52px repeat(var(--n),minmax(0,1fr)); }
@@ -1567,6 +1654,14 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 }
 .tp-sp.heute .tp-kopf{ color:var(--c1); }
 .tp-spalte{ position:relative; }
+.tp-jetzt{ position:absolute; left:0; right:0; height:2px; margin-top:-1px; z-index:4; pointer-events:none;
+  background:#ff7a90; box-shadow:0 0 8px rgba(255,122,144,.75); }
+.tp-jetzt::before{ content:""; position:absolute; left:-1px; top:-4px; width:10px; height:10px; border-radius:50%; background:#ff7a90; }
+.tp-jetzt span{ position:absolute; right:2px; top:-17px; font-family:var(--f-mono); font-size:9.5px; font-weight:700;
+  color:#ff9db0; background:rgba(8,11,18,.85); padding:1px 4px; border-radius:4px; font-variant-numeric:tabular-nums; }
+.tp-jetzt.leise{ height:1px; margin-top:0; background:rgba(255,122,144,.38); box-shadow:none; }
+.tp-jetzt.leise::before{ display:none; }
+
 @media(max-width:640px){ .tp-sp{ width:88px; } }
 
 /* Aufgabenzeile im Planer */
@@ -2919,21 +3014,114 @@ function setSync(state,txt){
   el.style.background=c; el.title=txt||"";
 }
 function queueSync(){ clearTimeout(syncTimer); syncTimer=setTimeout(pushCloud,1400); }
-async function pushCloud(){
-  if(!cloudOn()) return; const tok=cloudTok(); if(!tok) return;
-  setSync("busy","Speichert…");
-  try{
-    let sha=syncSha;
-    if(!sha){ const r=await fetch(GH_API,{headers:{Authorization:`token ${tok}`}});
-      if(r.ok){ sha=(await r.json()).sha; } }
-    const body={message:`nova ${new Date().toISOString()}`,
-      content:btoa(unescape(encodeURIComponent(JSON.stringify(S)))), ...(sha?{sha}:{})};
-    const r2=await fetch(GH_API,{method:"PUT",headers:{Authorization:`token ${tok}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
-    if(!r2.ok) throw new Error(r2.status);
-    syncSha=(await r2.json()).content.sha;
-    setSync("ok","Synchron");
-    if(typeof teilHoch==="function") teilHoch().catch(()=>{});
-  }catch(e){ setSync("err","Sync fehlgeschlagen"); }
+/* Hochladen läuft immer über den Abgleich: erst den Cloud-Stand holen,
+   zusammenführen, dann schreiben. Ein blindes Überschreiben mit einem
+   alten Stand (App lange offen) kann es so nicht mehr geben. */
+function pushCloud(){ return abgleichen().then(g=>{ if(g) frischHalten(true); }); }
+
+/* ── Abgleich mit Gedächtnis ──
+   Früher ersetzte der Cloud-Stand beim Öffnen den Stand auf dem Gerät
+   ganz. War das letzte Hochladen gescheitert (App lange offen und ein
+   anderes Gerät hatte inzwischen gespeichert, oder iOS hatte die App im
+   Hintergrund angehalten), war alles seit dem letzten Erfolg weg.
+   Jetzt merkt sich NOVA den zuletzt gemeinsamen Stand (Basis) und führt
+   drei Stände zusammen: nur hier geändert bleibt, nur dort geändert
+   kommt dazu, und Löschen reist in beide Richtungen. Ohne Basis (erster
+   Abgleich nach dem Update) wird nur vereinigt, nie gelöscht. */
+const BASIS="nova_basis";
+let basis=(()=>{ try{ return JSON.parse(localStorage.getItem(BASIS)||"null"); }catch(e){ return null; } })();
+function basisSetzen(x){ basis=JSON.parse(JSON.stringify(x)); try{ localStorage.setItem(BASIS,JSON.stringify(basis)); }catch(e){} }
+const istObj=v=>v!==null&&typeof v==="object"&&!Array.isArray(v);
+function stabil(v,c){
+  if(v===undefined||v===null||typeof v!=="object") return JSON.stringify(v===undefined?null:v);
+  if(c&&c.has(v)) return c.get(v);
+  const t=Array.isArray(v)?"["+v.map(x=>stabil(x,c)).join(",")+"]"
+    :"{"+Object.keys(v).filter(k=>v[k]!==undefined).sort().map(k=>JSON.stringify(k)+":"+stabil(v[k],c)).join(",")+"}";
+  if(c) c.set(v,t); return t;
+}
+const LEER=Symbol("leer");
+const listenSchl=(e,c)=>istObj(e)&&(e.gid!=null||e.id!=null)?"#"+(e.gid??e.id):"="+stabil(e,c);
+function mische3(b,l,r,lokalVorrang,c){
+  if(l===undefined) return r; if(r===undefined) return l;
+  const sl=stabil(l,c), sr=stabil(r,c);
+  if(sl===sr) return l;
+  if(b!==undefined){ const sb=stabil(b,c); if(sl===sb) return r; if(sr===sb) return l; }
+  if(istObj(l)&&istObj(r)){
+    const bo=istObj(b)?b:null, out={};
+    for(const k of new Set([...Object.keys(l),...Object.keys(r)])){
+      const inL=l[k]!==undefined, inR=r[k]!==undefined, inB=!!bo&&bo[k]!==undefined;
+      if(inL&&inR) out[k]=mische3(inB?bo[k]:undefined,l[k],r[k],lokalVorrang,c);
+      else if(inL){ if(!(inB&&stabil(l[k],c)===stabil(bo[k],c))) out[k]=l[k]; }
+      else if(inR){ if(!(inB&&stabil(r[k],c)===stabil(bo[k],c))) out[k]=r[k]; }
+    }
+    return out;
+  }
+  if(Array.isArray(l)&&Array.isArray(r)){
+    const zuMap=a=>{ const m=new Map(); (Array.isArray(a)?a:[]).forEach(e=>m.set(listenSchl(e,c),e)); return m; };
+    const B=zuMap(b), L=zuMap(l), R=zuMap(r), out=[];
+    const nimm=k=>{
+      const inL=L.has(k), inR=R.has(k), inB=B.has(k);
+      if(inL&&inR) return mische3(inB?B.get(k):undefined,L.get(k),R.get(k),lokalVorrang,c);
+      const x=inL?L.get(k):R.get(k);
+      return inB&&stabil(x,c)===stabil(B.get(k),c)?LEER:x;   /* drüben gelöscht, hier unverändert */
+    };
+    for(const k of L.keys()){ const v=nimm(k); if(v!==LEER) out.push(v); }
+    for(const k of R.keys()) if(!L.has(k)){ const v=nimm(k); if(v!==LEER) out.push(v); }
+    return out;
+  }
+  return lokalVorrang?l:r;
+}
+let syncKette=Promise.resolve(), abgleichFehler="";
+function inReihe(f){ const p=syncKette.then(f,f); syncKette=p.catch(()=>{}); return p; }
+const standLeer=x=>!x||(!(x.habits||[]).length&&!Object.keys(x.metrics||{}).length);
+async function holeFern(tok){
+  const r=await fetch(GH_API+"?v="+Date.now(),{headers:{Authorization:`token ${tok}`}});
+  if(r.status===404) return {fehlt:true};
+  if(!r.ok) throw new Error("GitHub "+r.status);
+  const j=await r.json();
+  if(!j.content) throw new Error("Cloud-Datei nicht lesbar");   /* nie als „leer“ behandeln */
+  return {sha:j.sha, daten:JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))))};
+}
+/* Holt, führt zusammen, schreibt. Gibt zurück, ob sich hier etwas geändert hat. */
+function abgleichen(){
+  return inReihe(async()=>{
+    if(!cloudOn()) return false; const tok=cloudTok(); if(!tok) return false;
+    clearTimeout(syncTimer); syncTimer=null;
+    setSync("busy","Gleicht ab…");
+    const start=stabil(S);
+    try{
+      for(let versuch=0;versuch<3;versuch++){
+        const f=await holeFern(tok);
+        if(!f.fehlt){
+          const neu=mische3(basis||undefined,S,f.daten,!!basis,new WeakMap());
+          S=Object.assign(blank(),neu);
+          tplanAufraeumen(); if(typeof lpKorrekturen==="function") lpKorrekturen();
+          persist();
+          if(stabil(S)===stabil(f.daten)){
+            syncSha=f.sha; basisSetzen(S); abgleichFehler=""; setSync("ok","Synchron");
+            return stabil(S)!==start;
+          }
+          if(standLeer(S)&&!standLeer(f.daten)) throw new Error("Leerer Stand, Hochladen gestoppt");
+        }
+        /* Genau das, was hochgeht, wird später zur Basis. Tippst du währenddessen
+           weiter, gilt das als neue lokale Änderung und reist beim nächsten Mal. */
+        const gesendet=JSON.stringify(S);
+        const body={message:`nova ${new Date().toISOString()}`,
+          content:btoa(unescape(encodeURIComponent(gesendet))), ...(f.sha?{sha:f.sha}:{})};
+        const r2=await fetch(GH_API,{method:"PUT",headers:{Authorization:`token ${tok}`,"Content-Type":"application/json"},body:JSON.stringify(body)});
+        if(r2.status===409||r2.status===422) continue;   /* ein anderes Gerät war schneller: neu holen und mischen */
+        if(!r2.ok) throw new Error("GitHub "+r2.status);
+        syncSha=(await r2.json()).content.sha; basisSetzen(JSON.parse(gesendet)); abgleichFehler=""; setSync("ok","Synchron");
+        if(typeof teilHoch==="function") teilHoch().catch(()=>{});
+        return stabil(S)!==start;
+      }
+      throw new Error("Zu viele gleichzeitige Änderungen");
+    }catch(e){
+      abgleichFehler=e.message||"Abgleich fehlgeschlagen";
+      setSync("err","Nicht abgeglichen, deine Eingaben bleiben auf diesem Gerät gespeichert");
+      return stabil(S)!==start;
+    }
+  });
 }
 /* Sagt genau, woran es lag — „keine Daten“ ist als Diagnose wertlos. */
 let cloudFehler="";
@@ -2949,7 +3137,7 @@ async function pullCloud(){
     S=Object.assign(blank(),JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,""))))));
     tplanAufraeumen();          /* auch das, was vom anderen Gerät kommt */
     if(typeof lpKorrekturen==="function") lpKorrekturen();
-    persist(); setSync("ok","Synchron"); cloudFehler=""; return true;
+    persist(); basisSetzen(S); setSync("ok","Synchron"); cloudFehler=""; return true;
   }catch(e){
     /* Ein abgewiesener fetch ohne Statuscode heißt fast immer: die
        Umgebung lässt den Zugriff auf fremde Server nicht zu. */
@@ -3200,35 +3388,9 @@ function tickClock(){
 async function syncNow(){
   if(!cloudOn()){ cloudModal(); return; }
   toast("Gleiche ab…","orbit");
-  cloudFehler="";
-  const lokal=JSON.parse(JSON.stringify(S));
-  const ok=await pullCloud();
-  if(ok){
-    /* Zusammenführen statt überschreiben: was hier neuer ist, bleibt. */
-    ["metrics","habitLog","sport","planer","dayCheck"].forEach(feld=>{
-      for(const [k,v] of Object.entries(lokal[feld]||{})){
-        if(!S[feld][k]) S[feld][k]=v;
-        else if(feld==="sport"){
-          const da=new Set(S[feld][k].map(e=>e.gid||e.id));
-          v.forEach(e=>{ if(!da.has(e.gid||e.id)) S[feld][k].push(e); });
-        }
-        else if(feld==="planer"){
-          const da=new Set(S[feld][k].map(e=>e.id));
-          v.forEach(e=>{ if(!da.has(e.id)) S[feld][k].push(e); });
-        }
-        else if(typeof v==="object") S[feld][k]=Object.assign({},v,S[feld][k]);
-      }
-    });
-    const ids=new Set((S.todos||[]).map(t=>t.id));
-    (lokal.todos||[]).forEach(t=>{ if(!ids.has(t.id)) S.todos.push(t); });
-    (lokal.habits||[]).forEach(h=>{ if(!(S.habits||[]).some(x=>x.id===h.id)) S.habits.push(h); });
-  }
-  if(cloudFehler==="gesperrt"){
-    toast("Zugriff auf GitHub ist hier gesperrt","x"); return;
-  }
-  mergeGarmin();
-  persist(); await pushCloud();
-  toast(cloudFehler?"Abgleich unvollständig":"Geräte sind gleich",cloudFehler?"x":"check");
+  if(mergeGarmin()) persist();
+  await abgleichen();
+  toast(abgleichFehler?"Abgleich unvollständig: "+abgleichFehler:"Geräte sind gleich",abgleichFehler?"x":"check");
   go(VIEW); paintOrb();
 }
 
@@ -3707,6 +3869,22 @@ function checkinOeffnen(teil){
   const j=checkinJetzt();
   if(j.teil!==teil){ toast(teil==="m"?"Der Morgen-Check geht bis 13 Uhr":"Der Abend-Check geht ab 18 Uhr","x"); return; }
   (teil==="m"?morgenModal:abendModal)(j.k);
+}
+/* ── Check-in von selbst ──
+   Ist der Morgen- oder Abend-Check gerade dran und noch offen, öffnet
+   NOVA ihn beim Öffnen der App sofort. Mit „Später“ ruht er 30 Minuten,
+   dann fragt die App beim nächsten Öffnen wieder. */
+const CK_AUTO="nova_ck_auto";
+function checkinVonSelbst(){
+  const j=checkinJetzt(); if(!j.teil||j.k<CHECKIN_AB) return;
+  if(checkinAm(j.k)[j.teil]) return;
+  if(document.hidden||document.getElementById("modal")?.classList.contains("on")) return;
+  if(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  const schl=j.k+"|"+j.teil;
+  let l={}; try{ l=JSON.parse(localStorage.getItem(CK_AUTO)||"{}"); }catch(e){}
+  if(l.s===schl&&Date.now()-(l.t||0)<30*60000) return;
+  try{ localStorage.setItem(CK_AUTO,JSON.stringify({s:schl,t:Date.now()})); }catch(e){}
+  (j.teil==="m"?morgenModal:abendModal)(j.k);
 }
 const planListe=k=>{
   const l=planDay(k).slice().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
@@ -7274,81 +7452,91 @@ R.partner=function(){
   const n=el.querySelector("#pwName");
   n.onchange=()=>{ const v=n.value.trim(); if(!v){ n.value=teilMeinName(); return; } localStorage.setItem(TEIL_NAME,v); teilHoch().catch(()=>{}); toast(`Bei ihr heißt du jetzt ${v}`,"heart"); };
 };
+/* Eigene Anlässe einer Person (z. B. Namenstag), aus ihren Ideen gesammelt */
+const gsEigene=p=>[...new Set([...(p.ideen||[]).map(i=>i.anlass),gsAnlassWahl[p.id]].filter(a=>a&&a!=="geb"&&a!=="xmas"))];
+const gsAnlassName=a=>a==="geb"?"Geburtstag":a==="xmas"?"Weihnachten":a;
+
+/* Geschenke, aufgeräumt wie in der Woche-App: ein Weihnachtsblock, die
+   nächsten Geburtstage als Leiste, darunter eine ruhige Karte je Mensch. */
 R.geschenke=function(){
   const el=document.getElementById("v-geschenke");
   const ps=gsPersonen().map(p=>({p,n:gsNaechster(p)}))
     .sort((a,b)=>(a.n?a.n.tage:9999)-(b.n?b.n.tage:9999)||a.p.name.localeCompare(b.p.name));
-  const bald=ps.filter(x=>x.n&&x.n.tage<=60).slice(0,6);
+  const bald=ps.filter(x=>x.n&&x.n.tage<=60);
   const ideenOffen=ps.reduce((a,x)=>a+(x.p.ideen||[]).filter(i=>i.status==="idee").length,0);
-  const gekauft=ps.reduce((a,x)=>a+(x.p.ideen||[]).filter(i=>i.status==="gekauft").length,0);
 
-  const ideeZeile=(p,i)=>`<div class="gs-i ${i.status}">
-      <button class="gs-st" data-gsst="${p.id}|${i.id}" title="Stand wechseln: Idee → gekauft → verschenkt">
+  const ideeZeile=(p,i)=>`<div class="gk-idee ${i.status}">
+      <button class="gk-st" data-gsst="${p.id}|${i.id}" title="Tippen: Idee, gekauft, verschenkt" aria-label="Stand ändern">
         ${i.status==="idee"?ico("bulb"):i.status==="gekauft"?ico("check"):ico("gift")}</button>
-      <span class="gs-i-t">${esc(i.text)}${i.preis?`<em>${esc(i.preis)}</em>`:""}${i.anlass==="xmas"?`<span class="gs-anl x">Weihnachten</span>`:i.anlass==="geb"?`<span class="gs-anl g">Geburtstag</span>`:""}</span>
-      <span class="gs-i-s">${i.status==="verschenkt"&&i.jahr?`verschenkt ${i.jahr}`:(GS_STATUS.find(x=>x[0]===i.status)||[])[1]}</span>
-      <button class="b b-i b-xs" data-gsweg="${p.id}|${i.id}" aria-label="Idee löschen" title="Löschen">${ico("x")}</button>
+      <span class="gk-it">${esc(i.text)}${i.preis?`<em>${esc(i.preis)}</em>`:""}${i.anlass?`<span class="gk-anl ${i.anlass==="xmas"?"x":i.anlass==="geb"?"g":"o"}">${esc(gsAnlassName(i.anlass))}</span>`:""}</span>
+      <span class="gk-is">${i.status==="verschenkt"&&i.jahr?`verschenkt ${i.jahr}`:(GS_STATUS.find(x=>x[0]===i.status)||[])[1]}</span>
+      <button class="gk-weg" data-gsweg="${p.id}|${i.id}" aria-label="Idee löschen">${ico("x")}</button>
     </div>`;
 
   const karte=({p,n})=>{
     const ideen=(p.ideen||[]), aktiv=ideen.filter(i=>i.status!=="verschenkt"), alt=ideen.filter(i=>i.status==="verschenkt");
-    const warn=gsOffenBald(p);
-    return `<div class="p gs-p${n&&n.tage<=7?" nah":""}">
-      <div class="gs-kopf">
-        <div class="gs-av">${esc((p.name||"?").trim().slice(0,1).toUpperCase())}</div>
-        <div class="gs-name"><b>${esc(p.name)}</b>
-          <span>${gsDatum(p)}${n?` · <i class="${n.tage<=7?"bald":""}">${gsCountdown(n.tage)}${n.alter?`, wird ${n.alter}`:""}</i>`:""}</span></div>
-        <button class="b b-i b-sm" data-gsedit="${p.id}" aria-label="${esc(p.name)} bearbeiten" title="Bearbeiten">${ico("edit")}</button>
+    const warn=gsOffenBald(p), vor=gsAnlassVor(p);
+    return `<div class="gk-per" data-person="${p.id}">
+      <div class="gk-pk">
+        <div class="gk-av">${esc((p.name||"?").trim().slice(0,1).toUpperCase())}</div>
+        <div class="gk-pn"><b>${esc(p.name)}</b>
+          <span>${gsDatum(p)}${n?` · <i>${n.tage===0?"heute!":gsCountdown(n.tage)}${n.alter?`, wird ${n.alter}`:""}</i>`:""}</span></div>
+        <button class="gk-rund" data-gsedit="${p.id}" aria-label="${esc(p.name)} bearbeiten">${ico("edit")}</button>
       </div>
-      ${warn?`<div class="gs-warn">${ico("clock")}Geburtstag ${gsCountdown(n.tage)} — noch nichts gekauft</div>`:""}
-      <textarea class="gs-notiz" data-gsnotiz="${p.id}" rows="2" placeholder="Notizen: was mag ${esc(p.name.split(" ")[0])}, Größen, Wünsche, die nebenbei fallen …">${esc(p.notiz||"")}</textarea>
-      <div class="gs-ideen">
-        ${aktiv.map(i=>ideeZeile(p,i)).join("")}
-        <div class="gs-anl-wahl">für
-          <button class="chip${gsAnlassVor(p)==="geb"?" on":""}" data-gsanl="${p.id}|geb">Geburtstag</button>
-          ${gsXmasDabei(p)?`<button class="chip${gsAnlassVor(p)==="xmas"?" on":""}" data-gsanl="${p.id}|xmas">Weihnachten</button>`:""}</div>
-        <div class="gs-neu">
-          <input data-gsneu="${p.id}" placeholder="Neue Geschenkidee …" autocomplete="off">
-          <button class="b b-sm" data-gsadd="${p.id}">${ico("plus")}</button>
-        </div>
+      ${warn?`<div class="gk-warn">${ico("clock")}Geburtstag ${gsCountdown(n.tage)}, noch nichts besorgt</div>`:""}
+      <div class="gk-lab">Notizen</div>
+      <textarea class="gk-notiz" data-gsnotiz="${p.id}" rows="2" aria-label="Notizen zu ${esc(p.name)}">${esc(p.notiz||"")}</textarea>
+      ${aktiv.length?`<div class="gk-ideen">${aktiv.map(i=>ideeZeile(p,i)).join("")}</div>`:""}
+      <div class="gk-anlw"><span>für</span>
+        <button class="chip${vor==="geb"?" on":""}" data-gsanl="${p.id}|geb">Geburtstag</button>
+        ${gsXmasDabei(p)?`<button class="chip${vor==="xmas"?" on":""}" data-gsanl="${p.id}|xmas">Weihnachten</button>`:""}
+        ${gsEigene(p).map(a=>`<button class="chip${vor===a?" on":""}" data-gsanl="${p.id}|${esc(a)}">${esc(a)}</button>`).join("")}
+        <button class="chip gk-plus" data-gsanlneu="${p.id}" aria-label="Eigenen Anlass hinzufügen">${ico("plus")}Anlass</button></div>
+      <div class="gk-neu">
+        <input data-gsneu="${p.id}" placeholder="Neue Geschenkidee" autocomplete="off" enterkeyhint="done" aria-label="Neue Geschenkidee für ${esc(p.name)}">
+        <button class="gk-rund voll" data-gsadd="${p.id}" aria-label="Idee hinzufügen">${ico("plus")}</button>
       </div>
-      ${alt.length?`<details class="gs-alt"><summary>${alt.length} schon verschenkt</summary>
-        <div class="gs-ideen">${alt.map(i=>ideeZeile(p,i)).join("")}</div></details>`:""}
+      ${alt.length?`<details class="gk-alt"><summary>${alt.length} schon verschenkt</summary>
+        <div class="gk-ideen">${alt.map(i=>ideeZeile(p,i)).join("")}</div></details>`:""}
     </div>`;
   };
 
   el.innerHTML=`
-  <div class="p-head" style="margin-bottom:14px">
-    <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Geschenke</div>
-      <div class="p-note">${ps.length} ${ps.length===1?"Person":"Personen"} · ${ideenOffen} ${ideenOffen===1?"Idee":"Ideen"} offen${gekauft?` · ${gekauft} gekauft, noch nicht verschenkt`:""}</div></div>
+  <div class="gk-kopf">
+    <div><div class="gk-titel">Geschenke</div>
+      <div class="p-note">${ps.length} ${ps.length===1?"Mensch":"Menschen"} · ${ideenOffen} ${ideenOffen===1?"Idee":"Ideen"} offen</div></div>
     <button class="b b-1" id="gsNeu">${ico("plus")}Person</button>
   </div>
 
   ${(()=>{ const x=gsXmas(), dabei=ps.filter(({p})=>gsXmasDabei(p)); if(!dabei.length||x.tage>100) return "";
     const st=dabei.map(({p})=>({p,s:gsXmasStand(p)})), fertig=st.filter(z=>z.s==="gekauft").length;
-    return `<div class="p gs-xmas${x.tage<=21&&fertig<dabei.length?" eng":""}">
-      <div class="gs-x-k"><span class="gs-x-ico">${ico("star")}</span>
-        <div><b>Weihnachten</b><span>${x.tage===0?"heute":gsCountdown(x.tage)} · ${fertig} von ${dabei.length} Geschenken besorgt</span></div>
-        <div class="gs-x-bar"><i style="width:${fertig/dabei.length*100}%"></i></div></div>
-      <div class="gs-x-pers">${st.map(({p,s})=>`<button class="gs-x-p ${s}" data-gsxgo="${p.id}" title="${s==="gekauft"?"besorgt":s==="idee"?"Idee vorhanden":"noch keine Idee"}">
+    return `<div class="gk-xmas">
+      <div class="gk-xk"><span class="gk-xic">${ico("star")}</span>
+        <div><b>Weihnachten</b><span>${x.tage===0?"heute":gsCountdown(x.tage)} · ${fertig} von ${dabei.length} besorgt</span></div>
+        <div class="gk-xbar"><i style="width:${fertig/dabei.length*100}%"></i></div></div>
+      <div class="gk-xp">${st.map(({p,s})=>`<button class="gk-xpe s-${s}" data-gsxgo="${p.id}" title="${s==="gekauft"?"besorgt":s==="idee"?"Idee vorhanden":"noch keine Idee"}">
         <i>${s==="gekauft"?ico("check"):s==="idee"?ico("bulb"):""}</i>${esc(p.name)}</button>`).join("")}</div>
     </div>`; })()}
 
-  ${bald.length?`<div class="gs-bald">${bald.map(({p,n})=>`
-    <button class="gs-b${n.tage<=7?" nah":""}${gsOffenBald(p)?" warn":""}" data-gsgo="${p.id}">
-      <span class="gs-b-n">${n.tage===0?ico("gift"):n.tage}</span>
-      <span class="gs-b-t"><b>${esc(p.name)}</b><span>${n.tage===0?"hat heute Geburtstag":`${n.tage===1?"Tag":"Tage"} · ${n.d.getDate()}. ${MS[n.d.getMonth()]}`}${n.alter?` · wird ${n.alter}`:""}</span></span>
+  ${bald.length?`<div class="gk-bald">${bald.map(({p,n})=>`
+    <button class="gk-gb${n.tage<=7?" nah":""}" data-gsgo="${p.id}">
+      <b class="gk-gbn">${n.tage===0?ico("gift"):n.tage}</b>
+      <span><b>${esc(p.name)}</b>${n.tage===0?"hat heute Geburtstag":`${n.tage===1?"Tag":"Tage"} · ${n.d.getDate()}. ${MS[n.d.getMonth()]}`}${n.alter?` · wird ${n.alter}`:""}</span>
     </button>`).join("")}</div>`:""}
 
-  ${ps.length?`<div class="gs-grid">${ps.map(karte).join("")}</div>`
-    :`<div class="p"><div class="empty">${ico("gift")}<div>Noch niemand eingetragen.<br>Leg die Menschen an, die dir wichtig sind — mit Geburtstag und allem, was dir zu Geschenken einfällt.</div></div></div>`}`;
+  ${ps.length?`<div class="gk-pers">${ps.map(karte).join("")}</div>`
+    :`<div class="p"><div class="empty">${ico("gift")}<div>Noch niemand eingetragen.<br>Leg die Menschen an, die dir wichtig sind, mit Geburtstag und allem, was dir zu Geschenken einfällt.</div></div></div>`}`;
 
   const finde=id=>gsPersonen().find(x=>x.id===id);
+  const zeigeKarte=(id,anl)=>{
+    const k=el.querySelector(`.gk-per[data-person="${id}"]`); if(!k) return;
+    if(anl){ gsAnlassWahl[id]=anl; k.querySelectorAll("[data-gsanl]").forEach(c=>c.classList.toggle("on",c.dataset.gsanl===`${id}|${anl}`)); }
+    k.scrollIntoView({behavior:"smooth",block:"center"}); k.classList.add("blink"); setTimeout(()=>k.classList.remove("blink"),1200);
+  };
   el.querySelector("#gsNeu").onclick=()=>gsPersonModal(null);
   el.querySelectorAll("[data-gsedit]").forEach(b=>b.onclick=()=>gsPersonModal(b.dataset.gsedit));
-  el.querySelectorAll("[data-gsgo]").forEach(b=>b.onclick=()=>{
-    const k=el.querySelector(`[data-gsnotiz="${b.dataset.gsgo}"]`)?.closest(".gs-p");
-    if(k){ k.scrollIntoView({behavior:"smooth",block:"center"}); k.classList.add("blink"); setTimeout(()=>k.classList.remove("blink"),1200); } });
+  el.querySelectorAll("[data-gsgo]").forEach(b=>b.onclick=()=>zeigeKarte(b.dataset.gsgo,"geb"));
+  el.querySelectorAll("[data-gsxgo]").forEach(b=>b.onclick=()=>zeigeKarte(b.dataset.gsxgo,"xmas"));
   el.querySelectorAll("[data-gsnotiz]").forEach(t=>t.onchange=()=>{
     const p=finde(t.dataset.gsnotiz); if(!p) return; p.notiz=t.value.trim(); save(); toast("Notiz gespeichert"); });
   const neu=id=>{
@@ -7359,23 +7547,32 @@ R.geschenke=function(){
     p.ideen=p.ideen||[];
     p.ideen.push({id:uid(), text:m?m[1]:v, preis:m?m[2].replace(/\s*(eur|euro)$/i,"€"):null, status:"idee", jahr:null, t:Date.now(), anlass:gsAnlassVor(p)});
     save(); R.geschenke();
-    el.querySelector(`[data-gsneu="${id}"]`)?.focus();
+    el.querySelector(`[data-gsneu="${id}"]`)?.focus({preventScroll:true});
   };
   el.querySelectorAll("[data-gsadd]").forEach(b=>b.onclick=()=>neu(b.dataset.gsadd));
-  el.querySelectorAll("[data-gsanl]").forEach(b=>b.onclick=()=>{ const [pid,a]=b.dataset.gsanl.split("|"); gsAnlassWahl[pid]=a;
-    b.parentElement.querySelectorAll("[data-gsanl]").forEach(c=>c.classList.toggle("on",c===b)); });
-  el.querySelectorAll("[data-gsxgo]").forEach(b=>b.onclick=()=>{
-    const k=el.querySelector(`[data-gsnotiz="${b.dataset.gsxgo}"]`)?.closest(".gs-p");
-    if(k){ gsAnlassWahl[b.dataset.gsxgo]="xmas"; k.querySelectorAll("[data-gsanl]").forEach(c=>c.classList.toggle("on",c.dataset.gsanl.endsWith("|xmas")));
-      k.scrollIntoView({behavior:"smooth",block:"center"}); k.classList.add("blink"); setTimeout(()=>k.classList.remove("blink"),1200); } });
   el.querySelectorAll("[data-gsneu]").forEach(i=>i.onkeydown=e=>{ if(e.key==="Enter") neu(i.dataset.gsneu); });
+  el.querySelectorAll("[data-gsanl]").forEach(b=>b.onclick=()=>{
+    const t=b.dataset.gsanl, k=t.indexOf("|"), pid=t.slice(0,k), a=t.slice(k+1);
+    gsAnlassWahl[pid]=a; b.parentElement.querySelectorAll("[data-gsanl]").forEach(c=>c.classList.toggle("on",c===b)); });
+  /* Eigener Anlass: aus dem Knopf wird ein Eingabefeld */
+  el.querySelectorAll("[data-gsanlneu]").forEach(b=>b.onclick=()=>{
+    const pid=b.dataset.gsanlneu;
+    const inp=Object.assign(document.createElement("input"),{className:"gk-anlin",maxLength:24,autocomplete:"off",placeholder:"z. B. Namenstag"});
+    inp.setAttribute("aria-label","Eigener Anlass"); inp.enterKeyHint="done";
+    b.replaceWith(inp); inp.focus();
+    let fertig=false;
+    const setzen=()=>{ if(fertig) return; fertig=true; const v=inp.value.trim().replace(/\|/g,"/");
+      if(v) gsAnlassWahl[pid]=v; R.geschenke(); if(v) el.querySelector(`[data-gsneu="${pid}"]`)?.focus({preventScroll:true}); };
+    inp.onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); setzen(); } if(e.key==="Escape"){ inp.value=""; setzen(); } };
+    inp.onblur=setzen;
+  });
   el.querySelectorAll("[data-gsst]").forEach(b=>b.onclick=()=>{
     const [pid,iid]=b.dataset.gsst.split("|"), p=finde(pid); if(!p) return;
     const i=(p.ideen||[]).find(x=>x.id===iid); if(!i) return;
     i.status=({idee:"gekauft",gekauft:"verschenkt",verschenkt:"idee"})[i.status]||"idee";
     i.jahr= i.status==="verschenkt" ? new Date().getFullYear() : null;
     i.st=Date.now();                                  /* wann der Stand zuletzt wechselte */
-    save(); toast(i.status==="gekauft"?"Gekauft":i.status==="verschenkt"?"Verschenkt — bleibt als Erinnerung stehen":"Wieder Idee"); R.geschenke(); });
+    save(); toast(i.status==="gekauft"?"Besorgt":i.status==="verschenkt"?"Verschenkt, bleibt als Erinnerung stehen":"Wieder Idee"); R.geschenke(); });
   el.querySelectorAll("[data-gsweg]").forEach(b=>b.onclick=()=>{
     const [pid,iid]=b.dataset.gsweg.split("|"), p=finde(pid); if(!p) return;
     p.ideen=(p.ideen||[]).filter(x=>x.id!==iid); save(); R.geschenke(); });
@@ -7528,7 +7725,7 @@ function wochenRaster(mk,H0,H1){
         <span>${TWD[i]} <i>${addD(mo,i).getDate()}.</i></span>
         ${tag<=today()&&solideTag(tag)?`<span class="tp-solid" title="Solider Tag — alle vier Ziele erfüllt">${ico("star")}</span>`:""}
       </div>
-      <div class="tp-spalte">${rows}${bl}</div>
+      <div class="tp-spalte">${rows}${bl}${jetztLinie(mk,i,H0,H1)}</div>
     </div>`;
   };
   return `<div class="tp-scroll"><div class="tp-raster">
@@ -7537,6 +7734,22 @@ function wochenRaster(mk,H0,H1){
   </div></div>`;
 }
 
+/* Jetzt-Strich: in der aktuellen Woche zeigt eine Linie die Uhrzeit,
+   kräftig in der Spalte von heute, leise in den übrigen Tagen. */
+function jetztLinie(mk,i,H0,H1){
+  if(mk!==wochenSchluessel(new Date())) return "";
+  const heute=dk(addD(parsedk(mk),i))===today();
+  return `<div class="tp-jetzt${heute?"":" leise"}" data-h0="${H0}" data-h1="${H1}" aria-hidden="true">${heute?"<span></span>":""}</div>`;
+}
+function jetztStrich(){
+  const d=new Date(), h=d.getHours()+d.getMinutes()/60, txt=`${p2(d.getHours())}:${p2(d.getMinutes())}`;
+  document.querySelectorAll(".tp-jetzt").forEach(el=>{
+    const h0=+el.dataset.h0, h1=+el.dataset.h1;
+    el.hidden=h<h0||h>=h1;
+    el.style.top=((h-h0)*TP_HH)+"px";
+    const sp=el.querySelector("span"); if(sp) sp.textContent=txt;
+  });
+}
 function wochenTitel(mk){
   const mo=parsedk(mk), so=addD(mo,6);
   const jetzt=wochenSchluessel(new Date());
@@ -7881,6 +8094,7 @@ R.planer=function(){
     const t=(S.todos||[]).find(x=>x.id===b.dataset.tcyc); if(!t) return;
     t.priority=({high:"mid",mid:"low",low:"high"})[t.priority||"mid"];
     save(); R.planer(); });
+  jetztStrich();
   const ti=V.querySelector("#tdIn");
   const addT=()=>{ const v=ti.value.trim(); if(!v) return;
     S.todos.push({id:uid(),text:v,done:false,type:"short",priority:todoPrio,date:today(),createdAt:Date.now()});
@@ -8060,13 +8274,14 @@ if(typeof lpKorrekturen==="function"&&lpKorrekturen()) save();
 shell();
 if(cloudOn()){
   setSync("busy");
-  pullCloud().then(async ok=>{
+  abgleichen().then(async geaendert=>{
     const n=await holeSatz();
-    if(ok||n) go(VIEW);
+    if(geaendert||n) go(VIEW);
+    checkinVonSelbst();
     teilAbgleich();
     if(n) setTimeout(()=>toast(`${n} Einheit${n===1?"":"en"} aus SATZ übernommen`,"run"),1000);
   });
-} else setSync("off");
+} else { setSync("off"); setTimeout(checkinVonSelbst,500); }
 ausUrl();
 
 /* ── Zwei Absicherungen für Handy und Rechner gleichzeitig ──────
@@ -8099,12 +8314,13 @@ function frischHalten(erzwingen){
   try{ R[VIEW]&&R[VIEW](); }catch(e){ console.error(e); }
   paintOrb(); if(v&&!neuerTag) v.scrollTop=y;
 }
-setInterval(()=>{ if(!document.hidden) frischHalten(false); },60000);
+setInterval(()=>{ if(!document.hidden){ frischHalten(false); jetztStrich(); } },30000);
 window.addEventListener("pageshow",()=>frischHalten(true));
 document.addEventListener("visibilitychange",()=>{
   if(document.hidden){ if(syncTimer){ clearTimeout(syncTimer); pushCloud(); } return; }
   frischHalten(true);
-  if(!cloudOn()) return;
+  if(!cloudOn()){ checkinVonSelbst(); return; }
+  abgleichen().then(g=>{ if(g) frischHalten(true); checkinVonSelbst(); });
   holeSatz().then(n=>{ if(n){ go(VIEW); toast(`${n} Einheit${n===1?"":"en"} aus SATZ übernommen`,"run"); } });
 });
 if(garminNeu) setTimeout(()=>toast(`${garminNeu} Werte von Garmin ergänzt`,"heart"),1400);

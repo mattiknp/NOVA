@@ -2198,6 +2198,35 @@ button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
 
 
 
+
+/* Planer: Zeile „ganztags“ über den Stunden */
+.tp-ganz{ position:relative; border-bottom:1px solid var(--line); background:rgba(255,255,255,.015); cursor:copy; }
+@media (hover:hover){ .tp-ganz:hover{ background:rgba(79,227,210,.05); } }
+.tp-ganz-l{ display:flex; align-items:flex-start; justify-content:flex-end; padding:7px 5px 0 0; border-bottom:1px solid var(--line);
+  font-size:9px; line-height:1.1; color:var(--text-faint); text-align:right; hyphens:manual; }
+.tp-gz{ position:absolute; left:0; right:0; height:18px; padding:0 6px; z-index:2; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;
+  font-size:10.5px; font-weight:700; line-height:18px; color:var(--text); cursor:pointer;
+  background:color-mix(in srgb, var(--gc) 34%, #111725); transition:filter var(--d2) var(--ez), transform .4s var(--spring); }
+.tp-gz.a{ left:3px; border-top-left-radius:6px; border-bottom-left-radius:6px; box-shadow:inset 3px 0 0 var(--gc); }
+.tp-gz.e{ right:3px; border-top-right-radius:6px; border-bottom-right-radius:6px; }
+@media (hover:hover){ .tp-gz:hover{ filter:brightness(1.25); } }
+.tp-gz:active{ transform:scale(.97); transition-duration:.08s; }
+/* Heute: ganztägige Einträge über dem Plan */
+.hd-ganz{ display:flex; flex-direction:column; gap:5px; margin-bottom:8px; }
+.hd-gz{ display:flex; align-items:baseline; gap:9px; width:100%; text-align:left; padding:8px 11px; border-radius:var(--r);
+  background:color-mix(in srgb, var(--gc) 13%, transparent); border:1px solid color-mix(in srgb, var(--gc) 35%, transparent);
+  border-left:3px solid var(--gc); font-size:var(--t-base); transition:transform .4s var(--spring); }
+.hd-gz:active{ transform:scale(.98); transition-duration:.08s; }
+.hd-gz span{ font-family:var(--f-mono); font-size:var(--t-xs); color:var(--text-dim); }
+.hd-gz b{ font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hd-gz em{ font-style:normal; font-size:var(--t-xs); color:var(--text-faint); white-space:nowrap; }
+/* Fenster „Ganztägig“ */
+.gz-daten{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.gz-farben{ display:flex; gap:8px; flex-wrap:wrap; }
+.gz-f{ width:30px; height:30px; border-radius:50%; background:var(--gc); box-shadow:inset 0 0 0 2px rgba(0,0,0,.25);
+  transition:transform .4s var(--spring), box-shadow var(--d2) var(--ez); }
+.gz-f.an{ box-shadow:0 0 0 2px var(--panel-2,#1a202f), 0 0 0 4px var(--gc); transform:scale(1.08); }
+.gz-f:active{ transform:scale(.9); transition-duration:.08s; }
 @media (prefers-reduced-motion: reduce){
   .knall,.knall svg,.mo,.mv.zu,.mv.zu .mo,.auftakt .view.on .p,.feiern .hz-glanz::before{ animation:none !important; }
 }
@@ -4036,9 +4065,9 @@ function checkinVonSelbst(){
   (j.teil==="m"?morgenModal:abendModal)(j.k);
 }
 const planListe=k=>{
-  const l=planDay(k).slice().sort((a,b)=>(a.start||"").localeCompare(b.start||""));
-  if(!l.length) return `<div class="ck-leer">Nichts geplant.</div>`;
-  return `<div class="ck-liste">${l.map(b=>{ const t=blockById(b.type);
+  const l=planDay(k).slice().sort((a,b)=>(a.start||"").localeCompare(b.start||"")), gz=ganzAm(k);
+  if(!l.length&&!gz.length) return `<div class="ck-leer">Nichts geplant.</div>`;
+  return `<div class="ck-liste">${gz.map(g=>`<div class="ck-z"><i style="background:${g.farbe||GANZ_FARBEN[0]}"></i><span class="ck-zt">ganztags</span>${esc(g.titel)}</div>`).join("")}${l.map(b=>{ const t=blockById(b.type);
     return `<div class="ck-z"><i style="background:${t.bg}"></i><span class="ck-zt">${b.start||""}</span>${esc(b.note||t.label)}</div>`;}).join("")}</div>`;
 };
 function morgenModal(k){
@@ -4265,6 +4294,8 @@ R.heute=function(){
       ${gsBald(14).map(({p,n})=>`<button class="hd-geb${n.tage<=3?" nah":""}" onclick="go('geschenke')">
           ${ico("gift")}<span><b>${esc(p.name)}</b> ${n.tage===0?"hat heute Geburtstag":`hat ${gsCountdown(n.tage)} Geburtstag`}${n.alter?` (${n.alter})`:""}</span>
           ${gsOffenBald(p)?`<em>noch nichts gekauft</em>`:""}</button>`).join("")}
+      ${ganzAm(k).length?`<div class="hd-ganz">${ganzAm(k).map(g=>`<button class="hd-gz" data-ganz="${g.id}" style="--gc:${g.farbe||GANZ_FARBEN[0]}">
+        <span>ganztags</span><b>${esc(g.titel)}</b>${g.bis&&g.bis!==g.von?`<em>bis ${fmtShort(parsedk(g.bis))}</em>`:""}</button>`).join("")}</div>`:""}
       ${plan.length?`<div class="hd-plan-list">${plan.map(g=>{
         const t=blockById(g.b.type), len=g.to-g.from;
         const now=new Date().getHours()*60+new Date().getMinutes();
@@ -4349,6 +4380,7 @@ R.heute=function(){
 
   const V=document.getElementById("v-heute");
   V.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>checkinOeffnen(b.dataset.ck));
+  V.querySelectorAll("[data-ganz]").forEach(b=>b.onclick=()=>ganzModal(b.dataset.ganz));
   lpHakWiring(V,()=>{ R.heute(); paintOrb(); });
   tglWiring(V,()=>{ R.heute(); paintOrb(); });
   V.querySelector("#hdAnkiNull")?.addEventListener("click",()=>{ const a=lp().ankiNull, t=today();
@@ -7460,7 +7492,8 @@ function teilAuszug(){
     const b=planDay(k).filter(x=>x&&x.type!=="schlafen").map(x=>{ const t=blockById(x.type);
       return {start:x.start||"",end:x.end||"",titel:x.note||t.label,farbe:t.bg,...(x.note?{art:t.label}:{}),...(x.raum?{ort:x.raum}:{})}; })
       .sort((a,b)=>a.start.localeCompare(b.start));
-    const g=(S.uniTermine||[]).filter(t=>t.datum===k).map(t=>({titel:`${t.titel}${t.zeit?` · ${t.zeit}`:""}`,farbe:"#e35d6a"}));
+    const g=[...ganzAm(k).map(x=>({titel:x.titel,farbe:x.farbe||GANZ_FARBEN[0]})),
+      ...(S.uniTermine||[]).filter(t=>t.datum===k).map(t=>({titel:`${t.titel}${t.zeit?` · ${t.zeit}`:""}`,farbe:"#e35d6a"}))];
     if(b.length||g.length) tage[k]={b,g};
   }
   return {v:1,app:"nova",von:teilMeinName(),tage};
@@ -7822,8 +7855,56 @@ function tplanStunden(){
   return [Math.max(0,Math.min(von-1,22)), Math.min(24,Math.max(bis+1,von+3))];
 }
 
+/* ── Ganztägig ──
+   Wie in der Woche-App: Einträge ohne Uhrzeit, die einen oder mehrere
+   ganze Tage belegen (Urlaub, Turnier, Klausurphase). Sie stehen im
+   Planer in einer eigenen Zeile über den Stunden, bei „Plan für heute“,
+   im Check-in und im geteilten Planer. */
+const GANZ_FARBEN=["#4fe3d2","#8b7cf0","#d488b8","#f0c04e","#3683db","#5ec47a","#e0697c"];
+const ganzAm=k=>(S.ganz||[]).filter(g=>g&&g.von&&g.von<=k&&(g.bis||g.von)>=k)
+  .sort((a,b)=>a.von.localeCompare(b.von)||(a.titel||"").localeCompare(b.titel||""));
+/* Für die Woche jedem Eintrag eine feste Bahn geben, damit mehrtägige
+   Einträge über die Spalten hinweg auf einer Linie liegen */
+function ganzBahnen(mk){
+  const tage=[...Array(7)].map((_,i)=>dk(addD(parsedk(mk),i)));
+  const items=(S.ganz||[]).filter(g=>g&&g.von&&g.von<=tage[6]&&(g.bis||g.von)>=tage[0])
+    .sort((a,b)=>a.von.localeCompare(b.von)||(b.bis||b.von).localeCompare(a.bis||a.von));
+  const ende=[], bahn={};
+  items.forEach(g=>{ let b=ende.findIndex(e=>e<g.von); if(b<0){ b=ende.length; ende.push(""); } ende[b]=g.bis||g.von; bahn[g.id]=b; });
+  return {bahn, n:ende.length, tage};
+}
+function ganzModal(id,tag){
+  const g=id?(S.ganz||[]).find(x=>x.id===id):null;
+  let farbe=(g&&g.farbe)||GANZ_FARBEN[0];
+  modal(`<h3>${g?"Ganztägig bearbeiten":"Ganztägig planen"}</h3>
+    <label>Was</label><input id="gzT" value="${g?esc(g.titel):""}" placeholder="z. B. Urlaub, Turnier, Klausurphase" autocomplete="off">
+    <div class="gz-daten"><div><label>Von</label><input type="date" id="gzV" value="${g?g.von:(tag||today())}"></div>
+      <div><label>Bis</label><input type="date" id="gzB" value="${g?(g.bis||g.von):(tag||today())}"></div></div>
+    <label>Farbe</label>
+    <div class="gz-farben">${GANZ_FARBEN.map(c=>`<button class="gz-f${c===farbe?" an":""}" data-gzf="${c}" style="--gc:${c}" aria-label="Farbe ${c}"></button>`).join("")}</div>
+    <div class="mo-act">${g?`<button class="b" id="gzDel" style="margin-right:auto;color:var(--bad)">Löschen</button>`:""}
+      <button class="b" onclick="closeModal()">Abbrechen</button>
+      <button class="b b-1" id="gzOk">${g?"Speichern":"Eintragen"}</button></div>`);
+  document.querySelectorAll("[data-gzf]").forEach(b=>b.onclick=()=>{ farbe=b.dataset.gzf;
+    document.querySelectorAll("[data-gzf]").forEach(c=>c.classList.toggle("an",c===b)); });
+  const neuZeichnen=()=>{ try{ R[VIEW]&&R[VIEW](); }catch(e){} paintOrb(); };
+  document.getElementById("gzOk").onclick=()=>{
+    const titel=document.getElementById("gzT").value.trim();
+    let von=document.getElementById("gzV").value, bis=document.getElementById("gzB").value||von;
+    if(!titel){ toast("Was steht an?","x"); return; }
+    if(!von){ toast("Datum fehlt","x"); return; }
+    if(bis<von) [von,bis]=[bis,von];
+    S.ganz=S.ganz||[];
+    if(g) Object.assign(g,{titel,von,bis,farbe}); else S.ganz.push({id:uid(),titel,von,bis,farbe});
+    save(); closeModal(); toast(g?"Gespeichert":von===bis?"Für den ganzen Tag eingetragen":"Ganztägig eingetragen","cal"); neuZeichnen();
+  };
+  document.getElementById("gzDel")?.addEventListener("click",()=>{
+    S.ganz=(S.ganz||[]).filter(x=>x.id!==id); save(); closeModal(); toast("Gelöscht"); neuZeichnen(); });
+  document.getElementById("gzT").onkeydown=e=>{ if(e.key==="Enter") document.getElementById("gzOk").click(); };
+  setTimeout(()=>document.getElementById("gzT")?.focus(),60);
+}
 function wochenRaster(mk,H0,H1){
-  const mo=parsedk(mk);
+  const mo=parsedk(mk), GB=ganzBahnen(mk), GH=Math.max(1,GB.n)*22+8;
   let stunden="";
   for(let h=H0;h<H1;h++)
     stunden+=`<div style="height:${TP_HH}px;border-top:1px solid var(--line);font-family:var(--f-mono);
@@ -7855,11 +7936,15 @@ function wochenRaster(mk,H0,H1){
         <span>${TWD[i]} <i>${addD(mo,i).getDate()}.</i></span>
         ${tag<=today()&&solideTag(tag)?`<span class="tp-solid" title="Solider Tag — alle vier Ziele erfüllt">${ico("star")}</span>`:""}
       </div>
+      <div class="tp-ganz" data-ganzneu="${tag}" style="height:${GH}px" title="Ganztägig planen">${ganzAm(tag).map(g=>{
+        const an=g.von===tag||i===0, en=(g.bis||g.von)===tag||i===6;
+        return `<button class="tp-gz${an?" a":""}${en?" e":""}" data-ganz="${g.id}" style="--gc:${g.farbe||GANZ_FARBEN[0]};top:${(GB.bahn[g.id]||0)*22+4}px"
+          title="${esc(g.titel)} · ganztags${g.bis&&g.bis!==g.von?` bis ${fmtShort(parsedk(g.bis))}`:""}">${an?esc(g.titel):"&nbsp;"}</button>`; }).join("")}</div>
       <div class="tp-spalte">${rows}${bl}${jetztLinie(mk,i,H0,H1)}</div>
     </div>`;
   };
   return `<div class="tp-scroll"><div class="tp-raster">
-    <div class="tp-uhr"><div class="tp-kopf">&nbsp;</div>${stunden}</div>
+    <div class="tp-uhr"><div class="tp-kopf">&nbsp;</div><div class="tp-ganz-l" style="height:${GH}px">ganz&shy;tags</div>${stunden}</div>
     ${[...Array(7)].map((_,i)=>spalte(i)).join("")}
   </div></div>`;
 }
@@ -8111,6 +8196,7 @@ R.planer=function(){
       Angeheftetes (📌) steht in jeder Woche.</div></div>
     <div style="display:flex;gap:6px;align-items:center">
       <button class="b b-i" id="tpwPrev" aria-label="Woche zurück">${ico("left")}</button>
+      <button class="b b-sm" id="tpGanz" title="Etwas für den ganzen Tag planen">${ico("plus")}Ganztägig</button>
       ${mk1===jetzt?"":`<button class="b b-sm" id="tpwNow">Heute</button>`}
       <button class="b b-i" id="tpwNext" aria-label="Woche vor">${ico("right")}</button></div>
   </div>
@@ -8186,6 +8272,9 @@ R.planer=function(){
   V.querySelector("#tpwPrev").onclick=()=>{ tpWoche=dk(addD(parsedk(tpWoche),-7)); R.planer(); };
   V.querySelector("#tpwNext").onclick=()=>{ tpWoche=dk(addD(parsedk(tpWoche),7)); R.planer(); };
   V.querySelector("#tpwNow")?.addEventListener("click",()=>{ tpWoche=wochenSchluessel(new Date()); R.planer(); });
+  V.querySelector("#tpGanz").onclick=()=>ganzModal(null,today());
+  V.querySelectorAll("[data-ganzneu]").forEach(z=>z.onclick=e=>{ if(e.target.closest("[data-ganz]")) return; ganzModal(null,z.dataset.ganzneu); });
+  V.querySelectorAll("[data-ganz]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); ganzModal(b.dataset.ganz); });
   V.querySelectorAll("[data-pf]").forEach(b=>b.onclick=()=>{ planFilter=b.dataset.pf||null; R.planer(); });
   V.querySelectorAll("[data-pk]").forEach(b=>b.onclick=()=>{
     katOffen = katOffen===b.dataset.pk ? null : b.dataset.pk; R.planer(); });

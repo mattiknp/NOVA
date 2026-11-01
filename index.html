@@ -2187,25 +2187,6 @@ button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
 /* Zielbalken laufen vom alten zum neuen Wert */
 .goal-bar > i{ width:100% !important; transform:scaleX(var(--w,0)); transform-origin:left; transition:transform 1s var(--spring); }
 
-/* Tageswert: vier Ringe statt der Kugel */
-.tw{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:22px; align-items:center; margin-top:14px; }
-.tw-ringe{ position:relative; width:184px; height:184px; }
-.tw-ringe svg{ width:100%; height:100%; transform:rotate(-90deg); overflow:visible; }
-.tw-ringe circle{ fill:none; stroke-width:13; stroke-linecap:round; }
-.tw-sp{ opacity:.15; }
-.tw-pr.null{ opacity:0; }   /* ohne Wert kein Punkt von der runden Kappe */
-.tw-pr{ stroke-dasharray:1 1; stroke-dashoffset:calc(1 - var(--w,0)); transition:stroke-dashoffset 1.3s var(--spring); }
-.tw-mitte{ position:absolute; inset:0; display:grid; place-content:center; text-align:center; }
-.tw-mitte b{ font-family:var(--f-disp); font-size:2.2rem; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; }
-.tw-mitte span{ font-size:10px; color:var(--text-faint); letter-spacing:.09em; text-transform:uppercase; margin-top:5px; }
-.tw-liste{ display:grid; gap:8px; min-width:0; }
-.tw-z{ display:grid; grid-template-columns:8px minmax(0,1fr) auto; column-gap:9px; row-gap:4px; align-items:center; font-size:var(--t-sm); }
-.tw-z i{ width:8px; height:8px; border-radius:3px; background:var(--c); }
-.tw-z span{ color:var(--text-dim); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.tw-z b{ font-family:var(--f-disp); font-weight:650; font-variant-numeric:tabular-nums; white-space:nowrap; }
-.tw-z u{ grid-column:2 / 4; height:3px; border-radius:2px; background:var(--track); overflow:hidden; }
-.tw-z u em{ display:block; height:100%; background:var(--c); transform-origin:left; transform:scaleX(var(--w,0)); transition:transform 1.1s var(--spring); }
-@media(max-width:560px){ .tw{ grid-template-columns:1fr; justify-items:center; gap:16px; } .tw-liste{ width:100%; } .tw-ringe{ width:168px; height:168px; } }
 
 /* Solider Tag: einmal läuft ein goldener Schein durch den Block */
 .hz-glanz{ position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:inherit; overflow:hidden; mix-blend-mode:screen; }
@@ -2216,25 +2197,6 @@ button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
 .hz-pips i.knall{ animation-delay:calc(var(--k,0) * 90ms); }
 
 
-.hd-nexus .tw{ flex:1; align-content:center; }
-@media(min-width:861px){ .tw-ringe{ width:232px; height:232px; } .tw{ gap:28px; } }
-/* Tageswert: lebende Form */
-.tw-form{ position:relative; width:270px; height:270px; flex:0 0 auto; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.tw-svg{ width:100%; height:100%; overflow:visible; }
-.tw-schein{ fill:url(#twVerlauf); opacity:.55; }
-.tw-kern{ fill:rgba(255,255,255,.16); mix-blend-mode:screen; }
-.tw-lk{ fill:var(--text); font:600 10px var(--f-ui); }
-.tw-lv{ fill:var(--text-dim); font:500 9.5px var(--f-mono); }
-.tw-beschr g{ transition:opacity .25s; pointer-events:none; }
-.tw-form .tw-mitte{ transition:opacity .3s, transform .5s var(--spring); pointer-events:none; }
-.tw-form .tw-mitte b{ color:#fff; text-shadow:0 1px 12px rgba(5,7,12,.55); }
-.tw-form .tw-mitte span{ color:rgba(255,255,255,.75); }
-@media(max-width:560px){ .tw-form{ width:240px; height:240px; } }
-.tw-lw{ position:absolute; inset:-14px; width:calc(100% + 28px); height:calc(100% + 28px); }
-.tw-mitte b{ text-shadow:0 0 22px rgba(79,227,210,.35); animation:twAtmen 4.2s ease-in-out infinite; transition:color .3s; }
-@keyframes twAtmen{ 50%{ transform:scale(1.04); text-shadow:0 0 30px rgba(79,227,210,.55); } }
-.tw-mitte span{ transition:color .3s; }
-.tw-ringe{ cursor:pointer; }
 
 /* ── Start: das NOVA-Zeichen erscheint, zündet und öffnet sich zur App ── */
 @property --loch{ syntax:"<length>"; inherits:false; initial-value:0px; }
@@ -4231,7 +4193,8 @@ R.heute=function(){
 
         </div>
       </div>
-      ${tageswertHtml()}
+      <div class="hd-nx-stage"><canvas id="nxMini" style="display:block;width:100%"></canvas></div>
+      <div class="nx-werte" id="nxWerte"></div>
     </div>
 
     <div class="p hd-plan">
@@ -4428,118 +4391,24 @@ R.heute=function(){
   cap.onkeydown=e=>{ if(e.key==="Enter") run(); };
 
   beleben(V);
-  tageswertLeben(V.querySelector(".tw-form"));
+  /* Kleiner Nexus auf der Startseite */
+  const mini=V.querySelector("#nxMini");
+  if(mini){
+    /* Handy: etwas flacher, damit die Kugel ruhig im Block sitzt */
+    const schmal=window.innerWidth<700;
+    NEXUS_MINI=makeNexus(mini,{mini:true,ratio:schmal?.68:.86,maxH:schmal?270:440,minH:schmal?220:260});
+    NEXUS_MINI.start();
+    const wl=V.querySelector("#nxWerte");
+    if(wl) wl.innerHTML=NEXUS_MINI.nodes.map(n=>
+      `<span class="nx-wert"><i style="background:${n.color}"></i>
+        <b>${n.sub}</b><em>${n.key}</em></span>`).join("");
+  }
   ZULETZT.set("voll",SO.voll);
   if(feiern) setTimeout(()=>V.querySelector(".hd-ziele")?.classList.remove("feiern"),1900);
 };
 
 /* Tageswert: vier Ringe (Gewohnheiten, Schlaf, Lernen, Training), in der
    Mitte der Wert der letzten drei Tage, daneben alle sieben Bereiche. */
-function tageswertHtml(){
-  const D=nexusData(), N=D.nodes, sc=Math.round(D.score||0);
-  const w=v=>Math.max(0,Math.min(1,v||0));
-  const daten=N.map(n=>({k:n.key,c:n.color,s:n.sub,v:+w(n.v).toFixed(3),von:+w(vorher("tw"+n.key,w(n.v))).toFixed(3)}));
-  return `<div class="tw">
-    <div class="tw-form" role="img" aria-label="Tageswert ${sc}: ${N.map(n=>`${n.key} ${n.sub}`).join(", ")}" data-form='${JSON.stringify(daten).replace(/'/g,"&#39;")}'>
-      <svg viewBox="0 0 260 260" class="tw-svg">
-        <defs>
-          <filter id="twGoo" x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="6.5" result="b"/>
-            <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -10" result="g"/>
-            <feComposite in="SourceGraphic" in2="g" operator="atop"/></filter>
-          <filter id="twGlow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="14"/></filter>
-          <linearGradient id="twVerlauf" gradientUnits="userSpaceOnUse" x1="40" y1="40" x2="220" y2="220">
-            <stop offset="0" stop-color="#4fe3d2"/><stop offset=".5" stop-color="#8b7cf0"/><stop offset="1" stop-color="#d488b8"/></linearGradient>
-        </defs>
-        <path class="tw-schein" filter="url(#twGlow)"/>
-        <g filter="url(#twGoo)"><path class="tw-koerper" fill="url(#twVerlauf)"/><g class="tw-tropfen"></g></g>
-        <path class="tw-kern"/>
-        <g class="tw-beschr"></g>
-      </svg>
-      <div class="tw-mitte"><b data-zahl="${sc}" data-von="${vorher("twScore",sc)}">${sc}</b><span>Tageswert</span></div>
-    </div>
-    <div class="tw-liste">${N.map(n=>`<div class="tw-z" style="--c:${n.color}"><i></i><span>${esc(n.key)}</span><b>${esc(n.sub)}</b>
-      <u><em style="--w:${w(vorher("twl"+n.key,w(n.v))).toFixed(3)}" data-ziel="${w(n.v).toFixed(3)}"></em></u></div>`).join("")}</div>
-  </div>`;
-}
-
-/* ── Tageswert als lebende Form ──
-   Kein Kreis mehr: eine flüssige Form, deren Umriss aus deinen sieben
-   Bereichen entsteht. Je voller ein Bereich, desto weiter wölbt sie sich
-   in seine Richtung. Morph-Technik nach dem Skill „anidoodle“ (handoff):
-   Ändert sich ein Wert, wandert der Umriss federnd vom alten zum neuen
-   Stand und dehnt sich dabei kurz in Bewegungsrichtung. Dazu atmet und
-   wogt der Rand ständig, kleine Tropfen lösen sich und fließen zurück
-   (Metaball-Filter). Antippen teilt die Form in sieben Tropfen auf, einen
-   je Bereich mit Wert, nochmal Antippen fließt alles wieder zusammen.
-   Zeigen auf einen Bereich lässt ihn anschwellen. Hält an, wenn nicht zu
-   sehen; bei „Bewegung reduzieren“ ein ruhiges Bild. */
-function tageswertLeben(box){
-  if(!box) return;
-  const R=JSON.parse(box.dataset.form||"[]"); if(!R.length) return;
-  const NS="http://www.w3.org/2000/svg", svg=box.querySelector("svg");
-  const koerper=box.querySelector(".tw-koerper"), schein=box.querySelector(".tw-schein"), kern=box.querySelector(".tw-kern");
-  const tgr=box.querySelector(".tw-tropfen"), beschr=box.querySelector(".tw-beschr"), mitte=box.querySelector(".tw-mitte");
-  const n=R.length, C=130, t0=performance.now();
-  const ang=i=>-Math.PI/2+i*2*Math.PI/n;
-  const tropfen=R.map((x,i)=>{ const c=document.createElementNS(NS,"circle"); c.setAttribute("fill",x.c); tgr.appendChild(c); return c; });
-  const label=R.map((x,i)=>{ const g=document.createElementNS(NS,"g"); g.innerHTML=`<text class="tw-lk">${esc(x.k)}</text><text class="tw-lv" dy="13">${esc(x.s)}</text>`; beschr.appendChild(g); return g; });
-  let geteilt=0, teilZiel=0, teilStart=0, teilVon=0, hov=-1, hovS=R.map(()=>0), sichtbar=true, raf=0;
-  const io=new IntersectionObserver(e=>{ sichtbar=e[0].isIntersecting; if(sichtbar&&!raf) raf=requestAnimationFrame(malen); }); io.observe(box);
-  const feder=p=>p>=1?1:1-Math.exp(-5.8*p)*Math.cos(8.6*p*.92);
-  box.onclick=()=>{ teilVon=geteilt; teilZiel=teilZiel?0:1; teilStart=performance.now(); if(BEWEG_ARM) malen(performance.now()); };
-  box.onpointermove=e=>{ const r=svg.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*260-C, y=(e.clientY-r.top)/r.height*260-C;
-    if(Math.hypot(x,y)<22){ hov=-1; return; }
-    let a=Math.atan2(y,x), b=0, bd=9; R.forEach((_,i)=>{ let dd=Math.abs(((a-ang(i))+3*Math.PI)%(2*Math.PI)-Math.PI); if(dd<bd){bd=dd;b=i;} }); hov=b; };
-  box.onpointerleave=()=>{ hov=-1; };
-  /* geschlossene, weiche Kurve durch Punkte (Catmull-Rom) */
-  const kurve=P=>{ const m=P.length; let d=`M${P[0][0].toFixed(1)} ${P[0][1].toFixed(1)}`;
-    for(let i=0;i<m;i++){ const p0=P[(i-1+m)%m],p1=P[i],p2=P[(i+1)%m],p3=P[(i+2)%m];
-      d+=` C${(p1[0]+(p2[0]-p0[0])/6).toFixed(1)} ${(p1[1]+(p2[1]-p0[1])/6).toFixed(1)} ${(p2[0]-(p3[0]-p1[0])/6).toFixed(1)} ${(p2[1]-(p3[1]-p1[1])/6).toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`; }
-    return d+"Z"; };
-  function malen(now){
-    raf=0;
-    if(!box.isConnected){ io.disconnect(); return; }
-    const t=(now-t0)/1000, ruhig=BEWEG_ARM;
-    /* Wert-Morph: vom alten zum neuen Umriss, gestaffelt je Bereich */
-    const werte=R.map((x,i)=>{ const p=ruhig?1:Math.min(1,Math.max(0,(now-t0-i*70)/1500)); return x.von+(x.v-x.von)*feder(p); });
-    const pT=ruhig?1:Math.min(1,(now-teilStart)/1100); geteilt=teilVon+(teilZiel-teilVon)*(ruhig?1:feder(pT));
-    R.forEach((_,i)=>{ hovS[i]+=((hov===i?1:0)-hovS[i])*.15; });
-    const gt=Math.max(0,Math.min(1.15,geteilt));
-    /* Umriss: 4 Punkte je Bereich, Wölbung nach Wert, Rand wogt */
-    const P=[], K=n*4;
-    for(let j=0;j<K;j++){
-      const a=-Math.PI/2+j*2*Math.PI/K, f=j/4, i0=Math.floor(f)%n, i1=(i0+1)%n, u=f-Math.floor(f), mix=u*u*(3-2*u);
-      const v=werte[i0]*(1-mix)+werte[i1]*mix, hv=hovS[i0]*(1-mix)+hovS[i1]*mix;
-      const welle=ruhig?0:3.2*Math.sin(t*1.7+j*.9)+2.2*Math.sin(t*1.1-j*1.7);
-      const r=(54+42*v+hv*10+welle)*(1-gt*.5);
-      P.push([C+Math.cos(a)*r, C+Math.sin(a)*r]);
-    }
-    const d=kurve(P); koerper.setAttribute("d",d); schein.setAttribute("d",d);
-    /* heller Kern, versetzt pulsierend: gibt Tiefe */
-    const Q=P.map(([x,y],j)=>{ const k=.42+.05*Math.sin(t*1.3+j); return [C+(x-C)*k+3*Math.sin(t*.7), C+(y-C)*k-3]; });
-    kern.setAttribute("d",kurve(Q));
-    /* Tropfen: zusammen liegen sie am Rand und lösen sich ab und zu; geteilt kreisen sie außen */
-    R.forEach((x,i)=>{
-      const a=ang(i)+(ruhig?0:gt*.18*Math.sin(t*.5+i)), v=werte[i];
-      const zusammen=(54+42*v)*.9+(ruhig?0:Math.max(0,Math.sin(t*.9+i*1.9))*14);
-      const aussen=86+(ruhig?0:3*Math.sin(t*1.4+i));
-      const rad=zusammen+(aussen-zusammen)*gt;
-      const gr=(5+5*v)*(1-gt)+(9+9*v+hovS[i]*4)*gt;
-      tropfen[i].setAttribute("cx",(C+Math.cos(a)*rad).toFixed(1)); tropfen[i].setAttribute("cy",(C+Math.sin(a)*rad).toFixed(1)); tropfen[i].setAttribute("r",gr.toFixed(1));
-      /* Beschriftung mittig unter dem Tropfen, damit nichts über den Rand ragt */
-      const lx=C+Math.cos(a)*rad, ly=C+Math.sin(a)*rad+gr+11;
-      label[i].setAttribute("transform",`translate(${lx.toFixed(1)} ${ly.toFixed(1)})`);
-      label[i].style.opacity=Math.max(gt,hovS[i]).toFixed(2);
-      label[i].setAttribute("text-anchor","middle");
-    });
-    mitte.style.opacity=(1-gt*.75).toFixed(2); mitte.style.transform=`scale(${(1-gt*.35).toFixed(3)})`;
-    if(!ruhig&&sichtbar&&!document.hidden) raf=requestAnimationFrame(malen);
-  }
-  document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&sichtbar&&!raf&&box.isConnected) raf=requestAnimationFrame(malen); });
-  raf=requestAnimationFrame(malen);
-}
-
 function smartCapture(raw){
   raw=(raw||"").trim(); if(!raw) return null;
   let low=raw.toLowerCase().replace(",","."), t=today(), when="";

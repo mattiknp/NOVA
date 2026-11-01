@@ -2219,12 +2219,21 @@ button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
 .hd-nexus .tw{ flex:1; align-content:center; }
 @media(min-width:861px){ .tw-ringe{ width:232px; height:232px; } .tw{ gap:28px; } }
 .tw-lw{ position:absolute; inset:-14px; width:calc(100% + 28px); height:calc(100% + 28px); }
-.tw-mitte b{ text-shadow:0 0 22px rgba(79,227,210,.35); }
+.tw-mitte b{ text-shadow:0 0 22px rgba(79,227,210,.35); animation:twAtmen 4.2s ease-in-out infinite; transition:color .3s; }
+@keyframes twAtmen{ 50%{ transform:scale(1.04); text-shadow:0 0 30px rgba(79,227,210,.55); } }
+.tw-mitte span{ transition:color .3s; }
+.tw-ringe{ cursor:pointer; }
 
 /* ── Start: das NOVA-Zeichen erscheint, zündet und öffnet sich zur App ── */
-.start{ position:fixed; inset:0; z-index:300; display:grid; place-items:center; background:#05070c; cursor:pointer; overflow:hidden; }
+@property --loch{ syntax:"<length>"; inherits:false; initial-value:0px; }
+.start{ position:fixed; inset:0; z-index:300; display:grid; place-items:center; background:#05070c; cursor:pointer; overflow:hidden;
+  -webkit-mask:radial-gradient(circle at 50% 50%, transparent var(--loch), #000 calc(var(--loch) + 2px));
+          mask:radial-gradient(circle at 50% 50%, transparent var(--loch), #000 calc(var(--loch) + 2px)); }
+.st-lw{ position:absolute; inset:0; width:100%; height:100%; }
+.st-blitz{ position:absolute; width:260px; height:260px; border-radius:50%; opacity:0; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,255,255,.95), rgba(191,252,244,.55) 22%, rgba(139,124,240,.25) 45%, transparent 70%); }
 .st-stage{ position:relative; display:grid; place-items:center; }
-.st-ic{ position:relative; width:104px; height:104px; border-radius:30px; opacity:0;
+.st-ic{ position:relative; z-index:2; width:104px; height:104px; border-radius:30px; opacity:0;
   background:conic-gradient(from var(--sa,140deg), var(--c1), var(--c2), var(--c3), var(--c1));
   box-shadow:0 0 60px var(--c1-glow), 0 0 120px var(--c2-glow), inset 0 1px 1px rgba(255,255,255,.5); animation:stDreh 2.4s linear infinite; }
 @property --sa{ syntax:"<angle>"; inherits:false; initial-value:140deg; }
@@ -2235,7 +2244,8 @@ button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
 .st-welle{ position:absolute; width:104px; height:104px; border-radius:50%; border:2px solid var(--c1); opacity:0; pointer-events:none; }
 .st-name{ position:absolute; top:calc(50% + 92px); left:0; right:0; display:flex; justify-content:center; gap:.42em;
   font-family:var(--f-disp); font-size:17px; font-weight:700; letter-spacing:.06em; }
-.st-name span{ display:inline-block; opacity:0; }
+.st-name span{ display:inline-block; opacity:0; background:linear-gradient(120deg,#bffcf4,var(--c1) 35%,var(--c2) 70%,var(--c3));
+  -webkit-background-clip:text; background-clip:text; color:transparent; font-size:22px; letter-spacing:.08em; }
 .st-sub{ position:absolute; top:calc(50% + 122px); left:0; right:0; text-align:center; font-size:12px; color:var(--text-faint); opacity:0; letter-spacing:.04em; }
 @media (prefers-reduced-motion: reduce){
   .knall,.knall svg,.mo,.mv.zu,.mv.zu .mo,.auftakt .view.on .p,.feiern .hz-glanz::before{ animation:none !important; }
@@ -4429,77 +4439,114 @@ function tageswertHtml(){
 }
 
 /* ── Tageswert, lebendig ──
-   Vorbild: die Aktivitätsringe von Apple Fitness (Farbverlauf entlang des
-   Rings, leuchtende Spitze) und die weiche Aura der Oura-App. Die Ringe
-   laufen vom zuletzt gezeigten Wert zum neuen, an jeder Spitze glimmt ein
-   Licht, ein Lichtfunke wandert den Ring entlang, und in der Mitte
-   atmet eine Aura in den Farben des Tages. Hält an, sobald der Block nicht
-   zu sehen ist; bei „Bewegung reduzieren“ steht alles still. */
+   Bausteine aus dem „animate“-Skill (One Wave): generative Partikel,
+   popIn, pulse, float, nativ auf einer Leinwand umgesetzt. Vorbild für die
+   Form: Apple-Fitness-Ringe (Verlauf entlang des Rings, leuchtende Spitze)
+   und die atmende Aura der Oura-App.
+   Live: Energie fließt als Lichtpartikel den gefüllten Ring entlang, je
+   voller, desto schneller; an der Spitze sprühen Funken; in der Mitte
+   kreist eine Aura in den Farben des Tages. Zeigst du auf einen Ring, wird
+   er dicker und die Mitte nennt Bereich und Prozent. Hält an, wenn der
+   Block nicht zu sehen ist; „Bewegung reduzieren“ zeigt ein ruhiges Bild. */
 function tageswertLeben(cv){
   if(!cv) return;
   const R=JSON.parse(cv.dataset.ringe||"[]"), ctx=cv.getContext("2d"), box=cv.parentElement;
-  const t0=performance.now(), DAUER=1500;
-  const hex=(c,a)=>{ const h=c.replace("#",""); const n=parseInt(h.length===3?h.split("").map(x=>x+x).join(""):h,16);
-    return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
-  const hell=c=>{ const h=c.replace("#",""), n=parseInt(h,16), f=x=>Math.min(255,Math.round(x+(255-x)*.45));
-    return `rgb(${f(n>>16&255)},${f(n>>8&255)},${f(n&255)})`; };
-  const funken=[];
-  let sichtbar=true, raf=0, W=0, H=0, d=1;
+  const mB=box.querySelector(".tw-mitte b"), mS=box.querySelector(".tw-mitte span"), mT={b:null,s:null};
+  const t0=performance.now(), DAUER=1600;
+  const rgb=c=>{ const h=c.replace("#",""), n=parseInt(h.length===3?h.split("").map(x=>x+x).join(""):h,16); return [n>>16&255,n>>8&255,n&255]; };
+  const rgba=(c,a)=>{ const [r,g,b]=rgb(c); return `rgba(${r},${g},${b},${a})`; };
+  const hell=(c,f=.45)=>{ const [r,g,b]=rgb(c).map(x=>Math.min(255,Math.round(x+(255-x)*f))); return `rgb(${r},${g},${b})`; };
+  /* Partikel je Ring: Anzahl und Tempo wachsen mit dem Wert */
+  const fluss=R.map((x,i)=>[...Array(Math.round(5+14*x.v))].map(()=>({ph:Math.random(),sp:.06+Math.random()*.07,wb:Math.random()*6.28,gr:.6+Math.random()*.8})));
+  const funken=[], sterne=[...Array(26)].map(()=>({x:Math.random(),y:Math.random(),r:.4+Math.random()*1.1,p:Math.random()*6.28}));
+  let sichtbar=true, raf=0, W=0, H=0, hov=-1, hovSanft=R.map(()=>0), maus=null;
   const io=new IntersectionObserver(e=>{ sichtbar=e[0].isIntersecting; if(sichtbar&&!raf) raf=requestAnimationFrame(malen); });
   io.observe(box);
-  const ease=p=>{ if(p>=1) return 1; return 1-Math.exp(-6.5*p)*Math.cos(9.5*p*.9); };   /* federnd */
+  const feder=p=>p>=1?1:1-Math.exp(-6.2*p)*Math.cos(9.2*p*.9);
+  box.onpointermove=e=>{ const r=cv.getBoundingClientRect(); maus={x:e.clientX-r.left,y:e.clientY-r.top}; };
+  box.onpointerleave=()=>{ maus=null; };
+  /* Auf dem Handy gibt es kein Zeigen: Tippen schaltet die Ringe durch */
+  box.onclick=()=>{ if(matchMedia("(hover:hover)").matches) return; hov=hov>=R.length-1?-1:hov+1; };
+  function mitte(i){
+    if(!mB||!mS) return;
+    if(mT.b===null){ mT.b=mB.textContent; mT.s=mS.textContent; }
+    if(i<0){ mB.textContent=mT.b; mS.textContent=mT.s; mB.style.color=""; return; }
+    mB.textContent=Math.round(R[i].v*100)+"%"; mS.textContent=R[i].k; mB.style.color=hell(R[i].c,.2);
+  }
+  let letzteHov=-2;
   function malen(now){
     raf=0;
     if(!cv.isConnected){ io.disconnect(); return; }
-    /* Die Leinwand ragt etwas über den Block hinaus, damit das Leuchten nicht abgeschnitten wird */
-    const r=cv.getBoundingClientRect(), rb=box.getBoundingClientRect(); d=Math.min(devicePixelRatio||1,2);
+    const r=cv.getBoundingClientRect(), rb=box.getBoundingClientRect(), d=Math.min(devicePixelRatio||1,2);
     if(Math.round(r.width*d)!==W||Math.round(r.height*d)!==H){ W=cv.width=Math.round(r.width*d); H=cv.height=Math.round(r.height*d); }
     ctx.setTransform(d,0,0,d,0,0);
     const w=r.width, h=r.height, cx=w/2, cy=h/2, s=Math.min(rb.width,rb.height)/200, t=(now-t0)/1000;
-    const p=BEWEG_ARM?1:Math.min(1,(now-t0)/DAUER), k=BEWEG_ARM?1:ease(p);
+    const p=BEWEG_ARM?1:Math.min(1,(now-t0)/DAUER), breite=13*s;
     ctx.clearRect(0,0,w,h);
-    /* Aura in der Mitte */
-    ctx.globalCompositeOperation="lighter";
+    /* welcher Ring ist unter dem Zeiger */
+    if(maus){ const dist=Math.hypot(maus.x-cx,maus.y-cy); let b=-1;
+      R.forEach((x,i)=>{ if(Math.abs(dist-(88-i*19)*s)<breite*.85) b=i; }); hov=b; }
+    if(hov!==letzteHov){ mitte(hov); letzteHov=hov; }
+    R.forEach((x,i)=>{ hovSanft[i]+=((hov===i?1:0)-hovSanft[i])*.18; });
     const voll=R.length&&R.every(x=>x.v>=1);
+    /* schwebende Sterne (float) */
+    sterne.forEach(st=>{ const a=.25+.35*Math.sin(t*1.3+st.p);
+      ctx.fillStyle=`rgba(207,233,255,${a*.55})`; ctx.beginPath();
+      ctx.arc(st.x*w,(st.y*h+Math.sin(t*.4+st.p)*4)%h,st.r,0,6.283); ctx.fill(); });
+    /* Aura: kreisende Lichtfelder, atmen mit (pulse) */
+    ctx.globalCompositeOperation="lighter";
     R.forEach((x,i)=>{
-      const a=t*(.35+i*.11)+i*1.7, rr=(18+8*Math.sin(t*.9+i))*s;
-      const bx=cx+Math.cos(a)*rr, by=cy+Math.sin(a*1.3)*rr*.8;
-      const g=ctx.createRadialGradient(bx,by,0,bx,by,38*s);
-      g.addColorStop(0,hex(x.c,(.22+.28*x.v)*(voll?1.3:1))); g.addColorStop(1,hex(x.c,0));
-      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(bx,by,38*s,0,6.283); ctx.fill();
+      const a=t*(.32+i*.09)+i*1.57, rr=(14+9*Math.sin(t*.8+i*2))*s;
+      const bx=cx+Math.cos(a)*rr, by=cy+Math.sin(a*1.21)*rr*.85, gr=(34+6*Math.sin(t*1.7+i))*s;
+      const g=ctx.createRadialGradient(bx,by,0,bx,by,gr);
+      g.addColorStop(0,rgba(x.c,(.16+.3*x.v)*(voll?1.35:1)*(1+hovSanft[i]*.6))); g.addColorStop(1,rgba(x.c,0));
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(bx,by,gr,0,6.283); ctx.fill();
     });
     ctx.globalCompositeOperation="source-over";
-    /* Ringe */
-    const breite=13*s;
     R.forEach((x,i)=>{
-      const rad=(88-i*19)*s, v=x.von+(x.v-x.von)*k, a0=-Math.PI/2, a1=a0+Math.max(0,v)*Math.PI*2;
-      ctx.lineCap="round"; ctx.lineWidth=breite;
-      ctx.strokeStyle=hex(x.c,.15); ctx.beginPath(); ctx.arc(cx,cy,rad,0,6.283); ctx.stroke();
+      const rad=(88-i*19)*s, k=BEWEG_ARM?1:feder(Math.max(0,Math.min(1,(now-t0-i*90)/DAUER)));
+      const v=x.von+(x.v-x.von)*k, a0=-Math.PI/2, a1=a0+Math.max(0,v)*Math.PI*2;
+      const dick=breite*(1+hovSanft[i]*.28), dimm=hov>=0&&hov!==i?.45:1;
+      ctx.lineCap="round"; ctx.lineWidth=dick;
+      ctx.strokeStyle=rgba(x.c,.14*dimm); ctx.beginPath(); ctx.arc(cx,cy,rad,0,6.283); ctx.stroke();
       if(v<.004) return;
-      let st;
+      ctx.globalAlpha=dimm;
+      let st=x.c;
       if(ctx.createConicGradient){ st=ctx.createConicGradient(a0,cx,cy);
         st.addColorStop(0,x.c); st.addColorStop(Math.min(.999,Math.max(.02,v)),hell(x.c)); st.addColorStop(1,hell(x.c)); }
-      else st=x.c;
       ctx.strokeStyle=st; ctx.beginPath(); ctx.arc(cx,cy,rad,a0,a1); ctx.stroke();
-      /* leuchtende Spitze, atmet leicht */
-      const ex=cx+Math.cos(a1)*rad, ey=cy+Math.sin(a1)*rad, puls=1+.14*Math.sin(t*2.4+i*1.3);
-      ctx.save(); ctx.shadowColor=x.c; ctx.shadowBlur=16*s*puls;
-      ctx.fillStyle=hell(x.c); ctx.beginPath(); ctx.arc(ex,ey,breite*.5*puls*.92,0,6.283); ctx.fill(); ctx.restore();
-      /* Lichtfunke wandert den Ring entlang */
-      if(!BEWEG_ARM&&p>=1){ const lauf=((t*.28+i*.23)%1.6)/1.6;
-        if(lauf<1){ const am=a0+(a1-a0)*lauf, fx=cx+Math.cos(am)*rad, fy=cy+Math.sin(am)*rad;
-          const g=ctx.createRadialGradient(fx,fy,0,fx,fy,breite*1.1); g.addColorStop(0,"rgba(255,255,255,.75)"); g.addColorStop(1,"rgba(255,255,255,0)");
-          ctx.fillStyle=g; ctx.beginPath(); ctx.arc(fx,fy,breite*1.1,0,6.283); ctx.fill(); } }
-      /* ab und zu ein Funke von der Spitze */
-      if(!BEWEG_ARM&&Math.random()<(voll?.12:.035)) funken.push({x:ex,y:ey,vx:(Math.random()-.5)*.9*s,vy:(Math.random()-.5)*.9*s,l:1,c:hell(x.c)});
+      /* Energiefluss: Lichtpartikel laufen zur Spitze */
+      if(!BEWEG_ARM){
+        ctx.globalCompositeOperation="lighter";
+        fluss[i].forEach(q=>{
+          q.ph=(q.ph+q.sp*(.55+x.v)*(1+hovSanft[i])/60)%1;
+          const am=a0+(a1-a0)*q.ph, wob=Math.sin(t*3+q.wb)*dick*.18;
+          for(let z=0;z<5;z++){
+            const az=am-z*.035*(1.2-x.v*.5); if(az<a0) break;
+            const px=cx+Math.cos(az)*(rad+wob), py=cy+Math.sin(az)*(rad+wob);
+            ctx.fillStyle=`rgba(255,255,255,${(.55-z*.1)*q.gr*.8})`;
+            ctx.beginPath(); ctx.arc(px,py,(1.5-z*.22)*s*q.gr+.3,0,6.283); ctx.fill();
+          }
+        });
+        ctx.globalCompositeOperation="source-over";
+      }
+      /* Spitze: leuchtet und atmet */
+      const ex=cx+Math.cos(a1)*rad, ey=cy+Math.sin(a1)*rad, puls=1+.16*Math.sin(t*2.6+i*1.3);
+      ctx.save(); ctx.shadowColor=x.c; ctx.shadowBlur=(18+hovSanft[i]*12)*s*puls;
+      ctx.fillStyle=hell(x.c,.6); ctx.beginPath(); ctx.arc(ex,ey,dick*.5*puls*.95,0,6.283); ctx.fill(); ctx.restore();
+      if(!BEWEG_ARM&&Math.random()<(voll?.22:.05+x.v*.05)){
+        const ta=a1+Math.PI/2+(Math.random()-.5)*.9;
+        funken.push({x:ex,y:ey,vx:Math.cos(ta)*(.4+Math.random()*.9)*s,vy:Math.sin(ta)*(.4+Math.random()*.9)*s,l:1,c:hell(x.c,.5)});
+      }
+      ctx.globalAlpha=1;
     });
     /* Funken */
-    for(let j=funken.length-1;j>=0;j--){ const f=funken[j]; f.x+=f.vx; f.y+=f.vy; f.l-=.018;
+    ctx.globalCompositeOperation="lighter";
+    for(let j=funken.length-1;j>=0;j--){ const f=funken[j]; f.x+=f.vx; f.y+=f.vy; f.vx*=.985; f.vy*=.985; f.l-=.02;
       if(f.l<=0){ funken.splice(j,1); continue; }
-      ctx.globalAlpha=f.l; ctx.fillStyle=f.c; ctx.beginPath(); ctx.arc(f.x,f.y,1.6*s*f.l+.4,0,6.283); ctx.fill(); }
-    ctx.globalAlpha=1;
+      ctx.globalAlpha=f.l; ctx.fillStyle=f.c; ctx.beginPath(); ctx.arc(f.x,f.y,1.7*s*f.l+.3,0,6.283); ctx.fill(); }
+    ctx.globalAlpha=1; ctx.globalCompositeOperation="source-over";
     if(!BEWEG_ARM&&sichtbar&&!document.hidden) raf=requestAnimationFrame(malen);
-    else if(BEWEG_ARM&&p<1) raf=requestAnimationFrame(malen);
   }
   document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&sichtbar&&!raf&&cv.isConnected) raf=requestAnimationFrame(malen); });
   raf=requestAnimationFrame(malen);
@@ -8530,47 +8577,91 @@ function auftakt(){ if(BEWEG_ARM) return; const v=document.getElementById("views
   v.classList.remove("auftakt"); void v.offsetWidth; v.classList.add("auftakt");
   setTimeout(()=>v.classList.remove("auftakt"),1600); }
 /* ── Start ──
-   Das NOVA-Zeichen taucht auf, ein Lichtring zieht sich darum, die
-   Buchstaben fallen ein. Dann zündet es (Nova: ein Stern leuchtet auf):
-   eine Welle läuft nach außen, das Zeichen wächst über den ganzen
-   Bildschirm und gibt die App frei. Antippen überspringt das Warten. */
+   Drei Szenen nach dem „animate“-Skill (One Wave), in einem Zug von gut
+   zwei Sekunden: 1) generativ: Lichtteilchen in NOVAs Farben strömen aus
+   allen Richtungen spiralförmig zur Mitte. 2) popIn: sie verdichten sich,
+   es blitzt, das NOVA-Zeichen springt auf, ein Lichtring zieht sich darum,
+   der Schriftzug fällt im Farbverlauf ein. 3) zoomThrough + clipCircle:
+   die Kamera fliegt durch das Zeichen, die Teilchen fliegen nach außen,
+   und die App öffnet sich in einem wachsenden Kreis. Antippen springt
+   direkt zum Öffnen. Nur beim Kaltstart; „Bewegung reduzieren“ lässt es aus. */
 (function starten(){
   if(BEWEG_ARM){ auftakt(); return; }
   const st=document.createElement("div"); st.className="start"; st.setAttribute("aria-hidden","true");
-  st.innerHTML=`<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="stG" x1="0" y1="0" x2="1" y2="1">
+  const std=new Date().getHours();
+  st.innerHTML=`<canvas class="st-lw"></canvas>
+    <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="stG" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#4fe3d2"/><stop offset=".5" stop-color="#8b7cf0"/><stop offset="1" stop-color="#d488b8"/></linearGradient></defs></svg>
-    <div class="st-stage"><svg class="st-ring" viewBox="0 0 168 168"><circle cx="84" cy="84" r="82" pathLength="1"/></svg>
-      <span class="st-welle"></span><span class="st-welle"></span><div class="st-ic"><i></i></div></div>
+    <div class="st-stage"><span class="st-blitz"></span><svg class="st-ring" viewBox="0 0 168 168"><circle cx="84" cy="84" r="82" pathLength="1"/></svg>
+      <span class="st-welle"></span><span class="st-welle"></span><span class="st-welle"></span><div class="st-ic"><i></i></div></div>
     <div class="st-name">${[..."NOVA"].map(c=>`<span>${c}</span>`).join("")}</div>
-    <div class="st-sub">${new Date().getHours()<11?"Guten Morgen":new Date().getHours()<18?"Guten Tag":"Guten Abend"}${S.userName?", "+esc(S.userName):""}</div>`;
+    <div class="st-sub">${std<5?"Gute Nacht":std<11?"Guten Morgen":std<18?"Guten Tag":"Guten Abend"}${S.userName?", "+esc(S.userName):""}</div>`;
   document.body.appendChild(st);
+  const cv=st.querySelector(".st-lw"), ctx=cv.getContext("2d"), d=Math.min(devicePixelRatio||1,2);
+  const W=innerWidth, H=innerHeight; cv.width=W*d; cv.height=H*d; ctx.setTransform(d,0,0,d,0,0);
   const ic=st.querySelector(".st-ic"), ring=st.querySelector(".st-ring circle"), wellen=st.querySelectorAll(".st-welle"),
-    buch=st.querySelectorAll(".st-name span"), sub=st.querySelector(".st-sub"), app=document.getElementById("shell");
+    blitz=st.querySelector(".st-blitz"), buch=st.querySelectorAll(".st-name span"), sub=st.querySelector(".st-sub"), app=document.getElementById("shell");
   const SP=getComputedStyle(document.documentElement).getPropertyValue("--spring").trim()||"ease-out";
   const IO="cubic-bezier(.77,0,.175,1)", EO="cubic-bezier(.23,1,.32,1)";
-  ic.animate([{transform:"scale(.3) rotate(-25deg)",opacity:0,filter:"blur(10px)"},{transform:"none",opacity:1,filter:"blur(0)"}],{duration:800,easing:SP,fill:"forwards"});
-  ring.animate([{strokeDashoffset:1},{strokeDashoffset:0}],{duration:900,delay:180,easing:EO,fill:"forwards"});
-  buch.forEach((b,i)=>b.animate([{opacity:0,transform:"translateY(12px)",filter:"blur(6px)"},{opacity:1,transform:"none",filter:"blur(0)"}],
-    {duration:600,delay:300+i*70,easing:EO,fill:"forwards"}));
-  sub.animate([{opacity:0,transform:"translateY(6px)"},{opacity:1,transform:"none"}],{duration:600,delay:650,easing:EO,fill:"forwards"});
+  const FARBEN=["#4fe3d2","#8b7cf0","#d488b8","#bffcf4","#ffffff"];
+  const cx=W/2, cy=H/2, M=Math.hypot(W,H)/2;
+  /* Szene 1: Teilchen kommen von außen auf Spiralbahnen */
+  const T=[...Array(Math.round(Math.min(220,W*H/4200)))].map(()=>{ const a=Math.random()*6.283, r=M*(.7+Math.random()*.5);
+    const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r*.92;
+    return {a,r,r0:r,dr:.55+Math.random()*.5,da:(Math.random()<.5?1:-1)*(1.4+Math.random()*1.4),c:FARBEN[Math.random()*FARBEN.length|0],g:.6+Math.random()*1.4,x,y,px:x,py:y,vx:0,vy:0,frei:false}; });
+  const t0=performance.now(); let phase=1, tExp=0, raf=0;
+  let letzt=t0;
+  function malen(now){
+    const t=(now-t0)/1000, dt=(now-letzt)/1000; letzt=now;
+    ctx.globalCompositeOperation="source-over";
+    ctx.fillStyle=phase<3?"rgba(5,7,12,.22)":"rgba(5,7,12,.32)"; ctx.fillRect(0,0,W,H);   /* Schweif durch Nachleuchten */
+    ctx.globalCompositeOperation="lighter";
+    T.forEach(q=>{
+      q.px=q.x; q.py=q.y;
+      if(!q.frei){ const k=Math.min(1,t/1.05); const e=1-Math.pow(1-k,3);
+        q.r=q.r0*(1-e*q.dr*.98)+6; q.a+=q.da*Math.min(.05,dt)*(1+e*2.2);
+        q.x=cx+Math.cos(q.a)*q.r; q.y=cy+Math.sin(q.a)*q.r*.92; }
+      else { q.x+=q.vx; q.y+=q.vy; q.vx*=1.02; q.vy*=1.02; }
+      ctx.strokeStyle=q.c; ctx.globalAlpha=q.frei?Math.max(0,1-(now-tExp)/700):.85; ctx.lineWidth=q.g;
+      ctx.beginPath(); ctx.moveTo(q.px,q.py); ctx.lineTo(q.x,q.y); ctx.stroke();
+    });
+    ctx.globalAlpha=1;
+    if(phase<3||now-tExp<800) raf=requestAnimationFrame(malen);
+  }
+  raf=requestAnimationFrame(malen);
   app.style.opacity="0";
+  /* Szene 2: Verdichtung, Blitz, Zeichen springt auf */
+  const sz2=setTimeout(()=>{
+    phase=2;
+    blitz.animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1)",opacity:1,offset:.25},{transform:"scale(2.4)",opacity:0}],{duration:900,easing:EO,fill:"forwards"});
+    ic.animate([{transform:"scale(.2) rotate(-40deg)",opacity:0,filter:"blur(12px)"},{transform:"scale(1.12) rotate(4deg)",opacity:1,filter:"blur(0)",offset:.55},{transform:"none",opacity:1}],{duration:900,easing:SP,fill:"forwards"});
+    ring.animate([{strokeDashoffset:1},{strokeDashoffset:0}],{duration:800,delay:120,easing:EO,fill:"forwards"});
+    wellen[0].animate([{transform:"scale(.6)",opacity:.9},{transform:"scale(3.2)",opacity:0}],{duration:900,easing:EO,fill:"forwards"});
+    buch.forEach((b,i)=>b.animate([{opacity:0,transform:"translateY(14px) scale(.9)",filter:"blur(8px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:620,delay:220+i*75,easing:EO,fill:"forwards"}));
+    sub.animate([{opacity:0,transform:"translateY(8px)",filter:"blur(4px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:600,delay:560,easing:EO,fill:"forwards"});
+  },620);
   let los=false;
   const oeffnen=()=>{
-    if(los) return; los=true;
-    const gross=Math.hypot(innerWidth,innerHeight)/104*1.15;
-    wellen.forEach((w,i)=>w.animate([{transform:"scale(1)",opacity:.9},{transform:`scale(${6+i*3})`,opacity:0}],{duration:900+i*250,delay:i*110,easing:EO,fill:"forwards"}));
-    ring.parentElement.animate([{transform:"rotate(-90deg) scale(1)",opacity:1},{transform:"rotate(-90deg) scale(2.4)",opacity:0}],{duration:650,easing:EO,fill:"forwards"});
-    [...buch,sub].forEach((b,i)=>b.animate([{opacity:1},{opacity:0,transform:"translateY(-10px)",filter:"blur(5px)"}],{duration:260,delay:i*25,easing:"ease-in",fill:"forwards"}));
-    ic.animate([{transform:"scale(1)",borderRadius:"30px",opacity:1},{transform:"scale(1.08)",offset:.18},{transform:`scale(${gross})`,borderRadius:"8px",opacity:1,offset:.78},{transform:`scale(${gross})`,opacity:0}],
-      {duration:1000,delay:120,easing:IO,fill:"forwards"});
-    st.animate([{backgroundColor:"#05070c"},{backgroundColor:"rgba(5,7,12,0)"}],{duration:650,delay:650,easing:"ease-out",fill:"forwards"});
-    setTimeout(()=>{ app.style.opacity="";
-      app.animate([{opacity:0,transform:"scale(1.06)",filter:"blur(16px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:900,easing:SP});
-      auftakt(); },620);
-    setTimeout(()=>{ st.remove(); },1250);
+    if(los) return; los=true; clearTimeout(sz2);
+    if(phase<2){ ic.style.opacity="1"; ring.style.strokeDashoffset="0"; buch.forEach(b=>b.style.opacity="1"); }
+    phase=3; tExp=performance.now();
+    /* Szene 3: Teilchen fliegen nach außen */
+    T.forEach(q=>{ const a=Math.atan2(q.y-cy,q.x-cx)+(Math.random()-.5)*.6, v=4+Math.random()*9; q.frei=true; q.vx=Math.cos(a)*v; q.vy=Math.sin(a)*v; });
+    wellen.forEach((w,i)=>w.animate([{transform:"scale(1)",opacity:.85},{transform:`scale(${7+i*4})`,opacity:0}],{duration:900+i*200,delay:i*90,easing:EO,fill:"forwards"}));
+    ring.parentElement.animate([{transform:"rotate(-90deg) scale(1)",opacity:1},{transform:"rotate(-90deg) scale(3)",opacity:0}],{duration:700,easing:EO,fill:"forwards"});
+    [...buch,sub].forEach((b,i)=>b.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateY(-14px) scale(1.08)",filter:"blur(6px)"}],{duration:300,delay:i*30,easing:"ease-in",fill:"forwards"}));
+    ic.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.86)",offset:.15},{transform:"scale(14)",opacity:0}],{duration:900,easing:IO,fill:"forwards"});
+    /* Die App öffnet sich im wachsenden Kreis und fliegt dabei auf die Kamera zu */
+    setTimeout(()=>{
+      app.style.opacity="";
+      st.animate([{"--loch":"0px"},{"--loch":Math.ceil(M*1.15)+"px"}],{duration:900,easing:IO,fill:"forwards"});
+      app.animate([{transform:"scale(1.14)",filter:"blur(14px) brightness(1.4)"},{transform:"none",filter:"blur(0) brightness(1)"}],{duration:1000,easing:SP});
+      auftakt();
+    },260);
+    setTimeout(()=>{ cancelAnimationFrame(raf); st.remove(); },1300);
   };
   st.addEventListener("click",oeffnen);
-  setTimeout(oeffnen,1350);
+  setTimeout(oeffnen,1750);
 })();
 if(cloudOn()){
   setSync("busy");

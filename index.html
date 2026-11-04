@@ -2221,12 +2221,58 @@ button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
 .hd-gz b{ font-weight:600; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .hd-gz em{ font-style:normal; font-size:var(--t-xs); color:var(--text-faint); white-space:nowrap; }
 /* Fenster „Ganztägig“ */
-.gz-daten{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.gz-daten{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
 .gz-farben{ display:flex; gap:8px; flex-wrap:wrap; }
 .gz-f{ width:30px; height:30px; border-radius:50%; background:var(--gc); box-shadow:inset 0 0 0 2px rgba(0,0,0,.25);
   transition:transform .4s var(--spring), box-shadow var(--d2) var(--ez); }
 .gz-f.an{ box-shadow:0 0 0 2px var(--panel-2,#1a202f), 0 0 0 4px var(--gc); transform:scale(1.08); }
 .gz-f:active{ transform:scale(.9); transition-duration:.08s; }
+
+/* Planer: Monatsansicht */
+.mn-p{ margin-bottom:14px; }
+.mn-kopf{ display:flex; align-items:center; justify-content:space-between; gap:6px 14px; flex-wrap:wrap; padding:11px 14px; min-height:58px; border-bottom:1px solid var(--line); }
+.mn-titel{ font-family:var(--f-disp); font-size:var(--t-lg); font-weight:600; }
+.mn-titel span{ color:var(--text-faint); font-weight:400; }
+.mn-status{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:var(--t-sm); color:var(--text-dim); }
+.mn-status span{ margin-right:4px; }
+.mn-status b{ color:var(--c1); font-weight:600; }
+.mn-hilfe{ font-style:normal; }
+.mn-wt{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); border-bottom:1px solid var(--line); }
+.mn-wt span{ padding:6px 8px; font-size:var(--t-xs); color:var(--text-faint); }
+.mn-raster{ user-select:none; -webkit-user-select:none; }
+.mn-woche{ position:relative; display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); border-bottom:1px solid var(--line); }
+.mn-woche:last-child{ border-bottom:0; }
+.mn-tag{ position:relative; display:block; min-width:0; min-height:calc(58px + var(--bahnen)*20px); padding:0; text-align:left; cursor:pointer;
+  border-right:1px solid var(--line); border-radius:0; transition:background-color var(--d2) var(--ez); }
+.mn-tag:nth-child(7){ border-right:0; }
+@media (hover:hover){ .mn-tag:hover{ background:rgba(255,255,255,.03); } }
+.mn-tag.fremd .mn-zahl{ color:var(--text-faint); opacity:.55; }
+.mn-zahl{ position:absolute; top:4px; left:5px; width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%;
+  font-family:var(--f-mono); font-size:var(--t-xs); color:var(--text-dim); }
+.mn-tag.heute .mn-zahl{ background:var(--c1); color:#07131a; font-weight:700; opacity:1; }
+.mn-punkte{ position:absolute; left:7px; right:3px; bottom:6px; display:flex; align-items:center; gap:2px; overflow:hidden; }
+.mn-punkte i{ width:6px; height:6px; border-radius:2px; flex:0 0 auto; }
+.mn-punkte em{ font-style:normal; font-size:9px; line-height:1; color:var(--text-faint); margin-left:1px; }
+.mn-tag.mark{ background:rgba(79,227,210,.17); }
+.mn-tag.mark-a{ box-shadow:inset 2px 0 0 var(--c1); }
+.mn-tag.mark-e{ box-shadow:inset -2px 0 0 var(--c1); }
+.mn-tag.mark-a.mark-e{ box-shadow:inset 2px 0 0 var(--c1), inset -2px 0 0 var(--c1); }
+.mn-bar{ --pl:0px; --pr:0px; position:absolute; z-index:2; left:calc(var(--i)*100%/7 + var(--pl)); width:calc(var(--n)*100%/7 - var(--pl) - var(--pr));
+  top:calc(28px + var(--b)*20px); height:18px; padding:0 6px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; text-align:left;
+  font-size:10.5px; font-weight:700; line-height:18px; color:var(--text); cursor:pointer;
+  background:color-mix(in srgb, var(--gc) 38%, #111725); transition:filter var(--d2) var(--ez), opacity var(--d2) var(--ez); }
+.mn-bar.a{ --pl:3px; border-top-left-radius:6px; border-bottom-left-radius:6px; box-shadow:inset 3px 0 0 var(--gc); }
+.mn-bar.e{ --pr:3px; border-top-right-radius:6px; border-bottom-right-radius:6px; }
+@media (hover:hover){ .mn-bar:hover{ filter:brightness(1.25); } }
+.mn-raster.markiert .mn-bar{ pointer-events:none; opacity:.6; }
+@media (max-width:640px){
+  .mn-kopf{ padding:10px 12px; min-height:92px; align-content:flex-start; }
+  .mn-tag{ min-height:calc(50px + var(--bahnen)*20px); }
+  .mn-status{ width:100%; flex-wrap:nowrap; font-size:var(--t-xs); white-space:nowrap; }
+  .mn-hilfe{ display:none; }
+  .mn-wt span{ padding:5px 5px; }
+  .mn-bar{ padding:0 4px; font-size:9.5px; }
+}
 @media (prefers-reduced-motion: reduce){
   .knall,.knall svg,.mo,.mv.zu,.mv.zu .mo,.auftakt .view.on .p,.feiern .hz-glanz::before{ animation:none !important; }
 }
@@ -7799,6 +7845,10 @@ const TP_HH=30;                       /* etwas flacher als der Tagesplan: 7 Spal
    ──────────────────────────────────────────────────────── */
 let tpWoche=dk(sow(new Date()));          /* linke Spalte = diese Woche */
 const wochenSchluessel=d=>dk(sow(d));
+const monatsSchluessel=d=>dk(new Date(d.getFullYear(),d.getMonth(),1));
+let tpModus=(()=>{ try{ return localStorage.getItem("nova_tp_modus")==="monat"?"monat":"woche"; }catch(e){ return "woche"; } })();
+let tpMonat=monatsSchluessel(new Date());
+let tpMark=null;                          /* erster angestrichener Tag im Monat */
 
 /* Alles, was in einer bestimmten Woche an einem Tag steht. */
 const istAus=(mk,id)=>((S.tplanAus||{})[mk]||[]).includes(id);
@@ -7873,13 +7923,13 @@ function ganzBahnen(mk){
   items.forEach(g=>{ let b=ende.findIndex(e=>e<g.von); if(b<0){ b=ende.length; ende.push(""); } ende[b]=g.bis||g.von; bahn[g.id]=b; });
   return {bahn, n:ende.length, tage};
 }
-function ganzModal(id,tag){
+function ganzModal(id,tag,bisTag){
   const g=id?(S.ganz||[]).find(x=>x.id===id):null;
   let farbe=(g&&g.farbe)||GANZ_FARBEN[0];
   modal(`<h3>${g?"Ganztägig bearbeiten":"Ganztägig planen"}</h3>
     <label>Was</label><input id="gzT" value="${g?esc(g.titel):""}" placeholder="z. B. Urlaub, Turnier, Klausurphase" autocomplete="off">
     <div class="gz-daten"><div><label>Von</label><input type="date" id="gzV" value="${g?g.von:(tag||today())}"></div>
-      <div><label>Bis</label><input type="date" id="gzB" value="${g?(g.bis||g.von):(tag||today())}"></div></div>
+      <div><label>Bis</label><input type="date" id="gzB" value="${g?(g.bis||g.von):(bisTag||tag||today())}"></div></div>
     <label>Farbe</label>
     <div class="gz-farben">${GANZ_FARBEN.map(c=>`<button class="gz-f${c===farbe?" an":""}" data-gzf="${c}" style="--gc:${c}" aria-label="Farbe ${c}"></button>`).join("")}</div>
     <div class="mo-act">${g?`<button class="b" id="gzDel" style="margin-right:auto;color:var(--bad)">Löschen</button>`:""}
@@ -7902,6 +7952,81 @@ function ganzModal(id,tag){
     S.ganz=(S.ganz||[]).filter(x=>x.id!==id); save(); closeModal(); toast("Gelöscht"); neuZeichnen(); });
   document.getElementById("gzT").onkeydown=e=>{ if(e.key==="Enter") document.getElementById("gzOk").click(); };
   setTimeout(()=>document.getElementById("gzT")?.focus(),60);
+}
+/* ── Monatsansicht ──
+   Zeigt die ganztägigen Einträge als durchgehende Balken und lässt
+   längere Termine anstreichen: ersten und letzten Tag antippen (geht
+   auch über einen Monatswechsel) oder mit der Maus darüberziehen. Am
+   Handy bleibt Wischen fürs Scrollen frei, deshalb dort nur Antippen. */
+function monatRaster(mk){
+  const erster=parsedk(mk), letzter=new Date(erster.getFullYear(),erster.getMonth()+1,0), h=today(), wochen=[];
+  for(let mo=sow(erster); mo<=letzter; mo=addD(mo,7)){
+    const GB=ganzBahnen(dk(mo)), tage=GB.tage;
+    const zellen=tage.map(k=>{
+      const d=parsedk(k);
+      const uni=(S.uniTermine||[]).filter(t=>t.datum===k).map(()=>"#e35d6a");
+      const bl=planDay(k).map(b=>blockById(b.type).bg);
+      const punkte=[...uni,...bl], zuViel=punkte.length>5;
+      return `<button class="mn-tag${d.getMonth()!==erster.getMonth()?" fremd":""}${k===h?" heute":""}" data-mtag="${k}" aria-label="${fmtShort(d)}">
+        <span class="mn-zahl">${d.getDate()}</span>
+        ${punkte.length?`<span class="mn-punkte">${punkte.slice(0,zuViel?4:5).map(c=>`<i style="background:${c}"></i>`).join("")}${zuViel?`<em>+${punkte.length-4}</em>`:""}</span>`:""}</button>`;
+    }).join("");
+    const balken=(S.ganz||[]).filter(g=>g&&g.von&&g.von<=tage[6]&&(g.bis||g.von)>=tage[0]).map(g=>{
+      const bis=g.bis||g.von, an=g.von>=tage[0], en=bis<=tage[6];
+      const i0=an?tage.indexOf(g.von):0, i1=en?tage.indexOf(bis):6;
+      return `<button class="mn-bar${an?" a":""}${en?" e":""}" data-ganz="${g.id}" style="--gc:${g.farbe||GANZ_FARBEN[0]};--i:${i0};--n:${i1-i0+1};--b:${GB.bahn[g.id]||0}"
+        title="${esc(g.titel)}${bis!==g.von?` · ${fmtShort(parsedk(g.von))} bis ${fmtShort(parsedk(bis))}`:" · ganztags"}">${esc(g.titel)}</button>`;
+    }).join("");
+    wochen.push(`<div class="mn-woche" style="--bahnen:${GB.n}">${zellen}${balken}</div>`);
+  }
+  return `<div class="mn-kopf">
+      <div class="mn-titel">${MONATE[erster.getMonth()]} <span>${erster.getFullYear()}</span></div>
+      <div class="mn-status" id="mnStatus"></div></div>
+    <div class="mn-wt">${["Mo","Di","Mi","Do","Fr","Sa","So"].map(t=>`<span>${t}</span>`).join("")}</div>
+    <div class="mn-raster">${wochen.join("")}</div>`;
+}
+function monatWiring(V){
+  const raster=V.querySelector(".mn-raster"); if(!raster) return;
+  const zellen=[...raster.querySelectorAll("[data-mtag]")], status=V.querySelector("#mnStatus");
+  const malen=(a,b)=>{
+    const [x,y]=a&&b?(a<=b?[a,b]:[b,a]):["",""];
+    zellen.forEach(z=>{ const k=z.dataset.mtag;
+      z.classList.toggle("mark",!!x&&k>=x&&k<=y); z.classList.toggle("mark-a",k===x); z.classList.toggle("mark-e",k===y); });
+  };
+  const fertig=(a,b)=>{ const [von,bis]=a<=b?[a,b]:[b,a]; tpMark=null; R.planer(); ganzModal(null,von,bis); };
+  const zeigen=()=>{
+    raster.classList.toggle("markiert",!!tpMark);
+    malen(tpMark,tpMark);
+    status.innerHTML=tpMark?`<span><b>Ab ${fmtShort(parsedk(tpMark))}</b><i class="mn-hilfe"> · jetzt den letzten Tag antippen</i></span>
+      <button class="b b-sm" id="mnEin">Nur dieser Tag</button><button class="b b-sm" id="mnWeg">Abbrechen</button>`:"";
+    status.querySelector("#mnEin")?.addEventListener("click",()=>fertig(tpMark,tpMark));
+    status.querySelector("#mnWeg")?.addEventListener("click",()=>{ tpMark=null; zeigen(); });
+  };
+  let zug=null, schluckenBis=0;
+  const unterMaus=e=>{ const el=document.elementFromPoint(e.clientX,e.clientY); return el&&el.closest("[data-mtag]"); };
+  raster.onpointerdown=e=>{
+    if(e.pointerType==="touch"||e.button!==0) return;
+    const z=e.target.closest("[data-mtag]"); if(!z) return;
+    zug={von:z.dataset.mtag,bis:z.dataset.mtag};
+    raster.classList.add("markiert");    /* Balken lassen den Zug durch */
+    addEventListener("pointerup",()=>{
+      const r=zug; zug=null;
+      if(r.bis!==r.von){ schluckenBis=performance.now()+300; fertig(r.von,r.bis); }
+      else if(!tpMark) raster.classList.remove("markiert");
+    },{once:true});
+  };
+  raster.onpointermove=e=>{
+    if(e.pointerType==="touch") return;
+    const z=unterMaus(e);
+    if(zug){ if(z) zug.bis=z.dataset.mtag; if(zug.bis!==zug.von) malen(zug.von,zug.bis); }
+    else if(tpMark&&z) malen(tpMark,z.dataset.mtag);
+  };
+  raster.onclick=e=>{
+    if(performance.now()<schluckenBis) return;
+    const z=e.target.closest("[data-mtag]"); if(!z) return;
+    if(tpMark) fertig(tpMark,z.dataset.mtag); else { tpMark=z.dataset.mtag; zeigen(); }
+  };
+  zeigen();
 }
 function wochenRaster(mk,H0,H1){
   const mo=parsedk(mk), GB=ganzBahnen(mk), GH=Math.max(1,GB.n)*22+8;
@@ -8188,20 +8313,24 @@ R.planer=function(){
   const [H0,H1]=tplanStunden();
   const mk1=tpWoche, mk2=dk(addD(parsedk(tpWoche),7));
   const jetzt=wochenSchluessel(new Date());
+  const monatlich=tpModus==="monat";
 
   document.getElementById("v-planer").innerHTML=`
   <div class="p-head" style="margin-bottom:12px">
-    <div><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Planer</div>
-    <div class="p-note">Baustein wählen, dann eine Stunde antippen.
-      Angeheftetes (📌) steht in jeder Woche.</div></div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <button class="b b-i" id="tpwPrev" aria-label="Woche zurück">${ico("left")}</button>
+    <div style="flex:1 1 240px;min-width:0"><div style="font-family:var(--f-disp);font-size:var(--t-xl);font-weight:600">Planer</div>
+    <div class="p-note">${monatlich?`Längere Termine anstreichen: ersten und letzten Tag antippen.`
+      :`Baustein wählen, dann eine Stunde antippen.
+      Angeheftetes (📌) steht in jeder Woche.`}</div></div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <div class="seg" role="tablist" aria-label="Ansicht">${[["woche","Woche"],["monat","Monat"]].map(([m,l])=>
+        `<button role="tab" aria-selected="${tpModus===m}" class="${tpModus===m?"on":""}" data-tpm="${m}">${l}</button>`).join("")}</div>
+      <button class="b b-i" id="tpwPrev" aria-label="${monatlich?"Monat":"Woche"} zurück">${ico("left")}</button>
       <button class="b b-sm" id="tpGanz" title="Etwas für den ganzen Tag planen">${ico("plus")}Ganztägig</button>
-      ${mk1===jetzt?"":`<button class="b b-sm" id="tpwNow">Heute</button>`}
-      <button class="b b-i" id="tpwNext" aria-label="Woche vor">${ico("right")}</button></div>
+      ${(monatlich?tpMonat===monatsSchluessel(new Date()):mk1===jetzt)?"":`<button class="b b-sm" id="tpwNow">Heute</button>`}
+      <button class="b b-i" id="tpwNext" aria-label="${monatlich?"Monat":"Woche"} vor">${ico("right")}</button></div>
   </div>
 
-  <div class="pl-leiste">
+  ${monatlich?`<div class="p mn-p" style="padding:0;overflow:hidden">${monatRaster(tpMonat)}</div>`:`<div class="pl-leiste">
     <div class="chips pl-filter">
       <button class="chip${planFilter?"":" on"}" data-pf="">Alles</button>
       ${KATEGORIEN.map(([id,l])=>`<button class="chip${planFilter===id?" on":""}" data-pf="${id}">${l}</button>`).join("")}
@@ -8220,7 +8349,7 @@ R.planer=function(){
   <div class="tp-doppel">
     <div class="p" style="padding:0;overflow:hidden">${wochenTitel(mk1)}${wochenRaster(mk1,H0,H1)}</div>
     <div class="p" style="padding:0;overflow:hidden">${wochenTitel(mk2)}${wochenRaster(mk2,H0,H1)}</div>
-  </div>
+  </div>`}
 
   <div class="p td-quer" style="padding:0;overflow:hidden">
       <div style="padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -8269,9 +8398,25 @@ R.planer=function(){
   </div>`;
 
   const V=document.getElementById("v-planer");
-  V.querySelector("#tpwPrev").onclick=()=>{ tpWoche=dk(addD(parsedk(tpWoche),-7)); R.planer(); };
-  V.querySelector("#tpwNext").onclick=()=>{ tpWoche=dk(addD(parsedk(tpWoche),7)); R.planer(); };
-  V.querySelector("#tpwNow")?.addEventListener("click",()=>{ tpWoche=wochenSchluessel(new Date()); R.planer(); });
+  const blaettern=n=>{
+    if(monatlich){ const d=parsedk(tpMonat); tpMonat=dk(new Date(d.getFullYear(),d.getMonth()+n,1)); }
+    else tpWoche=dk(addD(parsedk(tpWoche),7*n));
+    R.planer();
+  };
+  V.querySelector("#tpwPrev").onclick=()=>blaettern(-1);
+  V.querySelector("#tpwNext").onclick=()=>blaettern(1);
+  V.querySelector("#tpwNow")?.addEventListener("click",()=>{ tpWoche=wochenSchluessel(new Date()); tpMonat=monatsSchluessel(new Date()); R.planer(); });
+  V.querySelectorAll("[data-tpm]").forEach(b=>b.onclick=()=>{
+    if(b.dataset.tpm===tpModus) return;
+    tpModus=b.dataset.tpm; tpMark=null;
+    try{ localStorage.setItem("nova_tp_modus",tpModus); }catch(e){}
+    /* Der Umschalter bleibt in der Zeit, die gerade zu sehen ist */
+    const wochenMonat=monatsSchluessel(addD(parsedk(tpWoche),3));
+    if(tpModus==="monat") tpMonat=wochenMonat;
+    else if(wochenMonat!==tpMonat) tpWoche=wochenSchluessel(tpMonat===monatsSchluessel(new Date())?new Date():parsedk(tpMonat));
+    R.planer();
+  });
+  monatWiring(V);
   V.querySelector("#tpGanz").onclick=()=>ganzModal(null,today());
   V.querySelectorAll("[data-ganzneu]").forEach(z=>z.onclick=e=>{ if(e.target.closest("[data-ganz]")) return; ganzModal(null,z.dataset.ganzneu); });
   V.querySelectorAll("[data-ganz]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); ganzModal(b.dataset.ganz); });
@@ -8285,6 +8430,7 @@ R.planer=function(){
     t.ondragstart=()=>{ plDragTodo=t.dataset.todo; plDragType=null; };
     t.onclick=e=>{
       if(e.target.closest("[data-tdone],[data-tdel],[data-tcyc],[data-tfok]")) return;
+      if(monatlich) return;              /* Stunden gibt es nur in der Wochenansicht */
       const id=t.dataset.todo;
       plDragTodo = plDragTodo===id ? null : id;
       if(plDragTodo){ plDragType=null;

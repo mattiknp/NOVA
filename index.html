@@ -2264,6 +2264,7 @@ button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
 .mn-bar.a{ --pl:3px; border-top-left-radius:6px; border-bottom-left-radius:6px; box-shadow:inset 3px 0 0 var(--gc); }
 .mn-bar.e{ --pr:3px; border-top-right-radius:6px; border-bottom-right-radius:6px; }
 @media (hover:hover){ .mn-bar:hover{ filter:brightness(1.25); } }
+.mn-bar.fest{ background:var(--gc); color:#0b1018; box-shadow:none; }
 .mn-raster.markiert .mn-bar{ pointer-events:none; opacity:.6; }
 @media (max-width:640px){
   .mn-kopf{ padding:10px 12px; min-height:92px; align-content:flex-start; }
@@ -7915,9 +7916,9 @@ const ganzAm=k=>(S.ganz||[]).filter(g=>g&&g.von&&g.von<=k&&(g.bis||g.von)>=k)
   .sort((a,b)=>a.von.localeCompare(b.von)||(a.titel||"").localeCompare(b.titel||""));
 /* Für die Woche jedem Eintrag eine feste Bahn geben, damit mehrtägige
    Einträge über die Spalten hinweg auf einer Linie liegen */
-function ganzBahnen(mk){
+function ganzBahnen(mk,feste=[]){
   const tage=[...Array(7)].map((_,i)=>dk(addD(parsedk(mk),i)));
-  const items=(S.ganz||[]).filter(g=>g&&g.von&&g.von<=tage[6]&&(g.bis||g.von)>=tage[0])
+  const items=[...feste,...(S.ganz||[]).filter(g=>g&&g.von&&g.von<=tage[6]&&(g.bis||g.von)>=tage[0])]
     .sort((a,b)=>a.von.localeCompare(b.von)||(b.bis||b.von).localeCompare(a.bis||a.von));
   const ende=[], bahn={};
   items.forEach(g=>{ let b=ende.findIndex(e=>e<g.von); if(b<0){ b=ende.length; ende.push(""); } ende[b]=g.bis||g.von; bahn[g.id]=b; });
@@ -7958,10 +7959,27 @@ function ganzModal(id,tag,bisTag){
    längere Termine anstreichen: ersten und letzten Tag antippen (geht
    auch über einen Monatswechsel) oder mit der Maus darüberziehen. Am
    Handy bleibt Wischen fürs Scrollen frei, deshalb dort nur Antippen. */
+/* Feste Termine kommen aus den Geschenken und dem Kalender, nicht aus
+   S.ganz: Sie wiederholen sich jedes Jahr und folgen der Personenliste. */
+function monatFeste(tage){
+  const jahre=[...new Set([tage[0].slice(0,4),tage[6].slice(0,4)])].map(Number), out=[];
+  const liegtDrin=(von,bis)=>von<=tage[6]&&bis>=tage[0];
+  jahre.forEach(j=>{
+    gsPersonen().forEach(p=>{ if(!p.tag||!p.monat) return;
+      const k=dk(new Date(j,p.monat-1,p.tag)); if(!liegtDrin(k,k)) return;
+      const alter=p.jahr?j-p.jahr:null;
+      out.push({id:`geb_${p.id}_${j}`,titel:`${p.name}${alter?` ${alter}`:""}`,von:k,bis:k,farbe:"var(--gift)",
+        fest:`${p.name}${alter?` wird ${alter}`:""} · Geburtstag`}); });
+    const von=`${j}-12-24`, bis=`${j}-12-26`;
+    if(liegtDrin(von,bis)) out.push({id:`xmas_${j}`,titel:"Weihnachten",von,bis,farbe:"#5ec47a",fest:"Weihnachten · 24. bis 26. Dezember"});
+  });
+  return out;
+}
 function monatRaster(mk){
   const erster=parsedk(mk), letzter=new Date(erster.getFullYear(),erster.getMonth()+1,0), h=today(), wochen=[];
   for(let mo=sow(erster); mo<=letzter; mo=addD(mo,7)){
-    const GB=ganzBahnen(dk(mo)), tage=GB.tage;
+    const tageW=[...Array(7)].map((_,i)=>dk(addD(mo,i))), feste=monatFeste(tageW);
+    const GB=ganzBahnen(dk(mo),feste), tage=GB.tage;
     const zellen=tage.map(k=>{
       const d=parsedk(k);
       const uni=(S.uniTermine||[]).filter(t=>t.datum===k).map(()=>"#e35d6a");
@@ -7971,11 +7989,11 @@ function monatRaster(mk){
         <span class="mn-zahl">${d.getDate()}</span>
         ${punkte.length?`<span class="mn-punkte">${punkte.slice(0,zuViel?4:5).map(c=>`<i style="background:${c}"></i>`).join("")}${zuViel?`<em>+${punkte.length-4}</em>`:""}</span>`:""}</button>`;
     }).join("");
-    const balken=(S.ganz||[]).filter(g=>g&&g.von&&g.von<=tage[6]&&(g.bis||g.von)>=tage[0]).map(g=>{
+    const balken=[...feste,...(S.ganz||[]).filter(g=>g&&g.von&&g.von<=tage[6]&&(g.bis||g.von)>=tage[0])].map(g=>{
       const bis=g.bis||g.von, an=g.von>=tage[0], en=bis<=tage[6];
       const i0=an?tage.indexOf(g.von):0, i1=en?tage.indexOf(bis):6;
-      return `<button class="mn-bar${an?" a":""}${en?" e":""}" data-ganz="${g.id}" style="--gc:${g.farbe||GANZ_FARBEN[0]};--i:${i0};--n:${i1-i0+1};--b:${GB.bahn[g.id]||0}"
-        title="${esc(g.titel)}${bis!==g.von?` · ${fmtShort(parsedk(g.von))} bis ${fmtShort(parsedk(bis))}`:" · ganztags"}">${esc(g.titel)}</button>`;
+      return `<button class="mn-bar${an?" a":""}${en?" e":""}${g.fest?" fest":""}" ${g.fest?"data-mfest":`data-ganz="${g.id}"`} style="--gc:${g.farbe||GANZ_FARBEN[0]};--i:${i0};--n:${i1-i0+1};--b:${GB.bahn[g.id]||0}"
+        title="${esc(g.fest||`${g.titel}${bis!==g.von?` · ${fmtShort(parsedk(g.von))} bis ${fmtShort(parsedk(bis))}`:" · ganztags"}`)}">${esc(g.titel)}</button>`;
     }).join("");
     wochen.push(`<div class="mn-woche" style="--bahnen:${GB.n}">${zellen}${balken}</div>`);
   }
@@ -7988,6 +8006,7 @@ function monatRaster(mk){
 function monatWiring(V){
   const raster=V.querySelector(".mn-raster"); if(!raster) return;
   const zellen=[...raster.querySelectorAll("[data-mtag]")], status=V.querySelector("#mnStatus");
+  raster.querySelectorAll("[data-mfest]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); go("geschenke"); });
   const malen=(a,b)=>{
     const [x,y]=a&&b?(a<=b?[a,b]:[b,a]):["",""];
     zellen.forEach(z=>{ const k=z.dataset.mtag;

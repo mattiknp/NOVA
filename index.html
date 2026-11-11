@@ -2814,6 +2814,25 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
 .goal.hit{ background:radial-gradient(130% 100% at 0% 0%, color-mix(in srgb, var(--gc) 22%, transparent), transparent 66%), var(--platte); }
 .gk-xmas{ background:radial-gradient(120% 140% at 0% 0%, rgba(242,197,94,.2), transparent 60%), linear-gradient(170deg, rgba(200,150,50,.14), rgba(120,90,30,.06)), var(--platte); }
 
+/* ── Klares Glas: einige Elemente sind wirklich durchsichtig ──
+   Kaum Weichzeichnung, der Hintergrund bleibt scharf; ein dunkler Schleier (brightness) und
+   eine kräftige Lichtkante machen daraus Glas statt einer leeren Fläche. */
+:root{
+  --klar:linear-gradient(135deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.03) 34%, rgba(255,255,255,0) 60%, rgba(255,255,255,.07) 100%);
+  --klar-filter:blur(1.5px) saturate(160%) brightness(.74);
+  --klar-kante:inset 1px 1px 0 rgba(255,255,255,.55), inset -1px -1px 0 rgba(255,255,255,.18), inset 0 0 0 1px rgba(255,255,255,.08), inset 0 0 22px rgba(255,255,255,.06);
+}
+#v-heute .hz-kopf, #v-heute .hd-ziele.voll .hz-kopf{ background:var(--klar); border-color:rgba(255,255,255,.3);
+  -webkit-backdrop-filter:var(--klar-filter); backdrop-filter:var(--klar-filter);
+  box-shadow:var(--klar-kante), 0 24px 50px -26px rgba(0,0,0,.6); }
+#v-heute .hd-ziele.voll .hz-kopf{ border-color:rgba(242,197,94,.55); box-shadow:var(--klar-kante), inset 0 0 30px rgba(242,197,94,.14), 0 24px 50px -26px rgba(0,0,0,.6); }
+#v-heute .hz-kopf *{ text-shadow:0 1px 10px rgba(0,0,0,.5); }
+.goal, .goal.hit{ background:radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--gc) 10%, transparent), transparent 60%), var(--klar);
+  -webkit-backdrop-filter:blur(2px) saturate(150%); backdrop-filter:blur(2px) saturate(150%); box-shadow:var(--klar-kante); border-color:rgba(255,255,255,.18); }
+.goal.hit{ border-color:color-mix(in srgb, var(--gc) 45%, rgba(255,255,255,.2)); }
+.gl-ort{ background:var(--klar); border-color:rgba(255,255,255,.32); -webkit-backdrop-filter:var(--klar-filter); backdrop-filter:var(--klar-filter); box-shadow:var(--klar-kante); text-shadow:0 1px 8px rgba(0,0,0,.5); }
+.topbar .b-i, .orb{ background:var(--klar); border-color:rgba(255,255,255,.26); -webkit-backdrop-filter:var(--klar-filter); backdrop-filter:var(--klar-filter); box-shadow:var(--klar-kante); }
+
 /* ── Handy ── */
 @media (max-width:860px){
   /* Ohne Fenster: jede Platte ist eigenes Glas */
@@ -9345,6 +9364,34 @@ if(imported) setTimeout(()=>toast(imported==="seed"
    jedes erfüllte Ziel ein Geschoss aufsetzt. Das Licht folgt der Uhrzeit.
    Gezeichnet wird nur, solange sich etwas bewegt. */
 
+/* ── Diagramme in 3D: jede Säule bekommt eine Seitenfläche und einen Deckel ──
+   Läuft für alle Balkendiagramme (auch ohne 3D-Hintergrund) und ändert nur die Zeichnung. */
+(function(){
+  const NS="http://www.w3.org/2000/svg";
+  function saeulen3d(svg){
+    if(svg.dataset.d3) return; const vb=svg.viewBox&&svg.viewBox.baseVal; if(!vb||vb.width<200) return;
+    const bars=[...svg.querySelectorAll("rect,path")].filter(el=>{ const f=el.getAttribute("fill");
+      if(!f||f==="none"||f==="transparent"||f.startsWith("url")) return false;
+      if(el.classList.contains("sb-feld")||el.hasAttribute("data-sln")||el.closest("[data-d3teil]")) return false;
+      let b; try{ b=el.getBBox(); }catch(e){ return false; } return b.width>2&&b.width<=60&&b.height>.5; });
+    if(!bars.length) return; svg.dataset.d3="1"; svg.style.overflow="visible";
+    bars.forEach(el=>{ const b=el.getBBox(), f=el.getAttribute("fill"), t=Math.min(10,Math.max(3,b.width*.34)), dy=t*.6;
+      const g=document.createElementNS(NS,"g"); g.setAttribute("data-d3teil",""); g.setAttribute("pointer-events","none");
+      const op=el.getAttribute("opacity"); if(op) g.setAttribute("opacity",op);
+      const flaeche=(pts,fill,deck)=>{ const p=document.createElementNS(NS,"polygon"); p.setAttribute("points",pts.map(q=>q.map(v=>v.toFixed(1)).join(",")).join(" "));
+        p.setAttribute("fill",fill); if(deck!=null) p.setAttribute("fill-opacity",deck); g.append(p); };
+      const {x,y,width:w,height:h}=b;
+      const seite=[[x+w,y],[x+w+t,y-dy],[x+w+t,y+h-dy],[x+w,y+h]], deckel=[[x,y],[x+t,y-dy],[x+w+t,y-dy],[x+w,y]];
+      flaeche(seite,f); flaeche(seite,"#000",.34); flaeche(deckel,f); flaeche(deckel,"#fff",.34);
+      el.parentNode.insertBefore(g,el); });
+  }
+  let plan=0; const alle=()=>{ plan=0; document.querySelectorAll(".views svg").forEach(saeulen3d); };
+  const bald=()=>{ if(!plan) plan=setTimeout(alle,60); };
+  const start=()=>{ const v=document.getElementById("views"); if(!v) return setTimeout(start,300);
+    new MutationObserver(bald).observe(v,{childList:true,subtree:true}); bald(); };
+  start();
+})();
+
 let AUS3D=false; try{ AUS3D=localStorage.getItem("nova_3d")==="aus"; }catch(e){}
 document.body.classList.toggle("gl-ohne",AUS3D);
 if(!AUS3D) start3d().catch(e=>{ console.warn("3D-Hintergrund nicht geladen:",e); document.body.classList.add("gl-ohne"); });
@@ -9643,7 +9690,8 @@ function baueWelt(name,C,cfg){
         const st=new THREE.Mesh(new THREE.CylinderGeometry(.2,.28,2.4*s,6),M("#8b6f52")); st.position.set(ox,1.2*s+.25,oz); grp.add(st); });
       return grp; };
     const geruestMat=new THREE.LineBasicMaterial({color:"#c9a35c",transparent:true,opacity:.9}), kranMat=M("#e2b04a",.6);
-    /* Ein Geschoss ganz in der Farbe des Ziels, mit einem hellen Fensterband */
+    /* Ein Geschoss in der Farbe des Hauses, mit einem hellen Fensterband */
+    const HAUSFARBE="#e7b24a";
     const fensterBand=new THREE.MeshStandardMaterial({color:"#fdfaf4",emissive:"#fff4dd",emissiveIntensity:.35,roughness:.4});
     const geschoss=(w,GH,farbe)=>{ const fg=new THREE.Group();
       const mat=new THREE.MeshStandardMaterial({color:farbe,emissive:farbe,emissiveIntensity:.22,roughness:.6});
@@ -9655,7 +9703,7 @@ function baueWelt(name,C,cfg){
       const w=LOT-2, GH=3.4;
       const plat=new THREE.Mesh(new THREE.BoxGeometry(w+.8,.4,w+.8),M("#cfcbc3",.95)); plat.position.y=.2; plat.receiveShadow=true; grp.add(plat);
       let y=.4; ziele.forEach((ok,i)=>{ if(!ok) return;
-        const fg=geschoss(w,GH,farben[i]); fg.position.y=y; grp.add(fg);
+        const fg=geschoss(w,GH,HAUSFARBE); fg.position.y=y; grp.add(fg);   /* ein Gebäude, eine Farbe: das heutige Haus wächst in Gold */
         if(neueGeschosse&&neueGeschosse.has(i)&&!RUHIG){ fg.scale.y=.02; anim.push({o:fg,t0:performance.now()+120*i,dauer:1800}); }
         y+=GH; });
       if(fertig){ const k=new THREE.Mesh(new THREE.BoxGeometry(w+.4,.4,w+.4),gold); k.position.y=y+.2; grp.add(k); return grp; }

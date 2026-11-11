@@ -2736,7 +2736,8 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
    Wie in visionOS: das Hauptfenster schaut gerade nach vorn, die Leiste links
    und die Widgets rechts sind zum Betrachter hin gedreht. */
 @media (min-width:861px){
-  .rail{ transform:perspective(2200px) rotateY(2.5deg); transform-origin:100% 50%;
+  /* Die Leiste dreht sich um ihre linke Kante zum Betrachter: rechts rückt sie etwas weg, wie ein schräg gestelltes Panel */
+  .rail{ transform:perspective(1600px) rotateY(9deg) translateX(-2px); transform-origin:0 50%;
     box-shadow:inset 1px 1px 0 rgba(255,255,255,.34), inset -1px -1px 0 rgba(255,255,255,.1), inset 0 0 0 1px rgba(255,255,255,.04),
       0 2px 6px rgba(0,0,0,.2), 30px 50px 90px -40px rgba(0,0,0,.8); }
   .stage::before{ box-shadow:0 2px 6px rgba(0,0,0,.2), 0 60px 110px -44px rgba(0,0,0,.85); }
@@ -2860,6 +2861,29 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
   :root{ --fenster:#262422; --platte:rgba(255,255,255,.06); --platte-solo:#2b2927; --dicht:#2e2c2a; }
   .rail{ background:#33302d; }
 }
+
+/* ── Kartenmodus: das Modell bildschirmfüllend erkunden ── */
+.gl-tipp{ position:absolute; top:10px; right:10px; padding:5px 11px; border-radius:var(--r-pill); font-size:10.5px; color:rgba(255,255,255,.85);
+  background:rgba(30,28,27,.42); border:1px solid rgba(255,255,255,.14); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  opacity:0; transition:opacity .25s ease; pointer-events:none; }
+@media (hover:hover){ .gl-fenster:hover .gl-tipp{ opacity:1; } }
+body.gl-erkunden .shell{ opacity:0; pointer-events:none; transform:scale(.985); }
+.shell{ transition:opacity .35s var(--aus), transform .45s var(--aus); }
+body.gl-erkunden #glasSchleier{ opacity:0 !important; }
+#glasErkunden{ position:fixed; inset:0; z-index:60; cursor:grab; touch-action:none; }
+#glasErkunden.zieht{ cursor:grabbing; }
+#glasErkunden[hidden]{ display:none; }
+.ge-leiste{ position:absolute; left:50%; bottom:calc(26px + env(safe-area-inset-bottom)); transform:translateX(-50%); display:flex; align-items:center; gap:14px;
+  padding:8px 8px 8px 18px; border-radius:var(--r-pill); color:var(--text); font-size:var(--t-sm); white-space:nowrap;
+  background:linear-gradient(128deg, rgba(255,255,255,.2), rgba(255,255,255,.05) 40%), rgba(26,25,24,.5); border:1px solid rgba(255,255,255,.16);
+  -webkit-backdrop-filter:blur(24px) saturate(170%); backdrop-filter:blur(24px) saturate(170%);
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.3), 0 20px 44px -18px rgba(0,0,0,.7); cursor:default; }
+.ge-leiste span{ color:var(--text-dim); }
+.ge-zu{ padding:8px 16px; border-radius:var(--r-pill); font-weight:500; color:#fff; background:linear-gradient(180deg, #6a9cff, var(--c1) 55%, var(--c1-deep));
+  border:1px solid rgba(160,195,255,.35); box-shadow:inset 0 1px 0 rgba(255,255,255,.35); }
+.ge-zu:active{ transform:scale(.97); }
+@media (max-width:640px){ .ge-leiste span{ display:none; } .ge-leiste{ padding:6px; } }
+@media (prefers-reduced-motion:reduce){ .shell{ transition:none; } }
 </style>
 <script type="importmap">
 { "imports": {
@@ -9466,13 +9490,21 @@ function baueWelt(name,C,cfg){
     if(f.sport==="tennis") tennis(f.p); });
   if(platzLinien.length) lege(band(platzLinien,.08,.04,.24),M("#fdfbf7",.8));
   if(netze.length){ const n=lege(mergeGeometries(netze),M("#f3efe9",.6)); n.castShadow=true; }
+  /* Zäune um die Sandplätze: Pfosten und obere Stange, fein wie Draht */
+  const zaun=[];
+  (C.sport||[]).forEach(f=>{ if(f.sport!=="tennis"||!f.p.every(drin)) return; const q=f.p[0][0]===f.p.at(-1)[0]&&f.p[0][1]===f.p.at(-1)[1]?f.p.slice(0,-1):f.p;
+    for(let i=0;i<q.length;i++){ const [x1,z1]=q[i], [x2,z2]=q[(i+1)%q.length], n=Math.max(1,Math.round(Math.hypot(x2-x1,z2-z1)/6));
+      zaun.push(x1,3.2,z1, x2,3.2,z2, x1,1.6,z1, x2,1.6,z2);
+      for(let k=0;k<=n;k++){ const x=x1+(x2-x1)*k/n, z=z1+(z2-z1)*k/n; zaun.push(x,.08,z, x,3.2,z); } } });
+  if(zaun.length){ const zg=new THREE.BufferGeometry(); zg.setAttribute("position",new THREE.Float32BufferAttribute(zaun,3));
+    scene.add(new THREE.LineSegments(zg,new THREE.LineBasicMaterial({color:"#6f6a62",transparent:true,opacity:.55}))); }
   /* Wasser wie Acrylglas, mit heller Uferkante */
   const wasserFl=(C.wasser||[]).filter(f=>f.p.every(drin));
   wasserFl.forEach(f=>lege(flach(f,.4),new THREE.MeshPhysicalMaterial({color:"#78b5d6",roughness:.08,clearcoat:1,clearcoatRoughness:.05})));
   if(wasserFl.length) lege(band(wasserFl.map(f=>[...f.p,f.p[0]]),.0,.5,1.1),M("#e4dccb",.9));   /* Wasser liegt über den Wiesenplatten */
 
   /* Gebäude: reine weiße Baukörper wie im Lagemodell, feine Kanten */
-  const wand=M("#f7f5f1",.92), dach=M("#f0ede7",.9);
+  const wand=M("#f7f5f1",.92), dach=M("#f0ede7",.9), dachSattel=new THREE.MeshStandardMaterial({color:"#e6e1d8",roughness:.85,side:THREE.DoubleSide});
   const kante=new THREE.LineBasicMaterial({color:"#9a9083",transparent:true,opacity:.16});
   const inPolyF=(x,z,p)=>{ let c=false; for(let i=0,j=p.length-1;i<p.length;j=i++){ const [xi,zi]=p[i],[xj,zj]=p[j];
     if(((zi>z)!==(zj>z))&&(x<(xj-xi)*(z-zi)/(zj-zi)+xi)) c=!c; } return c; };
@@ -9481,6 +9513,20 @@ function baueWelt(name,C,cfg){
     const geo=new THREE.ExtrudeGeometry(form(b),{depth:b.h,bevelEnabled:false}); geo.rotateX(-Math.PI/2);
     const m=new THREE.Mesh(geo,c?[M(c,.85),M(c,.85)]:[dach,wand]); m.castShadow=m.receiveShadow=true; scene.add(m);
     m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,25),kante));
+    /* Kleine Häuser bekommen ein Satteldach: First entlang der längsten Seite */
+    { const q=b.p[0][0]===b.p.at(-1)[0]&&b.p[0][1]===b.p.at(-1)[1]?b.p.slice(0,-1):b.p;
+      const bx=b.p.map(t=>t[0]), bz=b.p.map(t=>t[1]), fb=(Math.max(...bx)-Math.min(...bx))*(Math.max(...bz)-Math.min(...bz));
+      if(!c&&b.h<=13&&fb<420&&q.length>=4){ let u=[1,0], best=0;
+        for(let i=0;i<q.length;i++){ const a=q[i], e=q[(i+1)%q.length], l=Math.hypot(e[0]-a[0],e[1]-a[1]); if(l>best){ best=l; u=[(e[0]-a[0])/l,(e[1]-a[1])/l]; } }
+        const v=[-u[1],u[0]]; let s0=1e9,s1=-1e9,t0=1e9,t1=-1e9;
+        q.forEach(([x,z])=>{ const su=x*u[0]+z*u[1], tv=x*v[0]+z*v[1]; s0=Math.min(s0,su); s1=Math.max(s1,su); t0=Math.min(t0,tv); t1=Math.max(t1,tv); });
+        s0-=.35; s1+=.35; t0-=.35; t1+=.35; const tm=(t0+t1)/2, rh=Math.min(4.2,(t1-t0)*.42), y0=b.h;
+        const P=(su,tv,y)=>[u[0]*su+v[0]*tv, y, u[1]*su+v[1]*tv];
+        const A=P(s0,t0,y0), B=P(s1,t0,y0), C2=P(s1,t1,y0), D=P(s0,t1,y0), E=P(s0,tm,y0+rh), F=P(s1,tm,y0+rh);
+        const tri=[A,B,F, A,F,E, C2,D,E, C2,E,F, A,E,D, B,C2,F].flat();
+        const rg=new THREE.BufferGeometry(); rg.setAttribute("position",new THREE.Float32BufferAttribute(tri,3)); rg.computeVertexNormals();
+        const dachM=new THREE.Mesh(rg,dachSattel); dachM.castShadow=dachM.receiveShadow=true; m.add(dachM);
+        m.add(new THREE.LineSegments(new THREE.EdgesGeometry(rg,20),kante)); } }
     /* Technik auf dem Dach: ein bis drei Aufbauten auf großen Flachdächern, wie im echten Modell */
     const xs=b.p.map(q=>q[0]), zs=b.p.map(q=>q[1]), fl=(Math.max(...xs)-Math.min(...xs))*(Math.max(...zs)-Math.min(...zs));
     if(fl>420&&b.h>5){ const [sx,sz]=schwerpunkt(b.p), teile=[]; let r=(Math.abs(sx*13+sz*7)|0)%97;
@@ -9597,14 +9643,22 @@ function baueWelt(name,C,cfg){
         const st=new THREE.Mesh(new THREE.CylinderGeometry(.2,.28,2.4*s,6),M("#8b6f52")); st.position.set(ox,1.2*s+.25,oz); grp.add(st); });
       return grp; };
     const geruestMat=new THREE.LineBasicMaterial({color:"#c9a35c",transparent:true,opacity:.9}), kranMat=M("#e2b04a",.6);
-    const baustelle=(x,z,ziele,farben)=>{ const grp=new THREE.Group(); grp.position.set(x,.5,z);
+    /* Ein Geschoss ganz in der Farbe des Ziels, mit einem hellen Fensterband */
+    const fensterBand=new THREE.MeshStandardMaterial({color:"#fdfaf4",emissive:"#fff4dd",emissiveIntensity:.35,roughness:.4});
+    const geschoss=(w,GH,farbe)=>{ const fg=new THREE.Group();
+      const mat=new THREE.MeshStandardMaterial({color:farbe,emissive:farbe,emissiveIntensity:.22,roughness:.6});
+      const m=new THREE.Mesh(kiste(w,w,GH),[mat,mat]); m.castShadow=m.receiveShadow=true; fg.add(m);
+      m.add(new THREE.LineSegments(new THREE.EdgesGeometry(kiste(w,w,GH)),kante));
+      const band=new THREE.Mesh(new THREE.BoxGeometry(w+.12,GH*.32,w+.12),fensterBand); band.position.y=GH*.56; fg.add(band);
+      return fg; };
+    const baustelle=(x,z,ziele,farben,neueGeschosse,fertig)=>{ const grp=new THREE.Group(); grp.position.set(x,.5,z);
       const w=LOT-2, GH=3.4;
       const plat=new THREE.Mesh(new THREE.BoxGeometry(w+.8,.4,w+.8),M("#cfcbc3",.95)); plat.position.y=.2; plat.receiveShadow=true; grp.add(plat);
       let y=.4; ziele.forEach((ok,i)=>{ if(!ok) return;
-        const m=new THREE.Mesh(kiste(w,w,GH),[dachS,hausMat]); m.position.y=y; m.castShadow=m.receiveShadow=true; grp.add(m);
-        m.add(new THREE.LineSegments(new THREE.EdgesGeometry(kiste(w,w,GH)),kante));
-        const band=new THREE.Mesh(new THREE.BoxGeometry(w+.14,.75,w+.14),new THREE.MeshStandardMaterial({color:farben[i],emissive:farben[i],emissiveIntensity:.6,roughness:.5}));
-        band.position.y=y+GH*.55; grp.add(band); y+=GH; });
+        const fg=geschoss(w,GH,farben[i]); fg.position.y=y; grp.add(fg);
+        if(neueGeschosse&&neueGeschosse.has(i)&&!RUHIG){ fg.scale.y=.02; anim.push({o:fg,t0:performance.now()+120*i,dauer:1800}); }
+        y+=GH; });
+      if(fertig){ const k=new THREE.Mesh(new THREE.BoxGeometry(w+.4,.4,w+.4),gold); k.position.y=y+.2; grp.add(k); return grp; }
       /* Gerüst bis zur vollen Höhe von vier Geschossen */
       const gg=new THREE.BoxGeometry(w+1,4*GH,w+1); gg.translate(0,.4+2*GH,0); grp.add(new THREE.LineSegments(new THREE.EdgesGeometry(gg),geruestMat));
       for(let s=1;s<4;s++){ const r=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(w+1,w+1).rotateX(-Math.PI/2)),geruestMat); r.position.y=.4+s*GH; grp.add(r); }
@@ -9616,7 +9670,7 @@ function baueWelt(name,C,cfg){
       return grp; };
 
     const inhalt=new THREE.Group(); g.add(inhalt);
-    const anim=[], info={anzahl:0,bloecke:0}; let sig="", vorher=null;
+    const anim=[], info={anzahl:0,bloecke:0}; let sig="", vorher=null, letzteZiele=null;
     function setze(sd){
       if(!sd) return; const s=JSON.stringify(sd); if(s===sig) return; sig=s;
       inhalt.clear(); bloecke.forEach(b=>{ b.m.material=bauland; b.linien.visible=b.baeume.visible=true; });
@@ -9626,17 +9680,22 @@ function baueWelt(name,C,cfg){
       let gesamt=runs.reduce((a,r)=>a+noetig(r),0);
       while(gesamt>bloecke.length&&runs.length>1) gesamt-=noetig(runs.shift());   /* passt nicht alles drauf: die ältesten Blöcke weichen */
       const neuK=sd.heuteOk&&sd.runs.length?sd.runs.at(-1).at(-1).k:null;
+      /* Welche Geschosse sind seit dem letzten Stand dazugekommen? Nur die wachsen sichtbar nach oben */
+      const jetztZ=sd.heuteOk?[true,true,true,true]:sd.ziele, neuG=new Set();
+      if(letzteZiele) jetztZ.forEach((v,i)=>{ if(v&&!letzteZiele[i]) neuG.add(i); });
       let bi=0, anzahl=0; info.bloecke=0;
       runs.forEach(r=>{ for(let i=0;i<r.length;i++){ const slot=i%PRO; if(slot===0&&i>0) bi++; if(bi>=bloecke.length) return;
           const b=bloecke[bi]; b.m.material=pflaster; b.linien.visible=b.baeume.visible=false; info.bloecke=Math.max(info.bloecke,bi+1);
           const col=Math.floor(slot/ZEILEN), row=slot%ZEILEN;
           const x=b.x-BX/2+RAND+LOT/2+col*LOT, z=b.z-BZ/2+RAND+LOT/2+row*LOT, e=r[i];
-          const o=e.typ==="haus"?hausFuer(e,x,z,e.k===neuK):e.typ==="park"?parkFuer(x,z):baustelle(x,z,sd.ziele,sd.farben);
+          const heuteFertig=e.typ==="haus"&&e.k===neuK;
+          const o=heuteFertig?baustelle(x,z,[true,true,true,true],sd.farben,neuG,true)
+            :e.typ==="haus"?hausFuer(e,x,z,false):e.typ==="park"?parkFuer(x,z):baustelle(x,z,sd.ziele,sd.farben,neuG,false);
           if(e.typ==="haus") anzahl++;
           inhalt.add(o); info.letzt=[sc.x+x,sc.z+z];
-          if(vorher&&!vorher.has(e.k+"|"+(e.typ==="site"?sd.ziele.join(""):""))&&!RUHIG){ o.scale.y=.02; anim.push({o,t0:performance.now()}); }
+          if(vorher&&!vorher.has(e.k)&&e.typ!=="site"&&!heuteFertig&&!RUHIG){ o.scale.y=.02; anim.push({o,t0:performance.now()}); }
         } bi++; });
-      vorher=new Set(runs.flat().map(e=>e.k+"|"+(e.typ==="site"?sd.ziele.join(""):"")));
+      vorher=new Set(runs.flat().map(e=>e.k)); letzteZiele=sd.heuteOk?[true,true,true,true]:sd.ziele.slice();
       info.anzahl=anzahl; renderer.shadowMap.needsUpdate=true;
     }
     return {g,setze,anim,info,hausMat};
@@ -9648,7 +9707,7 @@ function baueWelt(name,C,cfg){
   return {name,scene,wachsen,himmel,sonne,lampe,schilder:[],lichter,stadt,gewachsen:RUHIG?1:0};
 }
 
-const TS={uniforms:{tDiffuse:{value:null},delta:{value:new THREE.Vector2()},staerke:{value:2.4},mitte:{value:.5}},
+const TS={uniforms:{tDiffuse:{value:null},delta:{value:new THREE.Vector2()},staerke:{value:3.1},mitte:{value:.5}},
   vertexShader:"varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }",
   fragmentShader:"uniform sampler2D tDiffuse; uniform vec2 delta; uniform float staerke, mitte; varying vec2 vUv; void main(){ float d=abs(vUv.y-mitte); float s=clamp((d-.13)/.36,0.,1.)*staerke; vec4 c=vec4(0.); float t=0.; for(float i=-6.;i<=6.;i++){ float w=1.-abs(i)/7.; c+=texture2D(tDiffuse,vUv+delta*i*s)*w; t+=w; } gl_FragColor=c/t; }"};
 const comp=new Z.EffectComposer(renderer), bildPass=new Z.RenderPass(new THREE.Scene(),kam); comp.addPass(bildPass);
@@ -9690,7 +9749,7 @@ function stelle(){
   kam.position.set(b.ziel.x+Math.sin(b.az)*s*b.d, Math.cos(b.neig)*b.d, b.ziel.z+Math.cos(b.az)*s*b.d);
   kam.up.set(0,1,0); kam.lookAt(b.ziel);
   /* Das Ziel sitzt in der Mitte des Inhalts (neben dem Dock) und, fürs Kartenfenster, über der Bildmitte */
-  kam.setViewOffset(w,h,-railBreite()/2,b.hoch*h,w,h);
+  kam.setViewOffset(w,h,erkunden?0:-railBreite()/2,b.hoch*h,w,h);
   ts.forEach(p=>p.uniforms.mitte.value=.5+b.hoch);
   if(aktiv){ const n=b.nacht; aktiv.sonne.intensity=2.7-n*2.35; aktiv.sonne.color.setHex(0xffe0bd).lerp(mond,n);
     aktiv.himmel.intensity=1.15-n*.8; aktiv.lampe.intensity=n*4.2; if(aktiv.stadt) aktiv.stadt.hausMat.emissiveIntensity=Math.max(0,n-.15)*1.3; renderer.toneMappingExposure=.95; }
@@ -9710,7 +9769,7 @@ function setzeSchilder(){
     s.el.style.transform=`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-100%)`; });
 }
 
-let bis=0, laeuft=false, letztes=0, langsam=0, stufe=0, stabZeit=0;
+let bis=0, laeuft=false, letztes=0, langsam=0, stufe=0, stabZeit=0, erkunden=false;
 function fordere(ms){ letztes=0; bis=Math.max(bis,performance.now()+ms); if(!laeuft){ laeuft=true; requestAnimationFrame(bild); } }
 function bild(jetzt){
   if(flugDauer){ const p=Math.min(1,(jetzt-flugStart)/flugDauer), e=weich(p);
@@ -9729,7 +9788,7 @@ function bild(jetzt){
       if(Math.abs(d)<.003){ if(li.ist!==li.soll){ li.ist=li.soll; bewegt=true; } } else { li.ist+=d*zug*.7; bewegt=true; }
       li.ebene.constant=(li.boden||0)+li.ist*li.h+.02; li.huelle.visible=li.ist>.004&&aktiv.gewachsen>=1; }));   /* erst nach dem Aufbau, sonst wäre das wachsende Haus ganz farbig */
     if(aktiv.stadt&&aktiv.stadt.anim.length){ const A=aktiv.stadt.anim;
-      for(let i=A.length-1;i>=0;i--){ const p=Math.min(1,(jetzt-A[i].t0)/1100), e=1-Math.pow(1-p,3)+Math.sin(p*Math.PI)*.06;
+      for(let i=A.length-1;i>=0;i--){ const p=Math.max(0,Math.min(1,(jetzt-A[i].t0)/(A[i].dauer||1100))), e=1-Math.pow(1-p,3)+Math.sin(p*Math.PI)*.06;
         A[i].o.scale.y=Math.max(.02,e); if(p>=1){ A[i].o.scale.y=1; A.splice(i,1); } }
       renderer.shadowMap.needsUpdate=true; bewegt=true; }
     if(bewegt) bis=Math.max(bis,jetzt+120); else stabZeit=0; }
@@ -9767,7 +9826,7 @@ function fenster(ansicht){
   const v=document.getElementById("v-"+ansicht), art=blickFuer(ansicht).fenster; if(!v||!art) return;
   if(!v.firstElementChild||!v.firstElementChild.classList.contains("gl-fenster")){
     const f=document.createElement("div"); f.className="gl-fenster"+(art==="kurz"?" kurz":"");
-    f.innerHTML=`${ORTE[ansicht]?`<span class="gl-ort">${ORTE[ansicht]}</span>`:""}<span class="gl-quelle">Kartendaten © OpenStreetMap-Mitwirkende</span>`;
+    f.innerHTML=`${ORTE[ansicht]?`<span class="gl-ort">${ORTE[ansicht]}</span>`:""}<span class="gl-tipp">Doppelklick: Karte erkunden</span><span class="gl-quelle">Kartendaten © OpenStreetMap-Mitwirkende</span>`;
     v.prepend(f); ziehbar(f);
   }
   bestuecke();
@@ -9790,8 +9849,47 @@ function ziehbar(f){
     fordere(80); });
   const ende=e=>{ if(st&&e.pointerId===st.id){ st=null; f.classList.remove("zieht"); } };
   f.addEventListener("pointerup",ende); f.addEventListener("pointercancel",ende);
-  f.addEventListener("dblclick",()=>fliege(blickFuer(VIEW),900));
+  f.addEventListener("dblclick",()=>erkundenAn());
+  /* Trackpad-Pinch (kommt als Strg+Mausrad): direkt im Fenster zoomen; normales Scrollen bleibt der Seite */
+  f.addEventListener("wheel",e=>{ if(!e.ctrlKey||!aktiv) return; e.preventDefault(); flugDauer=0;
+    jetztB.d=Math.max(120,Math.min(1500,jetztB.d*Math.exp(e.deltaY*.012))); fordere(80); },{passive:false});
 }
+
+/* ── Kartenmodus: Doppelklick auf die Karte öffnet das Modell bildschirmfüllend ──
+   Ziehen verschiebt, mit Umschalt oder rechter Maustaste dreht und neigt es, Mausrad oder Pinch zoomt.
+   Mit zwei Fingern: auseinander zoomt, gemeinsam ziehen verschiebt. Fertig, Esc oder Doppelklick führt zurück. */
+const erk=document.createElement("div"); erk.id="glasErkunden"; erk.hidden=true;
+erk.innerHTML=`<div class="ge-leiste"><span>Ziehen verschiebt · Umschalt oder rechte Maustaste dreht · Scrollen zoomt</span><button type="button" class="ge-zu">Fertig</button></div>`;
+document.body.append(erk);
+const fliegeZu=(z,ms)=>{ ZAHLEN.forEach(k=>vonB[k]=jetztB[k]); vonB.ziel=jetztB.ziel.clone(); Object.assign(zuB,z); zuB.ziel=z.ziel||jetztB.ziel.clone(); flugStart=performance.now(); flugDauer=ms; fordere(ms+80); };
+function erkundenAn(){ if(!aktiv||erkunden) return; erkunden=true; document.body.classList.add("gl-erkunden"); erk.hidden=false;
+  fliegeZu({az:jetztB.az,neig:Math.min(jetztB.neig,1.15),d:jetztB.d*1.25,nacht:jetztB.nacht,hoch:0},800); }
+function erkundenAus(zurueck=true){ if(!erkunden) return; erkunden=false; document.body.classList.remove("gl-erkunden"); erk.hidden=true;
+  if(zurueck) fliege(blickFuer(VIEW),900); }
+erk.querySelector(".ge-zu").addEventListener("click",e=>{ e.stopPropagation(); erkundenAus(); });
+erk.querySelector(".ge-leiste").addEventListener("pointerdown",e=>e.stopPropagation());
+addEventListener("keydown",e=>{ if(e.key==="Escape"&&erkunden) erkundenAus(); });
+erk.addEventListener("contextmenu",e=>e.preventDefault());
+erk.addEventListener("dblclick",()=>erkundenAus());
+{ const zeiger=new Map(); let st=null;
+  const begrenze=()=>{ const cfg=aktiv&&WELTEN[aktiv.name]; if(!cfg) return; const [mx,mz]=cfg.mitte, [pw,pd]=cfg.platte;
+    jetztB.ziel.x=Math.max(mx-pw/2-60,Math.min(mx+pw/2+60,jetztB.ziel.x)); jetztB.ziel.z=Math.max(mz-pd/2-60,Math.min(mz+pd/2+200,jetztB.ziel.z));
+    jetztB.d=Math.max(90,Math.min(1600,jetztB.d)); jetztB.neig=Math.max(.2,Math.min(1.42,jetztB.neig)); };
+  const start=()=>{ const ps=[...zeiger.values()]; const mx=ps.reduce((a,p)=>a+p.x,0)/ps.length, my=ps.reduce((a,p)=>a+p.y,0)/ps.length;
+    st={x:mx,y:my,abst:ps.length>1?Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y):0,az:jetztB.az,neig:jetztB.neig,d:jetztB.d,zx:jetztB.ziel.x,zz:jetztB.ziel.z,
+      dreh:ps.length===1&&ps[0].dreh}; };
+  erk.addEventListener("pointerdown",e=>{ flugDauer=0; zeiger.set(e.pointerId,{x:e.clientX,y:e.clientY,dreh:e.shiftKey||e.altKey||e.button===2});
+    try{ erk.setPointerCapture(e.pointerId); }catch(_){} erk.classList.add("zieht"); start(); });
+  erk.addEventListener("pointermove",e=>{ const z=zeiger.get(e.pointerId); if(!z||!st) return; z.x=e.clientX; z.y=e.clientY;
+    const ps=[...zeiger.values()], mx=ps.reduce((a,p)=>a+p.x,0)/ps.length, my=ps.reduce((a,p)=>a+p.y,0)/ps.length, dx=mx-st.x, dy=my-st.y;
+    if(st.dreh){ jetztB.az=st.az-dx*.006; jetztB.neig=st.neig-dy*.004; }
+    else { if(ps.length>1&&st.abst) jetztB.d=st.d*st.abst/Math.max(10,Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y));
+      const k=.54*jetztB.d/innerHeight, s=Math.sin(jetztB.az), c=Math.cos(jetztB.az);
+      jetztB.ziel.set(st.zx-c*dx*k-s*dy*k*1.5,0,st.zz+s*dx*k-c*dy*k*1.5); }
+    begrenze(); fordere(80); });
+  const ende=e=>{ zeiger.delete(e.pointerId); if(zeiger.size) start(); else { st=null; erk.classList.remove("zieht"); } };
+  erk.addEventListener("pointerup",ende); erk.addEventListener("pointercancel",ende);
+  erk.addEventListener("wheel",e=>{ e.preventDefault(); flugDauer=0; jetztB.d*=Math.exp(e.deltaY*(e.ctrlKey?.012:.0016)); begrenze(); fordere(80); },{passive:false}); }
 /* Stäbe und Schilder der gezeigten Welt auf den Stand von NOVA bringen. Nur die Stäbe der offenen Ansicht stehen, die anderen sinken ein. */
 function bestuecke(){
   if(!aktiv) return; const d=daten();
@@ -9827,6 +9925,7 @@ function einblenden(){
     {duration:480,delay:i*42,easing:AUS,fill:"backwards"}));
 }
 function wechsel(v){
+  erkundenAus(false);
   const b=blickFuer(v), vorher=aktiv;
   zustand(); bestuecke();
   zeigeWelt(b.welt).then(()=>{

@@ -2326,22 +2326,25 @@ button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
   --aus:cubic-bezier(.23,1,.32,1);
 
   /* Materialien */
+  /* Liquid Glass: klar statt grau. Der Hintergrund kommt gesättigt durch, eine Glanzfläche liegt schräg darüber,
+     die Kanten fangen Licht. Nur so viel Tönung, dass weiße Schrift auch über dem hellen Modell steht. */
   --fenster:
-    linear-gradient(165deg, rgba(255,255,255,.1) 0%, rgba(255,255,255,.035) 38%, rgba(255,255,255,.02) 70%, rgba(255,255,255,.05) 100%),
-    rgba(26,24,23,.62);
-  --platte:linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.04));
-  --platte-solo:linear-gradient(170deg, rgba(255,255,255,.1), rgba(255,255,255,.03) 60%), rgba(34,32,30,.6);
+    linear-gradient(128deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.05) 18%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 72%, rgba(255,255,255,.07) 100%),
+    radial-gradient(120% 70% at 85% 110%, rgba(255,255,255,.05), transparent 60%),
+    rgba(22,21,20,.4);
+  --platte:linear-gradient(165deg, rgba(255,255,255,.11), rgba(255,255,255,.045) 55%, rgba(255,255,255,.06)), rgba(18,17,16,.12);
+  --platte-solo:linear-gradient(128deg, rgba(255,255,255,.16), rgba(255,255,255,.04) 40%, rgba(255,255,255,.06)), rgba(24,23,22,.42);
   --dicht:linear-gradient(170deg, rgba(255,255,255,.1), rgba(255,255,255,.03) 60%), rgba(38,36,34,.9);
   --knopf:rgba(255,255,255,.08);
   --knopf-hover:rgba(255,255,255,.13);
   --mulde:rgba(0,0,0,.2);
-  --kante:inset 0 1px 0 rgba(255,255,255,.09);
-  --kante-hell:inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.035);
-  --unscharf:blur(56px) saturate(135%) brightness(.72);
-  --unscharf-leicht:blur(22px) saturate(150%);
+  --kante:inset 1px 1px 0 rgba(255,255,255,.16), inset -1px -1px 0 rgba(255,255,255,.05);
+  --kante-hell:inset 1px 1px 0 rgba(255,255,255,.3), inset -1px -1px 0 rgba(255,255,255,.08), inset 0 0 0 1px rgba(255,255,255,.04);
+  --unscharf:blur(30px) saturate(190%) brightness(.84);
+  --unscharf-leicht:blur(18px) saturate(170%);
   --sh-2:0 18px 40px -26px rgba(0,0,0,.55);
   --sh-3:0 2px 6px rgba(0,0,0,.18), 0 40px 90px -36px rgba(0,0,0,.75);
-  --rand:rgba(255,255,255,.09);
+  --rand:rgba(255,255,255,.11);
 }
 body{ background:var(--void); font-variant-numeric:tabular-nums; letter-spacing:-.004em; }
 #aurora, .grain{ display:none; }
@@ -2489,7 +2492,7 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
 .rail{
   margin:14px 0 14px 14px; padding:22px 14px 16px; border-radius:36px; gap:3px;
   border:1px solid rgba(255,255,255,.12);
-  background:linear-gradient(170deg, rgba(255,255,255,.14), rgba(255,255,255,.06) 45%, rgba(255,255,255,.08)), rgba(44,41,39,.55);
+  background:linear-gradient(128deg, rgba(255,255,255,.2), rgba(255,255,255,.06) 30%, rgba(255,255,255,.03) 60%, rgba(255,255,255,.09)), rgba(30,28,27,.36);
   -webkit-backdrop-filter:var(--unscharf); backdrop-filter:var(--unscharf);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(255,255,255,.03), var(--sh-3);
   scrollbar-width:none;
@@ -2533,8 +2536,8 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
      bleibt sie oben offen, damit das Modell klar zu sehen ist; beim Scrollen
      schließt sie sich weich. */
   /* Rahmen und Lichtkante liegen auf der Bühne selbst: sie bleiben auch über dem offenen Kartenfenster sichtbar */
-  .stage{ position:relative; margin:14px 14px 22px 12px; border-radius:34px;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.13), inset 0 1px 0 rgba(255,255,255,.2); }
+  .stage{ position:relative; margin:24px 30px 34px 22px; border-radius:34px;
+    box-shadow:inset 1px 1px 0 rgba(255,255,255,.34), inset -1px -1px 0 rgba(255,255,255,.1), inset 0 0 0 1px rgba(255,255,255,.07); }
   .stage::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; border-radius:inherit;
     background:var(--fenster);
     -webkit-backdrop-filter:var(--unscharf); backdrop-filter:var(--unscharf);
@@ -2542,7 +2545,9 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
     --fen:0px; --fade:0px;
     -webkit-mask-image:linear-gradient(180deg, transparent calc(var(--fen) - 1px), #000 calc(var(--fen) + var(--fade)));
     mask-image:linear-gradient(180deg, transparent calc(var(--fen) - 1px), #000 calc(var(--fen) + var(--fade)));
-    transition:--fen .6s var(--aus), --fade .6s var(--aus); }
+    transition:--fen .6s var(--aus), --fade .6s var(--aus), opacity .45s var(--aus); }
+  /* Beim Wechsel der Ansicht wird das Glas für einen Moment dünn: die Stadt dahinter scheint durch */
+  body.gl-wechsel .stage::before{ opacity:.45; transition:opacity .2s ease-out; }
   body.gl-karte .stage::before{ --fen:calc(clamp(240px,40vh,400px) + 40px); --fade:110px; }
   body.gl-karte:has(.view.on > .gl-fenster.kurz) .stage::before{ --fen:calc(clamp(190px,27vh,270px) + 44px); --fade:110px; }
   body.gl-ohne .stage::before{ --fen:0px; --fade:0px; }
@@ -2732,8 +2737,8 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
    und die Widgets rechts sind zum Betrachter hin gedreht. */
 @media (min-width:861px){
   .rail{ transform:perspective(2200px) rotateY(2.5deg); transform-origin:100% 50%;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px rgba(255,255,255,.035),
-      0 2px 6px rgba(0,0,0,.2), 30px 50px 90px -40px rgba(0,0,0,.85); }
+    box-shadow:inset 1px 1px 0 rgba(255,255,255,.34), inset -1px -1px 0 rgba(255,255,255,.1), inset 0 0 0 1px rgba(255,255,255,.04),
+      0 2px 6px rgba(0,0,0,.2), 30px 50px 90px -40px rgba(0,0,0,.8); }
   .stage::before{ box-shadow:0 2px 6px rgba(0,0,0,.2), 0 60px 110px -44px rgba(0,0,0,.85); }
 }
 @media (min-width:861px) and (prefers-reduced-motion:reduce){ .rail{ transform:none; } }
@@ -9438,7 +9443,9 @@ function baueWelt(name,C,cfg){
     t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); return t; })();
   const wiese=new THREE.MeshStandardMaterial({color:"#b7cc96",map:koernung,roughness:1});
   const gruenFl=C.gruen.filter(f=>f.p.every(drin));
-  gruenFl.forEach(f=>lege(flach(f,.02),f.typ==="sand"?M("#e8dcc2"):wiese));
+  /* Wiesen liegen als dünne Platten auf: ihre Kante fängt Licht und Kontaktschatten, das gibt dem Modell Tiefe */
+  const platteAus=(f,h,y=0)=>{ const g=new THREE.ExtrudeGeometry(form(f),{depth:h,bevelEnabled:false}); g.rotateX(-Math.PI/2); g.translate(0,y,0); return g; };
+  gruenFl.forEach(f=>{ const m=lege(f.typ==="sand"?flach(f,.02):platteAus(f,.32),f.typ==="sand"?M("#e8dcc2"):wiese); });
   lege(band(C.wege.filter(w=>w.b>=5),0,.05),M("#c8c6c0",.95));
   lege(band(C.wege.filter(w=>w.b<5),0,.04),M("#dfdbd3"));
   lege(band(C.bahn,.03,.14,.5),M("#a9a59c"));
@@ -9459,16 +9466,28 @@ function baueWelt(name,C,cfg){
     if(f.sport==="tennis") tennis(f.p); });
   if(platzLinien.length) lege(band(platzLinien,.08,.04,.24),M("#fdfbf7",.8));
   if(netze.length){ const n=lege(mergeGeometries(netze),M("#f3efe9",.6)); n.castShadow=true; }
-  (C.wasser||[]).forEach(f=>{ if(f.p.every(drin)) lege(flach(f,.05),new THREE.MeshPhysicalMaterial({color:"#7db9d8",roughness:.1,clearcoat:1,clearcoatRoughness:.06})); });   /* Wasser wie Acrylglas */
+  /* Wasser wie Acrylglas, mit heller Uferkante */
+  const wasserFl=(C.wasser||[]).filter(f=>f.p.every(drin));
+  wasserFl.forEach(f=>lege(flach(f,.4),new THREE.MeshPhysicalMaterial({color:"#78b5d6",roughness:.08,clearcoat:1,clearcoatRoughness:.05})));
+  if(wasserFl.length) lege(band(wasserFl.map(f=>[...f.p,f.p[0]]),.0,.5,1.1),M("#e4dccb",.9));   /* Wasser liegt über den Wiesenplatten */
 
   /* Gebäude: reine weiße Baukörper wie im Lagemodell, feine Kanten */
   const wand=M("#f7f5f1",.92), dach=M("#f0ede7",.9);
   const kante=new THREE.LineBasicMaterial({color:"#9a9083",transparent:true,opacity:.16});
+  const inPolyF=(x,z,p)=>{ let c=false; for(let i=0,j=p.length-1;i<p.length;j=i++){ const [xi,zi]=p[i],[xj,zj]=p[j];
+    if(((zi>z)!==(zj>z))&&(x<(xj-xi)*(z-zi)/(zj-zi)+xi)) c=!c; } return c; };
   const wachsen=[], haus={};
   C.gebaeude.forEach(b=>{ if(!b.p.every(drin)) return; const c=cfg.farbe(b);
     const geo=new THREE.ExtrudeGeometry(form(b),{depth:b.h,bevelEnabled:false}); geo.rotateX(-Math.PI/2);
     const m=new THREE.Mesh(geo,c?[M(c,.85),M(c,.85)]:[dach,wand]); m.castShadow=m.receiveShadow=true; scene.add(m);
     m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,25),kante));
+    /* Technik auf dem Dach: ein bis drei Aufbauten auf großen Flachdächern, wie im echten Modell */
+    const xs=b.p.map(q=>q[0]), zs=b.p.map(q=>q[1]), fl=(Math.max(...xs)-Math.min(...xs))*(Math.max(...zs)-Math.min(...zs));
+    if(fl>420&&b.h>5){ const [sx,sz]=schwerpunkt(b.p), teile=[]; let r=(Math.abs(sx*13+sz*7)|0)%97;
+      for(let i=0;i<3;i++){ r=(r*31+17)%97; const ox=((r%10)/10-.5)*Math.min(18,Math.sqrt(fl)*.5), oz=(((r/10|0)%10)/10-.5)*Math.min(18,Math.sqrt(fl)*.5);
+        if(!inPolyF(sx+ox,sz+oz,b.p)) continue; const w=2.5+(r%4), d=2.5+((r>>2)%3), h=1.4+(r%3)*.6;
+        const gb=new THREE.BoxGeometry(w,h,d); gb.translate(sx+ox,b.h+h/2,sz+oz); teile.push(gb); if(fl<1500) break; }
+      if(teile.length){ const t=new THREE.Mesh(mergeGeometries(teile),c?M(c,.85):dach); t.castShadow=true; t.receiveShadow=true; t.position.y=0; m.add(t); } }
     if(b.ref) haus[b.ref]={m,geo,h:b.h};
     const [x,z]=schwerpunkt(b.p); wachsen.push({m,v:Math.hypot(x-cx,z-cz)}); if(!RUHIG) m.scale.y=.001; });
 
@@ -9476,22 +9495,30 @@ function baueWelt(name,C,cfg){
   const gruene=["#6f9a4c","#7fa858","#5f8a42","#8fb466","#739d50"];
   const inPoly=(x,z,p)=>{ let c=false; for(let i=0,j=p.length-1;i<p.length;j=i++){ const [xi,zi]=p[i],[xj,zj]=p[j];
     if(((zi>z)!==(zj>z))&&(x<(xj-xi)*(z-zi)/(zj-zi)+xi)) c=!c; } return c; };
-  const baumOrte=C.baeume.filter(drin).map(([x,z])=>[x,z,1]);
+  /* Wo kein Baum stehen darf: Wasser, Gebäude, Sportflächen */
+  const sperren=[...wasserFl,...C.gebaeude,...(C.sport||[])].map(f=>{ const xs=f.p.map(q=>q[0]), zs=f.p.map(q=>q[1]);
+    return {p:f.p,x0:Math.min(...xs)-1.5,x1:Math.max(...xs)+1.5,z0:Math.min(...zs)-1.5,z1:Math.max(...zs)+1.5}; });
+  const frei=(x,z)=>!sperren.some(q=>x>=q.x0&&x<=q.x1&&z>=q.z0&&z<=q.z1&&inPoly(x,z,q.p));
+  const baumOrte=C.baeume.filter(drin).filter(([x,z])=>frei(x,z)).map(([x,z])=>[x,z,1]);
   let saat=7; const rnd=()=>(saat=(saat*16807)%2147483647)/2147483647;
   gruenFl.forEach(f=>{ if(f.typ==="sand"||baumOrte.length>1500) return;
     const xs=f.p.map(q=>q[0]), zs=f.p.map(q=>q[1]), x0=Math.min(...xs), x1=Math.max(...xs), z0=Math.min(...zs), z1=Math.max(...zs);
     const n=Math.min(70,Math.floor((x1-x0)*(z1-z0)/240));
-    for(let i=0;i<n;i++){ const x=x0+rnd()*(x1-x0), z=z0+rnd()*(z1-z0); if(rnd()<.72&&inPoly(x,z,f.p)&&drin([x,z])) baumOrte.push([x,z,.65+rnd()*.6]); } });
+    for(let i=0;i<n;i++){ const x=x0+rnd()*(x1-x0), z=z0+rnd()*(z1-z0); if(rnd()<.72&&inPoly(x,z,f.p)&&drin([x,z])&&frei(x,z)) baumOrte.push([x,z,.65+rnd()*.6]); } });
+  /* Jeder vierte Baum ist ein Nadelbaum: schlanker Kegel, dunkleres Grün */
   const mx=new THREE.Matrix4(), farbe=new THREE.Color();
-  const kronen=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(3.2,2),M("#ffffff",.9),baumOrte.length);
+  const laub=baumOrte.filter((_,i)=>i%4!==3), nadel=baumOrte.filter((_,i)=>i%4===3);
+  const kronen=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(3.2,2),M("#ffffff",.9),laub.length);
+  const kegel=new THREE.InstancedMesh(new THREE.ConeGeometry(2.6,9,8),M("#ffffff",.9),nadel.length);
   const staemme=new THREE.InstancedMesh(new THREE.CylinderGeometry(.3,.42,1,6),M("#8b6f52"),baumOrte.length);
-  baumOrte.forEach(([x,z,s],i)=>{ const f=(.8+((i*37)%10)/25)*s; mx.makeScale(f,f*1.06,f).setPosition(x,6.6*f,z); kronen.setMatrixAt(i,mx);
-    kronen.setColorAt(i,farbe.set(gruene[i%5])); mx.makeScale(f,4.4*f,f).setPosition(x,2.2*f,z); staemme.setMatrixAt(i,mx); });
-  kronen.castShadow=staemme.castShadow=true; scene.add(kronen,staemme);
+  laub.forEach(([x,z,s],i)=>{ const f=(.8+((i*37)%10)/25)*s; mx.makeScale(f,f*1.06,f).setPosition(x,6.6*f,z); kronen.setMatrixAt(i,mx); kronen.setColorAt(i,farbe.set(gruene[i%5])); });
+  nadel.forEach(([x,z,s],i)=>{ const f=(.85+((i*29)%10)/22)*s; mx.makeScale(f,f,f).setPosition(x,2.4*f+4.5*f,z); kegel.setMatrixAt(i,mx); kegel.setColorAt(i,farbe.set(["#4f7a3c","#5c8646","#476f36"][i%3])); });
+  baumOrte.forEach(([x,z,s],i)=>{ const f=(.8+((i*37)%10)/25)*s; mx.makeScale(f,4.4*f,f).setPosition(x,2.2*f,z); staemme.setMatrixAt(i,mx); });
+  kronen.castShadow=kegel.castShadow=staemme.castShadow=true; scene.add(kronen,kegel,staemme);
 
   /* Warmes Licht wie am späten Nachmittag; nachts kühl und gedämpft */
   const himmel=new THREE.HemisphereLight(0xfff4e8,0x7c6a5c,1.15); scene.add(himmel);
-  const sonne=new THREE.DirectionalLight(0xffe4c4,2.7); sonne.position.set(cx-260,300,cz+190); sonne.target.position.set(cx,0,cz); scene.add(sonne.target);
+  const sonne=new THREE.DirectionalLight(0xffe4c4,2.7); sonne.position.set(cx-280,220,cz+210); sonne.target.position.set(cx,0,cz); scene.add(sonne.target);
   const s2=Math.max(pw,pd)*.85;
   sonne.castShadow=true; sonne.shadow.mapSize.setScalar(klein()?2048:4096);
   Object.assign(sonne.shadow.camera,{left:-s2,right:s2,top:s2,bottom:-s2,near:10,far:1600}); sonne.shadow.bias=-.0003; sonne.shadow.normalBias=.5; scene.add(sonne);

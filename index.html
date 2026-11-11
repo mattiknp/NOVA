@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="NOVA">
-<meta name="theme-color" content="#15100d">
+<meta name="theme-color" content="#0b0e14">
 <style>
 
 /* ── Rückblick ───────────────────────────────────────── */
@@ -2302,9 +2302,9 @@ button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
 @property --fade{ syntax:"<length>"; inherits:false; initial-value:0px; }
 
 :root{
-  --void:#141312; --deep:#0f0e0d;
+  --void:#0b0e14; --deep:#080a10;
   /* Kanäle aus bau.py: Aufhellung, Akzent, Abdunklung, Mischgrund, Schrift auf Akzent */
-  --ov:255,255,255; --c1r:76,134,247; --dk:22,20,19; --mix:#242221; --auf-c1:#ffffff;
+  --ov:255,255,255; --c1r:76,134,247; --dk:14,17,24; --mix:#1c212b; --auf-c1:#ffffff;
 
   --panel:rgba(255,255,255,.06); --panel-2:rgba(48,45,43,.9); --panel-3:rgba(58,55,52,.94);
   --glass-edge:rgba(255,255,255,.1);
@@ -2331,10 +2331,10 @@ button.kj-tag svg{ width:12px; height:12px; opacity:.7; }
   --fenster:
     linear-gradient(128deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.05) 18%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 72%, rgba(255,255,255,.07) 100%),
     radial-gradient(120% 70% at 85% 110%, rgba(255,255,255,.05), transparent 60%),
-    rgba(22,21,20,.4);
-  --platte:linear-gradient(165deg, rgba(255,255,255,.11), rgba(255,255,255,.045) 55%, rgba(255,255,255,.06)), rgba(18,17,16,.12);
-  --platte-solo:linear-gradient(128deg, rgba(255,255,255,.16), rgba(255,255,255,.04) 40%, rgba(255,255,255,.06)), rgba(24,23,22,.42);
-  --dicht:linear-gradient(170deg, rgba(255,255,255,.1), rgba(255,255,255,.03) 60%), rgba(38,36,34,.9);
+    rgba(15,19,27,.4);
+  --platte:linear-gradient(165deg, rgba(255,255,255,.11), rgba(255,255,255,.045) 55%, rgba(255,255,255,.06)), rgba(14,17,24,.12);
+  --platte-solo:linear-gradient(128deg, rgba(255,255,255,.16), rgba(255,255,255,.04) 40%, rgba(255,255,255,.06)), rgba(17,21,29,.42);
+  --dicht:linear-gradient(170deg, rgba(255,255,255,.1), rgba(255,255,255,.03) 60%), rgba(26,31,40,.92);
   --knopf:rgba(255,255,255,.08);
   --knopf-hover:rgba(255,255,255,.13);
   --mulde:rgba(0,0,0,.2);
@@ -2354,7 +2354,7 @@ body{ background:var(--void); font-variant-numeric:tabular-nums; letter-spacing:
 #glasWelt{ position:fixed; inset:0; z-index:0; width:100%; height:100%; display:block; transition:opacity .22s ease; }
 #glasWelt.weg{ opacity:0; }
 #glasSchleier{ position:fixed; inset:0; z-index:1; pointer-events:none;
-  background:radial-gradient(120% 95% at 55% 38%, rgba(20,19,18,.12) 0%, rgba(20,19,18,.38) 62%, rgba(20,19,18,.7) 100%);
+  background:radial-gradient(120% 95% at 55% 38%, rgba(10,13,20,.1) 0%, rgba(10,13,20,.36) 62%, rgba(8,10,16,.7) 100%);
   transition:opacity .5s var(--aus); }
 #glasSchilder{ position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
 body.gl-wechsel .views{ opacity:0; }
@@ -2372,7 +2372,7 @@ body.gl-wechsel #glasSchleier{ opacity:.3; }
 .gl-quelle{ right:4px; bottom:12px; color:rgba(255,255,255,.55); font-size:10px; text-shadow:0 1px 10px rgba(0,0,0,.7); }
 body.gl-karte #glasSchleier{ opacity:.4; }
 .topbar{ transition:background-color .3s ease; }
-body.gl-ohne{ background:radial-gradient(120% 90% at 60% 0%, #3a3632 0%, #1d1b1a 55%, #121110 100%) fixed; }
+body.gl-ohne{ background:radial-gradient(120% 90% at 60% 0%, #2c3a52 0%, #131a27 55%, #090c12 100%) fixed; }
 body.gl-ohne .gl-fenster{ display:none; }
 /* Schilder im Modell: kleine neutrale Glaspillen */
 .gl-schild{ position:absolute; left:0; top:0; display:flex; align-items:center; gap:8px; padding:6px 13px 6px 9px; border-radius:var(--r-pill);
@@ -2423,7 +2423,7 @@ body.gl-karte:not(.gl-wechsel) .gl-schild:not(.aus){ opacity:1; transition:opaci
 .toast{ background:var(--dicht); border-color:rgba(255,255,255,.14); padding:11px 18px 11px 14px; font-weight:500;
   -webkit-backdrop-filter:var(--unscharf); backdrop-filter:var(--unscharf); box-shadow:var(--kante-hell), 0 22px 44px -18px rgba(0,0,0,.7); }
 .toast svg{ color:var(--c1); }
-select option{ background:#2a2827; }
+select option{ background:#1f2530; }
 
 /* ── Bedienung ── */
 .b{ border-radius:var(--r-pill); border:1px solid rgba(255,255,255,.08); background:var(--knopf); color:var(--text);
@@ -2473,7 +2473,7 @@ input[type=date]::-webkit-calendar-picker-indicator, input[type=time]::-webkit-c
 .tb-date{ color:var(--text-dim); margin-top:2px; }
 .tb-clock{ color:var(--text-dim); font-size:var(--t-sm); padding:0 6px; font-family:var(--f-ui); }
 body.gl-karte .tb-title, body.gl-karte .tb-date, body.gl-karte .tb-clock{ text-shadow:0 1px 14px rgba(0,0,0,.55); }
-body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgba(20,19,18,0)); }
+body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(10,13,20,.5), rgba(10,13,20,0)); }
 /* Runde Knöpfe und die Suche als dunkle Pille, wie „Search leads“ */
 .topbar .b-i{ width:38px; height:38px; background:var(--knopf); border:1px solid rgba(255,255,255,.09); box-shadow:var(--kante); color:var(--text);
   -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); }
@@ -2492,7 +2492,7 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
 .rail{
   margin:14px 0 14px 14px; padding:22px 14px 16px; border-radius:36px; gap:3px;
   border:1px solid rgba(255,255,255,.12);
-  background:linear-gradient(128deg, rgba(255,255,255,.2), rgba(255,255,255,.06) 30%, rgba(255,255,255,.03) 60%, rgba(255,255,255,.09)), rgba(30,28,27,.36);
+  background:linear-gradient(128deg, rgba(255,255,255,.2), rgba(255,255,255,.06) 30%, rgba(255,255,255,.03) 60%, rgba(255,255,255,.09)), rgba(20,25,34,.36);
   -webkit-backdrop-filter:var(--unscharf); backdrop-filter:var(--unscharf);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(255,255,255,.03), var(--sh-3);
   scrollbar-width:none;
@@ -9488,7 +9488,7 @@ const kam=new THREE.PerspectiveCamera(30,innerWidth/innerHeight,5,6000);
 function baueWelt(name,C,cfg){
   const {mergeGeometries}=Z, [cx,cz]=cfg.mitte, [pw,pd]=cfg.platte;
   const drin=([x,z])=>Math.abs(x-cx)<=pw/2+.5&&Math.abs(z-cz)<=pd/2+.5;
-  const scene=new THREE.Scene(); scene.background=new THREE.Color("#1a1310");
+  const scene=new THREE.Scene(); scene.background=new THREE.Color("#0a0d13");
   const form=f=>{ const ring=pts=>pts[0][0]===pts.at(-1)[0]&&pts[0][1]===pts.at(-1)[1]?pts.slice(0,-1):pts;
     const s=new THREE.Shape(); ring(f.p).forEach(([x,z],i)=>i?s.lineTo(x,-z):s.moveTo(x,-z));
     (f.l||[]).forEach(l=>{ const h=new THREE.Path(); ring(l).forEach(([x,z],i)=>i?h.lineTo(x,-z):h.moveTo(x,-z)); s.holes.push(h); }); return s; };
@@ -9500,7 +9500,12 @@ function baueWelt(name,C,cfg){
   const lege=(geo,mat)=>{ const m=new THREE.Mesh(geo,mat); m.receiveShadow=true; scene.add(m); return m; };
 
   /* Der Tisch: eine große dunkle Fläche, darauf die Modellkachel */
-  const tisch=lege(new THREE.PlaneGeometry(6000,6000),M("#2a1f19",.9)); tisch.rotation.x=-Math.PI/2; tisch.position.set(cx,-14.2,cz);
+  /* Der Grund: tiefes Mitternachtsblau, unter dem Modell etwas heller, nach außen fast schwarz */
+  const grundBild=(()=>{ const cv=document.createElement("canvas"); cv.width=cv.height=512; const g=cv.getContext("2d");
+    const v=g.createRadialGradient(256,256,0,256,256,256); v.addColorStop(0,"#2c3a52"); v.addColorStop(.16,"#1c2638"); v.addColorStop(.42,"#111724"); v.addColorStop(1,"#080a10");
+    g.fillStyle=v; g.fillRect(0,0,512,512); const t=new THREE.CanvasTexture(cv); t.colorSpace=THREE.SRGBColorSpace; return t; })();
+  const tisch=lege(new THREE.PlaneGeometry(6000,6000),new THREE.MeshStandardMaterial({color:"#ffffff",map:grundBild,roughness:.95}));
+  tisch.rotation.x=-Math.PI/2; tisch.position.set(cx,-14.2,cz+120);
   /* Die Platte wie eine Kachel aus einem Lagemodell: heller Schnitt mit Erdschicht, oben Karton */
   const kantenMat=M("#e7e0d3",.85), karton=M("#ece8e0",.95), erdMat=M("#cdb99c",.9);
   const platte=lege(new THREE.BoxGeometry(pw+20,14,pd+20),[kantenMat,kantenMat,karton,kantenMat,kantenMat,kantenMat]); platte.position.set(cx,-7,cz); platte.castShadow=true;

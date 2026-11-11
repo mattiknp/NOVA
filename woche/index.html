@@ -1169,16 +1169,34 @@ function gewRhythmus(g){
     return t.length===7?"jeden Tag":t.length===5&&t.every((x,i)=>x===i)?"werktags":t.length===2&&t[0]===5&&t[1]===6?"am Wochenende":t.map(i=>TAGE[i]).join(", "); }
   return "jeden Tag";
 }
-/* Monatsbilanz einer Gewohnheit: geplant (soll), geschafft (ist), alle Haken */
+/* Monatsbilanz einer Gewohnheit: geplant (soll), geschafft (ist), alle Haken.
+   Gezählt wird jeder geplante Tag ab „seit“ bis einschließlich heute, abgehakt
+   oder nicht: Wer heute eins von vier geschafft hat, steht bei 25 %, nicht bei 100 %.
+   „n-mal pro Woche“ zählt Woche für Woche mit ihrem Ziel; mehr Haken als das
+   Wochenziel heben die Quote nicht über 100 %. */
 function gewMonat(g,mk){
   const h=heute(), [y,m]=mk.split("-").map(Number), n=new Date(y,m,0).getDate(), seit=g.seit||h;
-  let soll=0, ist=0, haken=0, zaehl=0;
-  for(let i=1;i<=n;i++){ const k=`${mk}-${p2(i)}`; if(k>h) break; const da=gewDa(g,k); if(da) haken++;
-    if(k<seit) continue; zaehl++;
-    if(g.rh!=="woche"&&gewGeplant(g,k)&&(k<h||da)){ soll++; if(da) ist++; } }
-  if(g.rh==="woche"){ soll=Math.round(gewZiel(g)*zaehl/7); ist=Math.min(soll,haken); }
+  let soll=0, ist=0, haken=0;
+  const tage=[];
+  for(let i=1;i<=n;i++){ const k=`${mk}-${p2(i)}`; if(k>h) break; if(gewDa(g,k)) haken++; if(k>=seit) tage.push(k); }
+  if(g.rh!=="woche"){ tage.forEach(k=>{ if(gewGeplant(g,k)){ soll++; if(gewDa(g,k)) ist++; } }); return {soll,ist,haken}; }
+  /* Jede Woche gehört zu dem Monat, in dem ihr Donnerstag liegt (wie Kalenderwochen),
+     die laufende Woche immer zum laufenden Monat. Beginnt die Gewohnheit mitten in
+     einer Woche, gilt das Ziel anteilig. Die laufende Woche ist wie auf der Startseite
+     heute einmal dran, solange ihr Ziel offen ist. */
+  const z=gewZiel(g), jetzt=mkVon(pk(h)), seitW=mkVon(pk(seit)), wochen=new Set();
+  for(let i=1;i<=n;i++){ const k=`${mk}-${p2(i)}`; if(k>h) break; const w=mkVon(pk(k));
+    if(w>=seitW&&(dk(addD(pk(w),3)).startsWith(mk)||w===jetzt)) wochen.add(w); }
+  wochen.forEach(w=>{ let t=0, da=0;
+    for(let i=0;i<7;i++){ const kk=dk(addD(pk(w),i)); if(kk<seit) continue; t++; if(kk<=h&&gewDa(g,kk)) da++; }
+    const ziel=Math.max(1,Math.round(z*t/7));
+    const s=w===jetzt?Math.min(ziel,da+(da<ziel&&!gewDa(g,h)?1:0)):ziel;
+    soll+=s; ist+=Math.min(da,s); });
   return {soll,ist,haken};
 }
+/* Ist eine Gewohnheit an diesem Tag dran? Für die Tagesbalken: geplante Tage;
+   „pro Woche“ zählt nur an Tagen mit Haken (sonst wäre jeder freie Tag ein Loch). */
+const gewDranAm=(g,k)=>(g.seit||heute())<=k&&(g.rh==="woche"?gewDa(g,k):gewGeplant(g,k));
 function gewUmschalten(id,k){
   const g=gewVon(id); if(!g||k>heute()) return;
   const istHeute=k===heute(), offen=()=>gewListe().filter(x=>gewFaellig(x,k)&&!gewDa(x,k)).length, vorher=istHeute?offen():0;
@@ -1304,6 +1322,7 @@ function vRueckblick(){
   const st=l.map(g=>({g,...gewMonat(g,mk)}));
   const soll=st.reduce((a,x)=>a+x.soll,0), ist=st.reduce((a,x)=>a+x.ist,0), haken=st.reduce((a,x)=>a+x.haken,0);
   const quote=soll?Math.round(ist/soll*100):null;
+  const hDran=l.filter(g=>gewFaellig(g,h)||gewDa(g,h)), hHeute={d:hDran.length,f:hDran.filter(g=>gewDa(g,h)).length};
   const tage=Array.from({length:n},(_,i)=>`${mk}-${p2(i+1)}`);
   /* Außerdem: was sonst in dem Monat erledigt wurde */
   const aufg=S.todos.filter(t=>t.done&&t.doneAt&&dk(new Date(t.doneAt)).startsWith(mk)).length;
@@ -1313,7 +1332,7 @@ function vRueckblick(){
   const ausserText=ausser.length?`Außerdem ${ausser.length>1?ausser.slice(0,-1).join(", ")+" und "+ausser[ausser.length-1]:ausser[0]}.`:"";
   const beste=istJetzt?l.map(g=>({g,s:gewSerie(g)})).filter(x=>x.s>=2).sort((a,b)=>b.s-a.s)[0]:null;
   const balken=tage.map(k=>{ if(k>h) return `<i class="zuk"></i>`;
-    const akt=l.filter(g=>(g.seit||h)<=k), v=akt.length?akt.filter(g=>gewDa(g,k)).length/akt.length:0;
+    const akt=l.filter(g=>gewDranAm(g,k)), v=akt.length?akt.filter(g=>gewDa(g,k)).length/akt.length:0;
     return `<i class="${v?"":"null"}${k===h?" heute":""}" style="--v:${v.toFixed(3)}" title="${pk(k).getDate()}. ${MON[m-1]}: ${Math.round(v*100)} %"></i>`; }).join("");
   const kopfZ=tage.map(k=>{ const d=pk(k); return `<span class="${wtag(d)>=5?"we":""}${k===h?" heute":""}">${wtag(d)===0||(d.getDate()===1&&wtag(d)<5)||k===h?d.getDate():""}</span>`; }).join("");
   const zeilen=st.map(({g,soll,ist,haken})=>{ const s=gewSerie(g), r=gewRekord(g), seit=g.seit||h;
@@ -1336,7 +1355,7 @@ function vRueckblick(){
     <div class="rb-q-box"><div class="lab" style="--kc:#333700">geschafft:</div>
       <div class="rb-q num">${quote!=null?`${quote}<small>%</small>`:"–"}</div></div>
     <div class="rb-band" style="--n:${n}" role="img" aria-label="Anteil abgehakter Gewohnheiten pro Tag im ${MON_L[m-1]}">${balken}</div>
-    <p class="rb-text">${haken} Haken im ${MON_L[m-1]}${beste?` · längste Serie: ${esc(beste.g.name)}, ${beste.s} ${gewEinheit(beste.g,beste.s)}`:""}${ausserText?`<br>${ausserText}`:""}</p>
+    <p class="rb-text">${Math.round(ist)} von ${Math.round(soll)} geplanten Haken geschafft${istJetzt?` · heute ${hHeute.f} von ${hHeute.d}`:""}${beste?` · längste Serie: ${esc(beste.g.name)}, ${beste.s} ${gewEinheit(beste.g,beste.s)}`:""}${ausserText?`<br>${ausserText}`:""}</p>
   </div>
   <div class="karte rb-tracker">
     <div class="k-kopf"><h3 class="lab" style="--kc:#333700">tracker:</h3><span class="hinweis">Antippen zum Nachtragen</span></div>

@@ -481,8 +481,117 @@ details.fertig-liste[open] summary::before{ content:"- "; }
 .toast.on{ opacity:1; transform:translate(-50%,0); }
 @media (prefers-reduced-motion:reduce){ *{ animation-duration:.001ms !important; transition-duration:.001ms !important; } }
 
+/* ── Gewohnheiten: abhaken heißt ausmalen, wie im Habit-Tracker auf Papier ── */
+.btn:disabled{ opacity:.35; pointer-events:none; }
+.gw-kz, .gw{ display:grid; grid-template-columns:30px minmax(0,1fr) auto; gap:12px; align-items:center; }
+.gw-kz{ padding:0 10px 6px 8px; }
+.gw-kz .gw-woche span{ font-size:10.5px; line-height:1; color:var(--leise); text-align:center; font-weight:650; }
+.gw-kz .gw-woche span.heute{ color:var(--tinte); }
+.gw-liste{ display:flex; flex-direction:column; gap:6px; }
+.gw{ position:relative; isolation:isolate; padding:9px 10px 9px 8px; border-radius:var(--r-xs); box-shadow:0 0 0 1.5px var(--linie) inset; }
+.gw::before{ content:""; position:absolute; inset:0; z-index:-1; border-radius:inherit; background:var(--kc); opacity:0; }
+.gw.da{ color:var(--ki); box-shadow:none; }
+.gw.da::before{ opacity:1; }
+.gw.frisch.da::before{ animation:gwMalen .42s var(--ez); }
+.gw.frisch.da{ animation:gwSchrift .42s var(--ez); }
+@keyframes gwMalen{ from{ clip-path:inset(0 100% 0 0 round 10px); } to{ clip-path:inset(0 0 0 0 round 10px); } }
+@keyframes gwSchrift{ from{ color:var(--tinte); } }
+.gw-box{ position:relative; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; color:transparent;
+  box-shadow:0 0 0 2px color-mix(in srgb, var(--kc) 80%, var(--tinte)) inset; transition:transform .16s var(--ez); }
+.gw-box::after{ content:""; position:absolute; inset:-8px; }
+.gw-box:active{ transform:scale(.9); }
+.gw-box .ic{ width:15px; height:15px; stroke-width:2.6; }
+.gw.da .gw-box{ background:var(--ki); color:var(--kc); box-shadow:none; }
+.gw.frisch.da .gw-box{ animation:gwPop .34s var(--ez); }
+@keyframes gwPop{ 0%{ transform:scale(.8); } 60%{ transform:scale(1.08); } 100%{ transform:none; } }
+.gw-t{ min-width:0; text-align:left; display:flex; flex-direction:column; gap:1px; padding:2px 0; }
+.gw-t b{ font-weight:600; font-size:15px; overflow-wrap:anywhere; }
+.gw-t span{ font-size:12.5px; color:var(--leise); }
+.gw.da .gw-t span{ color:inherit; opacity:.82; }
+.gw.ruht .gw-box{ box-shadow:0 0 0 1.5px color-mix(in srgb, var(--kc) 55%, transparent) inset; }
+.gw.ruht .gw-t b{ color:var(--tinte-2); font-weight:550; }
+.gw-woche{ display:grid; grid-template-columns:repeat(7,11px); gap:4px; align-items:center; }
+.gw-woche i{ width:11px; height:11px; border-radius:50%; box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--kc) 50%, transparent); }
+.gw-woche i.da{ background:var(--kc); box-shadow:none; }
+.gw-woche i.heute{ box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--kc) 80%, var(--tinte)); }
+.gw-woche i.verp{ box-shadow:inset 0 0 0 1.5px var(--linie-2); }
+.gw-woche i.frei{ width:4px; height:4px; justify-self:center; background:var(--linie-2); box-shadow:none; }
+.gw.da .gw-woche i{ box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--ki) 45%, transparent); }
+.gw.da .gw-woche i.da{ background:var(--ki); box-shadow:none; }
+.gw.da .gw-woche i.frei{ background:color-mix(in srgb, var(--ki) 45%, transparent); box-shadow:none; }
+.gw-fuss{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; }
+.gw-alles{ color:var(--moos); font-weight:650; }
+.gw-leer{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.gw-tagwahl{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; }
+.gw-tagwahl .chip{ height:40px; padding:0; justify-content:center; }
+.gw-zahl{ display:flex; align-items:center; gap:12px; }
+.gw-zahl-t{ flex:1; display:flex; align-items:baseline; gap:1px; color:var(--tinte-2); font-size:14px; }
+.gw-zahl-t b{ font-family:var(--disp); font-weight:400; font-size:42px; line-height:1; color:var(--sec-text); margin-right:2px; }
+.gw-seit{ margin-top:4px; }
+
+/* Nachtragen: Monatsblatt einer Gewohnheit */
+.gt-h{ display:flex; align-items:center; gap:12px; }
+.gt-h i{ width:16px; height:16px; border-radius:50%; background:var(--kc); flex:0 0 auto; box-shadow:0 0 0 1px color-mix(in srgb, var(--tinte) 12%, transparent) inset; }
+.blatt .gt-h{ margin-bottom:6px; }
+.gt-nav{ display:flex; align-items:center; justify-content:space-between; margin:18px 0 10px; }
+.gt-nav b{ font-family:var(--disp); font-weight:400; font-size:24px; color:var(--tinte); }
+.gt-kal{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; margin-bottom:14px; }
+.gt-k{ text-align:center; font-size:12px; color:var(--leise); padding-bottom:2px; }
+.gt-z{ width:100%; max-width:46px; aspect-ratio:1; justify-self:center; border-radius:50%; display:grid; place-items:center; font-size:15px; font-variant-numeric:tabular-nums;
+  color:var(--tinte-2); box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--kc) 50%, transparent); transition:transform .16s var(--ez); }
+.gt-z:active{ transform:scale(.92); }
+.gt-z.frei{ box-shadow:none; color:var(--leise); }
+.gt-z.verp{ box-shadow:inset 0 0 0 1.5px var(--linie-2); }
+.gt-z.heute{ box-shadow:inset 0 0 0 2.5px color-mix(in srgb, var(--kc) 80%, var(--tinte)); color:var(--tinte); font-weight:700; }
+.gt-z.da{ background:var(--kc); color:var(--ki); box-shadow:none; font-weight:650; }
+.gt-z.da.heute{ box-shadow:0 0 0 2px var(--papier), 0 0 0 3.5px var(--kc); }
+.gt-z:disabled{ box-shadow:none; color:var(--linie-2); cursor:default; }
+
+/* Rückblick */
+.rb-gesamt{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:6px 36px; align-items:end; margin-bottom:18px; }
+.rb-q{ font-family:var(--disp); font-size:84px; line-height:.88; color:var(--oliv); margin-top:4px; }
+.rb-q small{ font-size:.42em; margin-left:4px; color:var(--moos); }
+.rb-band{ display:grid; grid-template-columns:repeat(var(--n),minmax(0,1fr)); gap:3px; height:88px; align-items:end; }
+.rb-band i{ height:calc(5px + var(--v,0) * 83px); border-radius:3px; background:var(--moos); }
+.rb-band i.null{ background:color-mix(in srgb, var(--moos) 22%, transparent); }
+.rb-band i.zuk{ height:5px; background:var(--linie-2); opacity:.55; }
+.rb-band i.heute{ background:var(--oliv); }
+.rb-text{ grid-column:1/-1; margin-top:12px; font-size:14px; color:var(--tinte-2); line-height:1.6; }
+.rb-kz, .rb-z{ display:grid; grid-template-columns:210px minmax(0,1fr); gap:18px; align-items:center; }
+.rb-kz{ padding:0 10px 6px; }
+.rb-liste{ display:flex; flex-direction:column; gap:2px; }
+.rb-z{ text-align:left; padding:10px; border-radius:var(--r-xs); transition:background-color .15s ease, transform .16s var(--ez); }
+.rb-z:active{ transform:scale(.99); }
+@media (hover:hover) and (pointer:fine){ .rb-z:hover{ background:var(--papier-2); } }
+.rb-n{ min-width:0; }
+.rb-n b{ display:flex; align-items:center; gap:9px; font-weight:600; font-size:15px; }
+.rb-n b::before{ content:""; width:10px; height:10px; border-radius:50%; background:var(--kc); flex:0 0 auto; box-shadow:0 0 0 1px color-mix(in srgb, var(--tinte) 12%, transparent) inset; }
+.rb-n > span{ display:block; font-size:12.5px; color:var(--leise); margin-top:2px; padding-left:19px; }
+.rb-punkte, .rb-tagz{ display:grid; grid-template-columns:repeat(var(--n),minmax(0,1fr)); gap:3px; align-items:center; }
+.rb-punkte i{ width:100%; max-width:15px; aspect-ratio:1; justify-self:center; border-radius:50%; box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--kc) 45%, transparent); }
+.rb-punkte i.da{ background:var(--kc); box-shadow:none; }
+.rb-punkte i.verp{ box-shadow:inset 0 0 0 1.5px var(--linie-2); }
+.rb-punkte i.heute{ box-shadow:inset 0 0 0 2px var(--kc); }
+.rb-punkte i.frei, .rb-punkte i.aus{ transform:scale(.34); background:var(--linie-2); box-shadow:none; }
+.rb-punkte i.aus{ opacity:.5; }
+.rb-tagz span{ font-size:10.5px; line-height:1; color:var(--leise); text-align:center; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.rb-tagz span.we{ color:var(--rose); }
+.rb-tagz span.heute{ color:var(--tinte); font-weight:700; }
+
 /* ── Handy ── */
 @media (max-width:820px){
+  .tabbar.viele{ left:6px; right:6px; padding:6px; gap:1px; }
+  .tabbar.viele .tab{ font-size:9.5px; letter-spacing:-.01em; }
+  .rb-gesamt{ grid-template-columns:minmax(0,1fr); gap:14px; }
+  .rb-q{ font-size:68px; }
+  .rb-band{ height:64px; gap:2px; }
+  .rb-band i{ height:calc(4px + var(--v,0) * 60px); border-radius:2px; }
+  .rb-kz, .rb-z{ grid-template-columns:minmax(0,1fr); gap:8px; }
+  .rb-kz{ padding:0 8px 4px; }
+  .rb-kz > span:first-child{ display:none; }
+  .rb-z{ padding:10px 8px; }
+  .rb-punkte, .rb-tagz{ gap:2px; }
+  .rb-tagz span{ font-size:9px; }
   :root{ --hour:56px; }
   .app{ display:block; }
   .side{ display:none; }
@@ -637,6 +746,7 @@ const SEITEN=[
   {id:"kalender", l:"Kalender",  c:P.Altrosa, t:"#9a4c4f", a:P.Oliv,    b:P.Puder},
   {id:"uni",      l:"Uni",       c:P.Butter,  t:"#61122b", a:P.Butter,  b:P.Senf},
   {id:"geschenke",l:"Geschenke", c:P.Blush,   t:"#8e2c48", a:P.Babyblau,b:P.Puder},
+  {id:"rueckblick",l:"Rückblick",c:P.Moos,    t:"#333700", a:P.Salbei,  b:P.Butter},
   {id:"partner",  l:"Er",        c:P.Babyblau,t:"#2f4f73", a:P.Babyblau,b:P.Himmel},
 ];
 /* Die Seite mit seinem Planer gibt es nur, wenn der Abgleich eingerichtet ist */
@@ -656,7 +766,7 @@ const MON_THEMEN=[
   {c:P.Wein,   t:"#8e2c48",a:P.Babyblau,b:P.Puder},   /* Nov */
   {c:P.Altrosa,t:"#9a4c4f",a:P.Oliv,  b:P.Babyblau},  /* Dez */
 ];
-const leer=()=>({uniArten:[],v:3,name:"",sem:{start:"",ende:""},h0:7,h1:22,module:[],fix:[],woche:{},aus:{},ganz:[],todos:[],termine:[],geschenke:[],monNotiz:{},korr:[],upd:0});
+const leer=()=>({uniArten:[],v:3,name:"",sem:{start:"",ende:""},h0:7,h1:22,module:[],fix:[],woche:{},aus:{},ganz:[],todos:[],termine:[],geschenke:[],monNotiz:{},gew:[],korr:[],upd:0});
 let S=leer();
 /* Einmalige Ergänzungen: jede läuft genau einmal (Marke in S.korr) und kommt
    nach dem Löschen nicht wieder. Feste ids verhindern Doppelte beim Abgleich. */
@@ -700,6 +810,7 @@ function aufraeumen(){
   let neu=false;
   S.module.forEach(m=>{ const n=FARB_ALT[String(m.farbe).toLowerCase()]; if(n){ m.farbe=n; neu=true; } });
   S.monNotiz=S.monNotiz||{}; S.ganz=S.ganz||[]; S.geschenke=S.geschenke||[];
+  S.gew=Array.isArray(S.gew)?S.gew:[]; S.gew.forEach(g=>{ if(!g.log||typeof g.log!=="object") g.log={}; });
   if(S.gPin){ delete S.gPin; neu=true; }   /* die Geschenke-PIN gibt es nicht mehr */
   S.korr=Array.isArray(S.korr)?S.korr:[];
   KORR.forEach(([id,fn])=>{ if(S.korr.includes(id)) return; fn(); S.korr.push(id); neu=true; });
@@ -845,6 +956,8 @@ const IC={
   uni:'<path d="M2.5 9.5L12 5l9.5 4.5L12 14z"/><path d="M6.5 11.5v4.5c0 1.4 2.5 3 5.5 3s5.5-1.6 5.5-3v-4.5"/>',
   geschenke:'<rect x="3.5" y="8" width="17" height="4" rx="1.5"/><path d="M5 12v8.5h14V12M12 8v12.5"/><path d="M12 8c-1.5-3.5-5.5-4-5.5-1.5S10 8 12 8zM12 8c1.5-3.5 5.5-4 5.5-1.5S14 8 12 8z"/>',
   gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  rueckblick:'<path d="M4.5 19.5h15"/><path d="M7 16v-4M12 16V6.5M17 16v-6.5"/>',
+  minus:'<path d="M5 12h14"/>',
   plus:'<path d="M12 5v14M5 12h14"/>', links:'<path d="M15 5l-7 7 7 7"/>', rechts:'<path d="M9 5l7 7-7 7"/>',
   check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   idee:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9V16h7v-2.1A6 6 0 0 0 12 3z"/>',
@@ -870,7 +983,7 @@ function huelle(){
     </aside>
     <main class="main" id="main"></main>
     <button class="fab" data-act="neu" aria-label="Neu">${ic("plus")}</button>
-    <nav class="tabbar" style="--tabs:${seitenSichtbar().length}">${seitenSichtbar().map(s=>`<button class="tab" data-go="${s.id}">${ic(s.id)}${esc(s.l)}</button>`).join("")}</nav>`;
+    <nav class="tabbar${seitenSichtbar().length>5?" viele":""}" style="--tabs:${seitenSichtbar().length}">${seitenSichtbar().map(s=>`<button class="tab" data-go="${s.id}">${ic(s.id)}${esc(s.l)}</button>`).join("")}</nav>`;
 }
 /* Farben des Bereichs setzen; im Kalender bestimmt der Monat */
 function themaSetzen(){
@@ -884,13 +997,15 @@ let renderTag=heute();
 function zeige(s,anim){
   const neuSeite=(!!s&&s!==SEITE)||!!anim; if(s) SEITE=s;
   if(s&&s!=="partner"){ pwDatum=null; pwModus=null; }
+  if(s&&s!=="rueckblick") rbMonat=null;
   if(s==="partner"&&neuSeite) setTimeout(teilAbgleich,0);
   /* Tageswechsel, während die App offen war: „heute“ mitziehen */
   if(heute()!==renderTag){ if(kalDatum===renderTag) kalDatum=heute(); if(monWahl===renderTag) monWahl=heute(); renderTag=heute(); }
   themaSetzen();
   document.querySelectorAll("[data-go]").forEach(b=>{ if(b.closest(".side,.tabbar")) b.classList.toggle("on",b.dataset.go===SEITE); });
   const m=document.getElementById("main");
-  m.innerHTML=`<div class="view${neuSeite?" neu-seite":""}">${({heute:vHeute,kalender:vKalender,uni:vUni,geschenke:vGeschenke,partner:vPartner})[SEITE]()}</div>`;
+  m.innerHTML=`<div class="view${neuSeite?" neu-seite":""}">${({heute:vHeute,kalender:vKalender,uni:vUni,geschenke:vGeschenke,rueckblick:vRueckblick,partner:vPartner})[SEITE]()}</div>`;
+  gewEben=null;
   if(SEITE==="kalender") kalNachher();
   if(SEITE==="heute") heuteAusgleich();
   document.body.classList.toggle("seite-partner",SEITE==="partner");
@@ -986,6 +1101,7 @@ function vHeute(){
   const offenN=aufg.filter(t=>!t.done).length;
   const karten=[
     tagLeer?"":ablaufKarte,
+    gewKarte(),
     `<div class="karte">
         <div class="k-kopf"><h3 class="lab" style="--kc:${P.Oliv}">zu erledigen:</h3>${offenN?`<span class="hinweis">${offenN} offen</span>`:""}</div>
         <div class="neu-a"><input id="schnellA" placeholder="Neue Aufgabe" autocomplete="off" enterkeyhint="done" aria-label="Neue Aufgabe">
@@ -1005,6 +1121,231 @@ function vHeute(){
     `<button class="btn nur-desk" data-act="neuEintrag">${ic("plus")}Eintrag</button><button class="btn rund nur-handy" data-act="einst" aria-label="Einstellungen">${ic("gear")}</button>`, true)}
   ${karte}
   <div class="raster2 heute-raster"><div class="spalte">${karten.join("")}</div><div class="spalte"></div></div>`;
+}
+
+/* ============================================================
+   Gewohnheiten
+   Rhythmus (g.rh): "jeden" Tag, an festen Wochentagen ("tage", g.tage
+   0–6) oder n-mal pro Woche ("woche", g.n). Abgehakte Tage stehen in
+   g.log als { "2026-11-11": 1 }. g.seit ist der erste Tag, der zählt:
+   davor gilt nichts als verpasst. Der heutige Tag zählt erst als
+   verpasst, wenn er vorbei ist. Das Datum wird immer beim Handeln
+   berechnet, weil die App auf dem Handy über Nacht offen bleibt.
+   ============================================================ */
+let gewEben=null, rbMonat=null;
+const GEW_FARBEN=[P.Moos,P.Altrosa,P.Babyblau,P.Senf,P.Pflaume,P.Petrol,P.Flieder,P.Koralle,P.Oliv,P.Blush];
+const gewListe=()=>S.gew||[];
+const gewVon=id=>gewListe().find(g=>g.id===id)||null;
+const gewFarbe=g=>g.farbe||P.Moos;
+const gewDa=(g,k)=>!!(g.log&&g.log[k]);
+const gewGeplant=(g,k)=>g.rh!=="tage"||(g.tage||[]).includes(wtag(pk(k)));
+const gewZiel=g=>Math.max(1,Math.min(7,g.n||3));
+const gewEinheit=(g,n)=>g.rh==="woche"?(n===1?"Woche":"Wochen"):(n===1?"Tag":"Tage");
+function gewWocheN(g,k){ const m=mo(pk(k)); let n=0; for(let i=0;i<7;i++) if(gewDa(g,dk(addD(m,i)))) n++; return n; }
+/* Heute dran? Bei „n-mal pro Woche“ nur, solange das Wochenziel offen ist */
+const gewFaellig=(g,k)=>g.rh==="woche"?gewWocheN(g,k)<gewZiel(g):gewGeplant(g,k);
+/* Serie: zusammenhängende geplante Tage (oder erfüllte Wochen) bis heute */
+function gewSerie(g){
+  const h=heute(), start=pk(g.seit||h);
+  if(g.rh==="woche"){ const z=gewZiel(g); let m=mo(pk(h)), n=gewWocheN(g,dk(m))>=z?1:0;
+    for(m=addD(m,-7);m>=mo(start)&&gewWocheN(g,dk(m))>=z;m=addD(m,-7)) n++;
+    return n; }
+  let n=gewGeplant(g,h)&&gewDa(g,h)?1:0;
+  for(let d=addD(pk(h),-1);d>=start;d=addD(d,-1)){ const k=dk(d); if(!gewGeplant(g,k)) continue; if(!gewDa(g,k)) break; n++; }
+  return n;
+}
+function gewRekord(g){
+  const h=heute(); let best=0, lauf=0;
+  if(g.rh==="woche"){ const z=gewZiel(g), jetzt=mkVon(new Date());
+    for(let m=mo(pk(g.seit||h));m<=pk(h);m=addD(m,7)){ if(gewWocheN(g,dk(m))>=z) best=Math.max(best,++lauf); else if(dk(m)!==jetzt) lauf=0; }
+    return best; }
+  for(let d=pk(g.seit||h);d<=pk(h);d=addD(d,1)){ const k=dk(d); if(!gewGeplant(g,k)) continue;
+    if(gewDa(g,k)) best=Math.max(best,++lauf); else if(k!==h) lauf=0; }
+  return best;
+}
+function gewRhythmus(g){
+  if(g.rh==="woche") return `${gewZiel(g)}-mal pro Woche`;
+  if(g.rh==="tage"){ const t=[...(g.tage||[])].sort((a,b)=>a-b);
+    return t.length===7?"jeden Tag":t.length===5&&t.every((x,i)=>x===i)?"werktags":t.length===2&&t[0]===5&&t[1]===6?"am Wochenende":t.map(i=>TAGE[i]).join(", "); }
+  return "jeden Tag";
+}
+/* Monatsbilanz einer Gewohnheit: geplant (soll), geschafft (ist), alle Haken */
+function gewMonat(g,mk){
+  const h=heute(), [y,m]=mk.split("-").map(Number), n=new Date(y,m,0).getDate(), seit=g.seit||h;
+  let soll=0, ist=0, haken=0, zaehl=0;
+  for(let i=1;i<=n;i++){ const k=`${mk}-${p2(i)}`; if(k>h) break; const da=gewDa(g,k); if(da) haken++;
+    if(k<seit) continue; zaehl++;
+    if(g.rh!=="woche"&&gewGeplant(g,k)&&(k<h||da)){ soll++; if(da) ist++; } }
+  if(g.rh==="woche"){ soll=Math.round(gewZiel(g)*zaehl/7); ist=Math.min(soll,haken); }
+  return {soll,ist,haken};
+}
+function gewUmschalten(id,k){
+  const g=gewVon(id); if(!g||k>heute()) return;
+  const istHeute=k===heute(), offen=()=>gewListe().filter(x=>gewFaellig(x,k)&&!gewDa(x,k)).length, vorher=istHeute?offen():0;
+  g.log=g.log||{};
+  if(g.log[k]) delete g.log[k]; else { g.log[k]=1; if(!g.seit||k<g.seit) g.seit=k; }
+  gewEben=id+"|"+k; sichern(); zeige();
+  if(istHeute&&g.log[k]&&vorher>0&&!offen()) toast("Alles geschafft für heute");
+}
+/* Die laufende Woche als Punktreihe, wie im Habit-Tracker auf Papier */
+function gewWocheHtml(g,k){
+  const m=mo(pk(k)), seit=g.seit||k;
+  return `<span class="gw-woche" aria-hidden="true">${[0,1,2,3,4,5,6].map(i=>{ const kk=dk(addD(m,i));
+    const c=gewDa(g,kk)?"da":kk===k?"heute":g.rh==="woche"?"soll":!gewGeplant(g,kk)?"frei":kk<k&&kk>=seit?"verp":"soll";
+    return `<i class="${c}"></i>`; }).join("")}</span>`;
+}
+function gewZeile(g,k){
+  const da=gewDa(g,k), ruht=!da&&!gewFaellig(g,k), s=gewSerie(g), teile=[];
+  if(g.rh==="woche") teile.push(`${gewWocheN(g,k)} von ${gewZiel(g)} diese Woche`);
+  else if(g.rh==="tage") teile.push(gewRhythmus(g));
+  if(s>=2) teile.push(`${s} ${gewEinheit(g,s)} in Folge`);
+  if(ruht&&g.rh==="tage") teile.push("heute frei");
+  if(!teile.length) teile.push("jeden Tag");
+  return `<div class="gw${da?" da":""}${ruht?" ruht":""}${gewEben===g.id+"|"+k?" frisch":""}" style="${kv(gewFarbe(g))}">
+    <button class="gw-box" data-gew="${g.id}" aria-pressed="${da}" aria-label="${esc(g.name)}: ${da?"Haken entfernen":"abhaken"}">${ic("check")}</button>
+    <button class="gw-t" data-act="gewEdit" data-id="${g.id}"><b>${esc(g.name)}</b><span>${esc(teile.join(" · "))}</span></button>
+    ${gewWocheHtml(g,k)}</div>`;
+}
+/* Startseite: alle Gewohnheiten, Abhaken mit einem Tipp */
+function gewKarte(){
+  const l=gewListe(), k=heute();
+  if(!l.length) return `<div class="kasten gw-leer"><h3 class="lab" style="--kc:${P.Moos}">gewohnheiten:</h3>
+    <button class="btn klein" data-act="gewNeu">${ic("plus")}Gewohnheit anlegen</button></div>`;
+  const dran=l.filter(g=>gewFaellig(g,k)||gewDa(g,k)), fertig=dran.filter(g=>gewDa(g,k)).length, wt=wtag(pk(k));
+  return `<div class="karte gw-karte">
+    <div class="k-kopf"><h3 class="lab" style="--kc:${P.Moos}">gewohnheiten:</h3><button class="btn klein ghost" data-go="rueckblick">Rückblick ${ic("rechts")}</button></div>
+    <div class="gw-kz" aria-hidden="true"><span></span><span></span><span class="gw-woche">${TAGE.map((t,i)=>`<span${i===wt?' class="heute"':""}>${t.slice(0,1)}</span>`).join("")}</span></div>
+    <div class="gw-liste">${l.map(g=>gewZeile(g,k)).join("")}</div>
+    <div class="gw-fuss"><span class="hinweis${dran.length&&fertig===dran.length?" gw-alles":""}">${!dran.length?"Heute ist nichts dran":fertig===dran.length?"Alles geschafft für heute":`${fertig} von ${dran.length} geschafft`}</span>
+      <button class="btn klein ghost" data-act="gewNeu">${ic("plus")}Neue</button></div>
+  </div>`;
+}
+/* Anlegen und bearbeiten: Name, Rhythmus, Farbe */
+function gewBlatt(id){
+  const g=id?gewVon(id):null; if(id&&!g) return;
+  const frei=GEW_FARBEN.find(c=>!gewListe().some(x=>x.farbe===c))||GEW_FARBEN[gewListe().length%GEW_FARBEN.length];
+  const e={name:g?g.name:"",farbe:g?gewFarbe(g):frei,rh:g?(g.rh||"jeden"):"jeden",tage:g&&g.tage?[...g.tage]:[0,1,2,3,4],n:g?gewZiel(g):3};
+  const zeichne=()=>{
+    const rek=g?gewRekord(g):0, seit=g?pk(g.seit||heute()):null;
+    blatt(`<h2>${g?"Gewohnheit bearbeiten":"Neue Gewohnheit"}</h2>
+      <div class="feld"><label for="gwN">Name</label><input id="gwN" value="${esc(e.name)}" maxlength="40" autocomplete="off" enterkeyhint="done"></div>
+      <div class="feld"><label>Wie oft</label><div class="wahl" role="radiogroup" aria-label="Wie oft">${[["jeden","Jeden Tag"],["tage","An festen Tagen"],["woche","Pro Woche"]].map(([r,l])=>
+        `<button class="chip${e.rh===r?" on":""}" role="radio" aria-checked="${e.rh===r}" data-grh="${r}" style="${kv(e.farbe)}">${l}</button>`).join("")}</div></div>
+      ${e.rh==="tage"?`<div class="feld"><label>An welchen Tagen</label><div class="gw-tagwahl">${TAGE.map((t,i)=>
+        `<button class="chip${e.tage.includes(i)?" on":""}" aria-pressed="${e.tage.includes(i)}" aria-label="${TAGE_L[i]}" data-gtag="${i}" style="${kv(e.farbe)}">${t}</button>`).join("")}</div></div>`:""}
+      ${e.rh==="woche"?`<div class="feld"><label>Wie oft pro Woche</label><div class="gw-zahl">
+        <button class="btn rund" id="gwMinus" aria-label="Seltener"${e.n<=1?" disabled":""}>${ic("minus")}</button>
+        <span class="gw-zahl-t"><b class="num">${e.n}</b>-mal pro Woche</span>
+        <button class="btn rund" id="gwPlus" aria-label="Öfter"${e.n>=7?" disabled":""}>${ic("plus")}</button></div></div>`:""}
+      <div class="feld"><label>Farbe</label>${farbWahlHtml(e.farbe,e.farbe,false)}</div>
+      ${g?`<p class="hinweis gw-seit">Dabei seit ${kurzD(seit)} ${seit.getFullYear()}${rek?` · Rekord ${rek} ${gewEinheit(g,rek)}`:""}</p>`:""}
+      <div class="blatt-akt">${g?`<button class="btn gefahr links" id="gwDel">Löschen</button>`:""}
+        <button class="btn" data-act="zu">Abbrechen</button><button class="btn prim" id="gwOk">${g?"Speichern":"Anlegen"}</button></div>`);
+    const q=s=>document.getElementById(s);
+    const merke=()=>{ e.name=q("gwN").value; };
+    document.querySelectorAll("#blatt [data-grh]").forEach(c=>c.onclick=()=>{ merke(); e.rh=c.dataset.grh; zeichne(); });
+    document.querySelectorAll("#blatt [data-gtag]").forEach(c=>c.onclick=()=>{ merke(); const i=+c.dataset.gtag;
+      e.tage=e.tage.includes(i)?e.tage.filter(x=>x!==i):[...e.tage,i]; zeichne(); });
+    q("gwMinus")?.addEventListener("click",()=>{ merke(); e.n=Math.max(1,e.n-1); zeichne(); });
+    q("gwPlus")?.addEventListener("click",()=>{ merke(); e.n=Math.min(7,e.n+1); zeichne(); });
+    farbWahlWiring(f=>{ merke(); if(f) e.farbe=f; zeichne(); });
+    q("gwN").addEventListener("keydown",ev=>{ if(ev.key==="Enter"&&!ev.isComposing){ ev.preventDefault(); q("gwOk").click(); } });
+    q("gwOk").onclick=()=>{ merke(); const name=e.name.trim();
+      if(!name){ toast("Gib der Gewohnheit einen Namen"); return; }
+      if(e.rh==="tage"&&!e.tage.length){ toast("Wähl mindestens einen Tag"); return; }
+      const d={name,farbe:e.farbe,rh:e.rh,tage:e.rh==="tage"?[...e.tage].sort((a,b)=>a-b):null,n:e.rh==="woche"?e.n:null};
+      if(g) Object.assign(g,d); else S.gew.push({id:uid(),...d,seit:heute(),log:{}});
+      sichern(); zu(); toast(g?"Gespeichert":`„${name}“ angelegt`); zeige(); };
+    q("gwDel")?.addEventListener("click",()=>{ if(!confirm(`„${g.name}“ mit allen Haken löschen?`)) return;
+      S.gew=S.gew.filter(x=>x.id!==g.id); sichern(); zu(); toast("Gelöscht"); zeige(); });
+  };
+  zeichne();
+}
+/* Tage nachtragen: Monatsblatt einer Gewohnheit, jeder vergangene Tag antippbar */
+function gewTageBlatt(id){
+  const g=gewVon(id); if(!g) return;
+  let mk=rbMonat||heute().slice(0,7);
+  const zeichne=()=>{
+    const h=heute(), [y,m]=mk.split("-").map(Number), n=new Date(y,m,0).getDate(), off=wtag(new Date(y,m-1,1)), seit=g.seit||h;
+    const zellen=Array.from({length:off},()=>"<span></span>").concat(Array.from({length:n},(_,i)=>{
+      const k=`${mk}-${p2(i+1)}`, da=gewDa(g,k), zuk=k>h;
+      const c=[da?"da":"", k===h?"heute":"", !gewGeplant(g,k)?"frei":"", !da&&!zuk&&k<h&&k>=seit&&g.rh!=="woche"&&gewGeplant(g,k)?"verp":""].filter(Boolean).join(" ");
+      return `<button class="gt-z ${c}" data-gt="${k}"${zuk?" disabled":""} aria-pressed="${da}" aria-label="${i+1}. ${MON_L[m-1]}${da?", abgehakt":""}">${i+1}</button>`; })).join("");
+    const s=gewSerie(g), r=gewRekord(g);
+    blatt(`<h2 class="gt-h" style="${kv(gewFarbe(g))}"><i></i>${esc(g.name)}</h2>
+      <p class="hinweis">${esc(gewRhythmus(g))} · Serie ${s} ${gewEinheit(g,s)} · Rekord ${r} ${gewEinheit(g,r)}</p>
+      <div class="gt-nav"><button class="btn rund klein" id="gtZ" aria-label="Monat davor">${ic("links")}</button><b>${MON_L[m-1]} ${y}</b>
+        <button class="btn rund klein" id="gtV" aria-label="Monat danach"${mk>=h.slice(0,7)?" disabled":""}>${ic("rechts")}</button></div>
+      <div class="gt-kal" style="${kv(gewFarbe(g))}">${TAGE.map(t=>`<span class="gt-k">${t}</span>`).join("")}${zellen}</div>
+      <p class="hinweis">Tipp auf einen Tag, um ihn nachzutragen oder den Haken zu entfernen.</p>
+      <div class="blatt-akt"><button class="btn links" id="gtEdit">${ic("edit")}Bearbeiten</button><button class="btn prim" data-act="zu">Fertig</button></div>`);
+    const q=s=>document.getElementById(s);
+    document.querySelectorAll("#blatt [data-gt]").forEach(b=>b.onclick=()=>{ gewUmschalten(g.id,b.dataset.gt); zeichne(); });
+    const schritt=r=>{ const d=new Date(y,m-1+r,1); mk=`${d.getFullYear()}-${p2(d.getMonth()+1)}`; zeichne(); };
+    q("gtZ").onclick=()=>schritt(-1); q("gtV").onclick=()=>schritt(1);
+    q("gtEdit").onclick=()=>gewBlatt(g.id);
+  };
+  zeichne();
+}
+
+/* ============================================================
+   Rückblick: der Monat als Habit-Tracker-Seite
+   Oben die Bilanz, darunter jede Gewohnheit als Punktreihe über
+   alle Tage des Monats. Antippen öffnet das Blatt zum Nachtragen.
+   ============================================================ */
+function rbSchritt(r){
+  const [y,m]=(rbMonat||heute().slice(0,7)).split("-").map(Number), d=new Date(y,m-1+r,1);
+  rbMonat=`${d.getFullYear()}-${p2(d.getMonth()+1)}`; if(rbMonat>=heute().slice(0,7)) rbMonat=null; zeige();
+}
+function vRueckblick(){
+  const h=heute(), jetztM=h.slice(0,7), mk=rbMonat||jetztM, [y,m]=mk.split("-").map(Number), n=new Date(y,m,0).getDate();
+  const l=gewListe(), istJetzt=mk===jetztM, mName=`${MON_L[m-1]}${y!==new Date().getFullYear()?" "+y:""}`;
+  const anfang=[...l.map(g=>g.seit||h),...S.todos.filter(t=>t.doneAt).map(t=>dk(new Date(t.doneAt)))].reduce((a,b)=>b<a?b:a,h).slice(0,7);
+  const st=l.map(g=>({g,...gewMonat(g,mk)}));
+  const soll=st.reduce((a,x)=>a+x.soll,0), ist=st.reduce((a,x)=>a+x.ist,0), haken=st.reduce((a,x)=>a+x.haken,0);
+  const quote=soll?Math.round(ist/soll*100):null;
+  const tage=Array.from({length:n},(_,i)=>`${mk}-${p2(i+1)}`);
+  /* Außerdem: was sonst in dem Monat erledigt wurde */
+  const aufg=S.todos.filter(t=>t.done&&t.doneAt&&dk(new Date(t.doneAt)).startsWith(mk)).length;
+  const fr=S.termine.filter(t=>t.erledigt&&String(t.datum||"").startsWith(mk));
+  const abg=fr.filter(t=>t.art==="abgabe").length, kl=fr.filter(t=>t.art==="klausur").length;
+  const ausser=[aufg?`${aufg} ${aufg===1?"Aufgabe":"Aufgaben"} erledigt`:"",abg?`${abg} ${abg===1?"Abgabe":"Abgaben"} abgegeben`:"",kl?`${kl} ${kl===1?"Klausur":"Klausuren"} geschrieben`:""].filter(Boolean);
+  const ausserText=ausser.length?`Außerdem ${ausser.length>1?ausser.slice(0,-1).join(", ")+" und "+ausser[ausser.length-1]:ausser[0]}.`:"";
+  const beste=istJetzt?l.map(g=>({g,s:gewSerie(g)})).filter(x=>x.s>=2).sort((a,b)=>b.s-a.s)[0]:null;
+  const balken=tage.map(k=>{ if(k>h) return `<i class="zuk"></i>`;
+    const akt=l.filter(g=>(g.seit||h)<=k), v=akt.length?akt.filter(g=>gewDa(g,k)).length/akt.length:0;
+    return `<i class="${v?"":"null"}${k===h?" heute":""}" style="--v:${v.toFixed(3)}" title="${pk(k).getDate()}. ${MON[m-1]}: ${Math.round(v*100)} %"></i>`; }).join("");
+  const kopfZ=tage.map(k=>{ const d=pk(k); return `<span class="${wtag(d)>=5?"we":""}${k===h?" heute":""}">${wtag(d)===0||(d.getDate()===1&&wtag(d)<5)||k===h?d.getDate():""}</span>`; }).join("");
+  const zeilen=st.map(({g,soll,ist,haken})=>{ const s=gewSerie(g), r=gewRekord(g), seit=g.seit||h;
+    const punkte=tage.map(k=>{ const da=gewDa(g,k);
+      const c=da?"da":k>h||k<seit?"aus":k===h?"heute":g.rh==="woche"||!gewGeplant(g,k)?"frei":"verp";
+      return `<i class="${c}"></i>`; }).join("");
+    const info=[g.rh==="woche"?`${haken} Haken, Ziel ${gewZiel(g)} pro Woche`:soll?`${ist} von ${soll} ${soll===1?"Tag":"Tagen"}`:"noch nichts fällig",
+      istJetzt&&s>=2?`Serie ${s}`:"", r>=2?`Rekord ${r}`:""].filter(Boolean).join(" · ");
+    return `<button class="rb-z" data-act="gewTage" data-id="${g.id}" style="${kv(gewFarbe(g))}" aria-label="${esc(g.name)}: Tage ansehen und nachtragen">
+      <span class="rb-n"><b>${esc(g.name)}</b><span>${esc(info)}</span></span>
+      <span class="rb-punkte" style="--n:${n}" aria-hidden="true">${punkte}</span></button>`; }).join("");
+  return `
+  ${kopf("Rückblick",`<b>${mName}</b>${quote!=null?` · ${quote} % geschafft`:""}`,
+    `<button class="btn nur-desk" data-act="gewNeu">${ic("plus")}Gewohnheit</button>
+     <div class="pw-nav"><button class="btn rund" data-act="rbZurueck" aria-label="Monat davor"${mk<=anfang?" disabled":""}>${ic("links")}</button>
+      ${istJetzt?"":`<button class="btn nur-desk" data-act="rbHeute">Jetzt</button>`}
+      <button class="btn rund" data-act="rbVor" aria-label="Monat danach"${istJetzt?" disabled":""}>${ic("rechts")}</button></div>`)}
+  ${l.length?`
+  <div class="kasten rb-gesamt">
+    <div class="rb-q-box"><div class="lab" style="--kc:#333700">geschafft:</div>
+      <div class="rb-q num">${quote!=null?`${quote}<small>%</small>`:"–"}</div></div>
+    <div class="rb-band" style="--n:${n}" role="img" aria-label="Anteil abgehakter Gewohnheiten pro Tag im ${MON_L[m-1]}">${balken}</div>
+    <p class="rb-text">${haken} Haken im ${MON_L[m-1]}${beste?` · längste Serie: ${esc(beste.g.name)}, ${beste.s} ${gewEinheit(beste.g,beste.s)}`:""}${ausserText?`<br>${ausserText}`:""}</p>
+  </div>
+  <div class="karte rb-tracker">
+    <div class="k-kopf"><h3 class="lab" style="--kc:#333700">tracker:</h3><span class="hinweis">Antippen zum Nachtragen</span></div>
+    <div class="rb-kz" aria-hidden="true"><span></span><span class="rb-tagz" style="--n:${n}">${kopfZ}</span></div>
+    <div class="rb-liste">${zeilen}</div>
+  </div>`
+  :`<div class="kasten"><div class="lab" style="--kc:#333700">gewohnheiten:</div>
+    <p class="leer">Noch keine Gewohnheiten. Sobald du eine anlegst und abhakst, siehst du hier, wie dein Monat lief.${ausserText?` ${ausserText}`:""}</p>
+    <button class="btn prim" data-act="gewNeu" style="margin-top:12px">${ic("plus")}Gewohnheit anlegen</button></div>`}`;
 }
 
 /* ============================================================
@@ -1784,6 +2125,7 @@ document.addEventListener("click",e=>{
     const k=document.querySelector(`[data-person="${pid}"]`);
     if(k){ if(gzu.dataset.anl) k.querySelectorAll("[data-ganl]").forEach(c=>c.classList.toggle("on",c.dataset.ganl.endsWith("|"+gzu.dataset.anl)));
       k.scrollIntoView({behavior:"smooth",block:"center"}); setTimeout(()=>k.querySelector("[data-gneu]")?.focus({preventScroll:true}),350); } return; }
+  const gew=e.target.closest("[data-gew]"); if(gew){ gewUmschalten(gew.dataset.gew,heute()); return; }
   const go=e.target.closest("[data-go]"); if(go){ zeige(go.dataset.go); nachOben(); return; }
   const blk=e.target.closest("[data-blk]"); if(blk){ eintragBlatt({blk:blk.dataset.blk.split("|")}); return; }
   const gz=e.target.closest("[data-ganz]"); if(gz){ eintragBlatt({ganz:gz.dataset.ganz}); return; }
@@ -1833,7 +2175,14 @@ document.addEventListener("click",e=>{
       if(SEITE==="uni"){ terBlatt(null,uniReiter==="klausur"?"klausur":"abgabe"); break; }
       if(SEITE==="geschenke"){ personBlatt(null); break; }
       if(SEITE==="partner") break;
+      if(SEITE==="rueckblick"){ gewBlatt(null); break; }
       eintragBlatt({datum:aktTag()}); break;
+    case "gewNeu": gewBlatt(null); break;
+    case "gewEdit": gewBlatt(id); break;
+    case "gewTage": gewTageBlatt(id); break;
+    case "rbZurueck": rbSchritt(-1); break;
+    case "rbVor": rbSchritt(1); break;
+    case "rbHeute": rbMonat=null; zeige(); break;
     case "neuEintrag": eintragBlatt({datum:aktTag()}); break;
     case "neuAm": eintragBlatt({datum:a.dataset.tag}); break;
     case "zumTag": kalDatum=a.dataset.tag; kalModus="tag"; zeige(); nachOben(); break;

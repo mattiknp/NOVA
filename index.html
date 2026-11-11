@@ -9690,23 +9690,18 @@ function baueWelt(name,C,cfg){
         const st=new THREE.Mesh(new THREE.CylinderGeometry(.2,.28,2.4*s,6),M("#8b6f52")); st.position.set(ox,1.2*s+.25,oz); grp.add(st); });
       return grp; };
     const geruestMat=new THREE.LineBasicMaterial({color:"#c9a35c",transparent:true,opacity:.9}), kranMat=M("#e2b04a",.6);
-    /* Ein Geschoss in der Farbe des Hauses, mit einem hellen Fensterband */
-    const HAUSFARBE="#e7b24a";
-    const fensterBand=new THREE.MeshStandardMaterial({color:"#fdfaf4",emissive:"#fff4dd",emissiveIntensity:.35,roughness:.4});
-    const geschoss=(w,GH,farbe)=>{ const fg=new THREE.Group();
-      const mat=new THREE.MeshStandardMaterial({color:farbe,emissive:farbe,emissiveIntensity:.22,roughness:.6});
-      const m=new THREE.Mesh(kiste(w,w,GH),[mat,mat]); m.castShadow=m.receiveShadow=true; fg.add(m);
-      m.add(new THREE.LineSegments(new THREE.EdgesGeometry(kiste(w,w,GH)),kante));
-      const band=new THREE.Mesh(new THREE.BoxGeometry(w+.12,GH*.32,w+.12),fensterBand); band.position.y=GH*.56; fg.add(band);
-      return fg; };
+    /* Das heutige Haus: ganz in einer Farbe */
+    const HAUSFARBE="#d99a2b";   /* dieselbe Farbe wie die Mensa */
     const baustelle=(x,z,ziele,farben,neueGeschosse,fertig)=>{ const grp=new THREE.Group(); grp.position.set(x,.5,z);
       const w=LOT-2, GH=3.4;
       const plat=new THREE.Mesh(new THREE.BoxGeometry(w+.8,.4,w+.8),M("#cfcbc3",.95)); plat.position.y=.2; plat.receiveShadow=true; grp.add(plat);
-      let y=.4; ziele.forEach((ok,i)=>{ if(!ok) return;
-        const fg=geschoss(w,GH,HAUSFARBE); fg.position.y=y; grp.add(fg);   /* ein Gebäude, eine Farbe: das heutige Haus wächst in Gold */
-        if(neueGeschosse&&neueGeschosse.has(i)&&!RUHIG){ fg.scale.y=.02; anim.push({o:fg,t0:performance.now()+120*i,dauer:1800}); }
-        y+=GH; });
-      if(fertig){ const k=new THREE.Mesh(new THREE.BoxGeometry(w+.4,.4,w+.4),gold); k.position.y=y+.2; grp.add(k); return grp; }
+      /* Ein Gebäude, eine Farbe: ein durchgehender Baukörper wie die Mensa, so hoch wie die erfüllten Ziele.
+         Kommt ein Ziel dazu, wächst er langsam um ein Geschoss in die Höhe. */
+      const n=ziele.filter(Boolean).length, neu=neueGeschosse?[...neueGeschosse].filter(i=>ziele[i]).length:0;
+      if(n){ const mat=M(HAUSFARBE,.85), geo=kiste(w,w,n*GH), m=new THREE.Mesh(geo,[mat,mat]);
+        m.position.y=.4; m.castShadow=m.receiveShadow=true; grp.add(m); m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo),kante));
+        if(neu&&!RUHIG){ const von=Math.max(.02,(n-neu)/n); m.scale.y=von; anim.push({o:m,t0:performance.now(),dauer:1500+500*neu,von}); } }
+      if(fertig) return grp;
       /* Gerüst bis zur vollen Höhe von vier Geschossen */
       const gg=new THREE.BoxGeometry(w+1,4*GH,w+1); gg.translate(0,.4+2*GH,0); grp.add(new THREE.LineSegments(new THREE.EdgesGeometry(gg),geruestMat));
       for(let s=1;s<4;s++){ const r=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(w+1,w+1).rotateX(-Math.PI/2)),geruestMat); r.position.y=.4+s*GH; grp.add(r); }
@@ -9837,7 +9832,7 @@ function bild(jetzt){
       li.ebene.constant=(li.boden||0)+li.ist*li.h+.02; li.huelle.visible=li.ist>.004&&aktiv.gewachsen>=1; }));   /* erst nach dem Aufbau, sonst wäre das wachsende Haus ganz farbig */
     if(aktiv.stadt&&aktiv.stadt.anim.length){ const A=aktiv.stadt.anim;
       for(let i=A.length-1;i>=0;i--){ const p=Math.max(0,Math.min(1,(jetzt-A[i].t0)/(A[i].dauer||1100))), e=1-Math.pow(1-p,3)+Math.sin(p*Math.PI)*.06;
-        A[i].o.scale.y=Math.max(.02,e); if(p>=1){ A[i].o.scale.y=1; A.splice(i,1); } }
+        const v=A[i].von||0; A[i].o.scale.y=Math.max(.02,v+(1-v)*e); if(p>=1){ A[i].o.scale.y=1; A.splice(i,1); } }
       renderer.shadowMap.needsUpdate=true; bewegt=true; }
     if(bewegt) bis=Math.max(bis,jetzt+120); else stabZeit=0; }
   stelle(); comp.render(); setzeSchilder();

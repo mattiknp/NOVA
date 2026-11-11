@@ -2483,9 +2483,9 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
 .orb{ width:38px; height:38px; border-radius:50%; background:var(--knopf); border:1px solid rgba(255,255,255,.09); box-shadow:var(--kante); }
 
 /* ── Seitenleiste: eigene Glasscheibe links, wie in der Vorlage ── */
-:root{ --rail-w:236px; --rail-w-min:84px; }
+:root{ --rail-w:272px; --rail-w-min:88px; }
 .rail{
-  margin:14px 0 14px 14px; padding:18px 12px 14px; border-radius:34px; gap:2px;
+  margin:14px 0 14px 14px; padding:22px 14px 16px; border-radius:36px; gap:3px;
   border:1px solid rgba(255,255,255,.12);
   background:linear-gradient(170deg, rgba(255,255,255,.14), rgba(255,255,255,.06) 45%, rgba(255,255,255,.08)), rgba(44,41,39,.55);
   -webkit-backdrop-filter:var(--unscharf); backdrop-filter:var(--unscharf);
@@ -2493,20 +2493,20 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
   scrollbar-width:none;
 }
 .rail::-webkit-scrollbar{ display:none; }
-.mark{ padding:2px 8px 18px; gap:11px; }
-.mark-orb{ width:38px; height:38px; border-radius:50%; background:radial-gradient(120% 90% at 30% 20%, #6c6560, #2d2a28);
+.mark{ padding:2px 10px 22px; gap:12px; }
+.mark-orb{ width:44px; height:44px; border-radius:50%; background:radial-gradient(120% 90% at 30% 20%, #6c6560, #2d2a28);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 4px 10px -4px rgba(0,0,0,.6); }
-.mark-orb::after{ inset:11px; border-radius:50%; background:none; border:2.5px solid #f3eee8; }
-.mark-txt{ font-family:var(--f-disp); font-size:1.15rem; font-weight:500; letter-spacing:.02em; }
-.rail-sep{ height:1px; background:rgba(255,255,255,.08); margin:10px 10px; }
+.mark-orb::after{ inset:13px; border-radius:50%; background:none; border:2.5px solid #f3eee8; }
+.mark-txt{ font-family:var(--f-disp); font-size:1.4rem; font-weight:500; letter-spacing:.02em; }
+.rail-sep{ height:1px; background:rgba(255,255,255,.08); margin:12px 12px; }
 /* Einträge: einfarbige Liniensymbole, die Auswahl ist eine helle Glaspille */
-.rl{ padding:9px 12px; gap:12px; border-radius:14px; color:var(--text-dim); transition:background-color .16s ease, color .16s ease; }
-.rl svg{ width:18px; height:18px; stroke-width:1.7; color:currentColor; opacity:.95; }
-.rl-txt{ font-size:var(--t-base); font-weight:500; letter-spacing:-.006em; }
+.rl{ padding:12px 15px; gap:14px; border-radius:16px; color:var(--text-dim); transition:background-color .16s ease, color .16s ease; }
+.rl svg{ width:21px; height:21px; stroke-width:1.7; color:currentColor; opacity:.95; }
+.rl-txt{ font-size:.97rem; font-weight:500; letter-spacing:-.006em; }
 @media (hover:hover) and (pointer:fine){ .rl:hover{ color:var(--text); background:rgba(255,255,255,.05); } }
 .rl.on{ color:var(--text); background:rgba(255,255,255,.12); }
 .rl.on::before, .rl-ind::before{ display:none; }
-.rl-ind{ border-radius:14px; background:rgba(255,255,255,.13); box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 4px 12px -6px rgba(0,0,0,.45); }
+.rl-ind{ border-radius:16px; background:rgba(255,255,255,.13); box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 4px 12px -6px rgba(0,0,0,.45); }
 .rail.mit-ind .rl.on{ background:none; }
 .rl:active{ transform:scale(.98); }
 .rl-kbd{ border:1px solid rgba(255,255,255,.12); color:var(--text-faint); border-radius:6px; }
@@ -2729,7 +2729,7 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
    Wie in visionOS: das Hauptfenster schaut gerade nach vorn, die Leiste links
    und die Widgets rechts sind zum Betrachter hin gedreht. */
 @media (min-width:861px){
-  .rail{ transform:perspective(1500px) rotateY(7deg); transform-origin:100% 50%;
+  .rail{ transform:perspective(2200px) rotateY(2.5deg); transform-origin:100% 50%;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.22), inset 0 0 0 1px rgba(255,255,255,.035),
       0 2px 6px rgba(0,0,0,.2), 30px 50px 90px -40px rgba(0,0,0,.85); }
   .stage::before{ box-shadow:0 2px 6px rgba(0,0,0,.2), 0 60px 110px -44px rgba(0,0,0,.85); }
@@ -2775,6 +2775,36 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(20,19,18,.5), rgb
     background:radial-gradient(120% 80% at 0% 0%, rgba(242,197,94,.22), transparent 60%), linear-gradient(165deg, rgba(255,255,255,.16), rgba(255,255,255,.05) 55%), rgba(36,34,32,.55); }
 }
 @media (min-width:1180px) and (prefers-reduced-motion:reduce){ #v-heute .hz-kopf{ transform:none; } }
+
+/* ── Farbiges Glas: einzelne Platten tragen die Farbe ihres Themas, wie das blaue Widget in der Vorlage ── */
+:root{
+  /* feine Wellen im Glas, wie Wasser hinter der Scheibe */
+  --wellen:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .03' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 -.24'/%3E%3C/filter%3E%3Crect width='400' height='300' filter='url(%23w)'/%3E%3C/svg%3E");
+}
+.glas-ton, #v-heute .hz-kopf, .lu-karte, .sl-nacht, #v-sport .p-tight, .gk-xmas, .goal{
+  --ton:#4c86f7;
+}
+#v-heute .hz-kopf, .lu-karte{
+  background:var(--wellen) center / cover,
+    radial-gradient(120% 90% at 15% 0%, rgba(170,198,255,.5), rgba(170,198,255,0) 55%),
+    linear-gradient(170deg, rgba(86,128,240,.72), rgba(44,80,196,.58));
+  border-color:rgba(170,200,255,.38);
+  box-shadow:inset 0 1px 0 rgba(220,232,255,.45), inset 0 0 0 1px rgba(170,200,255,.08), 0 24px 50px -26px rgba(20,40,120,.8);
+}
+#v-heute .hz-kopf .hz-t span, #v-heute .hz-kopf .hz-serie, #v-heute .hz-kopf .hz-serie em, .lu-karte .p-note{ color:rgba(235,242,255,.82); }
+#v-heute .hz-kopf .hz-ico{ background:rgba(255,255,255,.2); color:#fff; }
+#v-heute .hz-kopf .hz-pips i{ background:rgba(255,255,255,.22); }
+#v-heute .hz-kopf .hz-pips i.an{ background:#fff; }
+.sl-nacht{ background:var(--wellen) center / cover, radial-gradient(120% 90% at 15% 0%, rgba(205,190,255,.42), transparent 55%), linear-gradient(170deg, rgba(128,104,232,.62), rgba(78,60,170,.5));
+  border-color:rgba(200,185,255,.32); box-shadow:inset 0 1px 0 rgba(235,228,255,.4), 0 24px 50px -26px rgba(50,30,120,.8); }
+#v-sport .p-tight{ background:radial-gradient(120% 100% at 15% 0%, rgba(140,230,170,.3), transparent 60%), linear-gradient(170deg, rgba(70,170,110,.42), rgba(40,110,70,.3));
+  border-color:rgba(150,230,180,.26); box-shadow:inset 0 1px 0 rgba(220,255,232,.3); }
+#v-heute .hd-ziele.voll .hz-kopf{ background:var(--wellen) center / cover, radial-gradient(120% 90% at 15% 0%, rgba(255,232,170,.55), transparent 55%), linear-gradient(170deg, rgba(232,180,70,.72), rgba(190,130,30,.6));
+  border-color:rgba(255,225,160,.45); }
+/* Ziel-Kacheln: ein Hauch der Zielfarbe im Glas */
+.goal{ background:radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--gc) 20%, transparent), transparent 62%), var(--platte); }
+.goal.hit{ background:radial-gradient(130% 100% at 0% 0%, color-mix(in srgb, var(--gc) 34%, transparent), transparent 66%), var(--platte); }
+.gk-xmas{ background:radial-gradient(120% 140% at 0% 0%, rgba(242,197,94,.32), transparent 60%), linear-gradient(170deg, rgba(200,150,50,.3), rgba(120,90,30,.18)); }
 
 /* ── Handy ── */
 @media (max-width:860px){
@@ -9297,31 +9327,25 @@ const AUS="cubic-bezier(.23,1,.32,1)";
 
 const WELTEN={
   campus:{datei:new URL("../stile/campus.json",HIER), mitte:[-20,-15], platte:[520,445],
-    ansicht:"uni", farbe:g=>({"L4|02":"#3b93c4","L1|01":"#4aa869","L4|01":"#d99a2b"})[g.ref],
-    /* Die vier Serien stehen auf einem eigenen Sockel vor dem Campus, die Lernwoche auf dem Dach des Hörsaalzentrums */
-    staebe:C=>({heute:{n:4,x:-20,z:252,y:0,abstand:30,r:4.4,sockel:1,schilder:1,rohr:1},
-                uni:{n:7,x:-13,z:8,y:14.6,abstand:8.6,r:2.9,ueber:"hmz"}}),
-    marken(C){ const m=ref=>{ const g=C.gebaeude.find(b=>b.ref===ref); return g&&[...schwerpunkt(g.p),g.h]; };
-      return [{id:"hmz",name:"Hörsaalzentrum",farbe:"#3b93c4",ort:m("L4|02")},
-              {id:"mb",name:"Maschinenbau",farbe:"#4aa869",ort:m("L1|01")},
-              {id:"mensa",name:"Mensa",farbe:"#d99a2b",ort:m("L4|01")}]; }},
+    ansicht:"uni", farbe:()=>undefined,
+    /* Gebäude als Anzeige: sie füllen sich von unten mit Licht in der Farbe des Ziels.
+       Heute: Maschinenbau = Eingetragen, Clemens-Schöpf-Institut = Geschlafen,
+       Hörsaal- und Medienzentrum = Gelernt, Materialwissenschaft = Scroll-Ziel.
+       Uni: das Hörsaal- und Medienzentrum zeigt die Lernzeit des Tages. */
+    lichter:{heute:["L1|01","L2|02","L4|02","L2|01"], uni:["L4|02"]}},
   woog:{datei:new URL("../stile/woog.json",HIER), mitte:[0,0], platte:[680,578],
-    ansicht:"sport", farbe:g=>g.k==="tennis"?"#4aa869":undefined,
-    /* Die Sportwoche steht im Stadionrund */
-    staebe:C=>({sport:{n:7,x:C.marken.tsg[0],z:C.marken.tsg[1],y:.1,abstand:10,r:3.3,ueber:"tsg"}}),
-    marken:C=>[{id:"tennis",name:"Tennisplätze",farbe:"#4aa869",ort:[...C.marken.tennis,2]},
-               {id:"tsg",name:"TSG 1846",farbe:"#d99a2b",ort:[...C.marken.tsg,2]},
-               {id:"woog",name:"Großer Woog",farbe:"#7fb6d6",ort:[...C.marken.woog,2]}]}
+    /* Farbig ist nur das Wichtige: die zehn Sandplätze und die Tennishalle */
+    ansicht:"sport", farbe:g=>g.k==="tennis"?"#c9764e":undefined, lichter:{}}
 };
 /* Blick je Ansicht: Welt, Ziel (x,z), Richtung (Grad, 0 = von Süden), Neigung (Grad ab der Senkrechten),
    Abstand, Nacht, und „hoch“: wie weit das Ziel über die Bildmitte rückt (für das Kartenfenster) */
 const BLICKE={
-  /* Auf breiten Bildschirmen steht rechts neben den Stationen ein Widget: dann rückt der Blick etwas zur Seite */
-  heute:     {welt:"campus", ziel:[innerWidth>=1180?12:-20,236],  az:14,   neig:71, d:innerWidth>=1180?380:340, hoch:.255, fenster:"kurz"},
+  /* Heute: Blick auf die vier Gebäude der Ziele. Auf breiten Bildschirmen steht rechts ein Widget, dann rückt der Blick zur Seite */
+  heute:     {welt:"campus", ziel:[innerWidth>=1180?118:6,34],  az:20,   neig:58, d:innerWidth>=1180?740:580, hoch:.255, fenster:"kurz"},
   planer:    {welt:"campus", ziel:[-20,-15],  az:0,    neig:14, d:640},     /* fast von oben: die Woche als Grundriss */
   uni:       {welt:"campus", ziel:[-12,-10],  az:-20,  neig:62, d:440, hoch:.2, fenster:1},
   schlaf:    {welt:"campus", ziel:[-20,-15],  az:150,  neig:66, d:600, nacht:1},
-  sport:     {welt:"woog",   ziel:[30,-8],    az:24,   neig:58, d:580, hoch:.225, fenster:1},
+  sport:     {welt:"woog",   ziel:[46,-62],   az:22,   neig:56, d:600, hoch:.225, fenster:1},   /* die Tennisplätze in der Mitte */
   habits:    {welt:"campus", ziel:[-60,10],   az:105,  neig:52, d:470},
   rueckblick:{welt:"campus", ziel:[-20,-15],  az:-115, neig:42, d:720},     /* weit weg: der Blick zurück */
   geschenke: {welt:"campus", ziel:[-130,-35], az:205,  neig:60, d:380},     /* an der Mensa */
@@ -9335,21 +9359,15 @@ const schwerpunkt=p=>[p.reduce((a,q)=>a+q[0],0)/p.length, p.reduce((a,q)=>a+q[1]
 const farbwert=c=>{ const m=/var\((--[\w-]+)\)/.exec(c||""); return (m?getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim():c)||"#f69646"; };
 const zahl=v=>Number(v).toLocaleString("de-DE",{maximumFractionDigits:1});
 function daten(){
-  const d={text:{},heute:[],uni:[],sport:[]}, h=today(), mo=sow(new Date()), tage=[...Array(7)].map((_,i)=>dk(addD(mo,i)));
-  /* Heute: jedes Ziel ist ein Glasrohr so hoch wie der Rekord, gefüllt bis zur laufenden Serie */
-  try{ d.heute=buildGoals().map(g=>{ const rohr=9+Math.min(g.best,60)*.3;
-    return {name:g.label,farbe:farbwert(g.color),rohr,hoch:g.best>0?Math.max(2,rohr*Math.min(1,g.serie/g.best)):2,an:g.todayOk,text:String(g.serie)}; }); }catch(e){}
-  try{ const blau=farbwert("var(--m-study)"); let hh=0;
-    d.uni=tage.map(k=>{ const v=+((S.metrics[k]||{}).study)||0; if(k===h) hh=v; return {farbe:blau,hoch:v*4.6,an:k===h,matt:k>h}; });
-    const mk=wochenSchluessel(new Date()); let n=0;
-    for(let i=0;i<7;i++) wocheTag(mk,i).forEach(b=>{ if(b.type!=="lernen"&&katVon(blockById(b.type))==="uni") n++; });
-    d.text.hmz=`${n} ${n===1?"Termin":"Termine"} · heute ${zahl(hh)} h`; }catch(e){}
-  try{ d.text.mb=STUDIENPLAN.filter(m=>modStatus(m)==="bestanden").reduce((a,m)=>a+m.cp,0)+" CP"; }catch(e){}
-  try{ let ten=0, ges=0;
-    d.sport=tage.map(k=>{ const l=(S.sport||{})[k]||[]; let min=0, groesste=null;
-      l.forEach(e=>{ const m=+e.duration||0; min+=m; if(e.type==="tennis") ten++; if(!groesste||m>(+groesste.duration||0)) groesste=e; });
-      ges+=min; return {farbe:groesste?typeInfo(groesste.type).color:farbwert("var(--m-sport)"),hoch:min*.2,an:k===h,matt:k>h}; });
-    d.text.tennis=`${ten}× Tennis`; d.text.tsg=`${Math.round(ges)} von ${G().sport} min`; }catch(e){}
+  const d={heute:[],uni:[]}, m=((S.metrics||{})[today()])||{};
+  /* Heute: erfüllt = ganz gefüllt und leuchtend; sonst so weit, wie der Tag schon ist (Schlaf, Lernzeit) */
+  try{ const g=G(); d.heute=buildGoals().map(z=>{ let teil=0;
+      if(z.key==="study") teil=(+m.study||0)/(+g.study||1);
+      else if(z.key==="sleep") teil=(+m.sleep||0)/(+g.sleep||1);
+      return {farbe:farbwert(z.color), anteil:z.todayOk?1:Math.max(.3,Math.min(.9,teil)), an:z.todayOk}; }); }catch(e){}
+  /* Uni: das Hörsaalzentrum füllt sich mit der Lernzeit von heute bis zum Tagesziel */
+  try{ const v=+m.study||0, ziel=+G().study||1;
+    d.uni=[{farbe:farbwert("var(--m-study)"), anteil:Math.max(.14,Math.min(1,v/ziel)), an:v>=ziel}]; }catch(e){}
   return d;
 }
 
@@ -9365,7 +9383,7 @@ document.body.prepend(leinwand,schleier,schildEbene);
 const klein=()=>innerWidth<=860;
 const renderer=new THREE.WebGLRenderer({canvas:leinwand,antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,klein()?1.5:2)); renderer.setSize(innerWidth,innerHeight,false);
-renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled=true; renderer.localClippingEnabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.shadowMap.autoUpdate=false;      /* Schatten ändern sich nur, wenn im Modell etwas wächst */
 renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=.95;
 const kam=new THREE.PerspectiveCamera(30,innerWidth/innerHeight,5,6000);
@@ -9392,18 +9410,45 @@ function baueWelt(name,C,cfg){
   lege(band(C.wege.filter(w=>w.b>=5),0,.04),M("#d3cdc2"));
   lege(band(C.wege.filter(w=>w.b<5),0,.03),M("#dbd5ca"));
   lege(band(C.bahn,.03,.12,.5),M("#b8b0a4"));
+  /* Sportflächen neutral; die Tennisplätze sind Sand mit weißen Linien und Netz, wie in Wirklichkeit */
+  const platzLinien=[], netze=[];
+  const tennis=p=>{ const q=p[0][0]===p.at(-1)[0]&&p[0][1]===p.at(-1)[1]?p.slice(0,-1):p; if(q.length!==4) return;
+    const c=[(q[0][0]+q[1][0]+q[2][0]+q[3][0])/4,(q[0][1]+q[1][1]+q[2][1]+q[3][1])/4];
+    let a=[q[1][0]-q[0][0],q[1][1]-q[0][1]], b=[q[2][0]-q[1][0],q[2][1]-q[1][1]];
+    if(Math.hypot(...a)<Math.hypot(...b)) a=b;
+    const la=Math.hypot(...a), u=[a[0]/la,a[1]/la], v=[-u[1],u[0]];
+    const P=(s,t)=>[c[0]+u[0]*s+v[0]*t, c[1]+u[1]*s+v[1]*t];
+    const L=11.885, D=5.485, E=4.115, A=6.4;   /* Maße eines Tennisplatzes in Metern */
+    platzLinien.push([P(-L,-D),P(L,-D),P(L,D),P(-L,D),P(-L,-D)], [P(-L,-E),P(L,-E)], [P(-L,E),P(L,E)],
+      [P(-A,-E),P(-A,E)], [P(A,-E),P(A,E)], [P(-A,0),P(A,0)]);
+    const g=new THREE.BoxGeometry(.18,1,2*D+1.6); g.rotateY(-Math.atan2(u[1],u[0])); g.translate(c[0],.57,c[1]); netze.push(g); };
   (C.sport||[]).forEach(f=>{ if(!f.p.every(drin)) return; const c=cfg.farbe({k:f.sport});
-    lege(flach(f,.07),M(c?new THREE.Color(c).lerp(new THREE.Color("#ffffff"),.22):f.typ==="track"?"#dccfc2":"#e0dad0")); });
+    lege(flach(f,.07),M(c||(f.typ==="track"?"#ddd0c3":"#e4ded4"),c?.95:1));
+    if(f.sport==="tennis") tennis(f.p); });
+  if(platzLinien.length) lege(band(platzLinien,.08,.04,.24),M("#fdfbf7",.8));
+  if(netze.length){ const n=lege(mergeGeometries(netze),M("#f3efe9",.6)); n.castShadow=true; }
   (C.wasser||[]).forEach(f=>{ if(f.p.every(drin)) lege(flach(f,.05),M("#8fb9d4",.2,.05)); });
 
-  const weiss=M("#f7f3ec"), wachsen=[];
+  /* Gebäude: weiße Wände mit eingeprägten Fensterreihen, Dächer eine Spur dunkler, feine Kanten wie gezeichnet */
+  const fenster=(()=>{ const cv=document.createElement("canvas"); cv.width=cv.height=64; const g=cv.getContext("2d");
+    g.fillStyle="#ffffff"; g.fillRect(0,0,64,64); g.fillStyle="#e6e1d9"; g.fillRect(0,0,64,5); g.fillStyle="#c9c2b7"; g.fillRect(13,17,38,28);
+    const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1/3.4,1/3.6); t.offset.set(0,-1/3.6);
+    t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); return t; })();
+  const wand=new THREE.MeshStandardMaterial({color:"#f8f4ee",map:fenster,roughness:.95}), dach=M("#ebe6de",.9);
+  const kante=new THREE.LineBasicMaterial({color:"#9a9083",transparent:true,opacity:.4});
+  const wachsen=[], haus={};
   C.gebaeude.forEach(b=>{ if(!b.p.every(drin)) return; const c=cfg.farbe(b);
     const geo=new THREE.ExtrudeGeometry(form(b),{depth:b.h,bevelEnabled:false}); geo.rotateX(-Math.PI/2);
-    const m=new THREE.Mesh(geo,c?M(c,.85):weiss); m.castShadow=m.receiveShadow=true; scene.add(m);
+    const m=new THREE.Mesh(geo,c?[M(c,.85),M(c,.85)]:[dach,wand]); m.castShadow=m.receiveShadow=true; scene.add(m);
+    m.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo,25),kante));
+    if(b.ref) haus[b.ref]={m,geo,h:b.h};
     const [x,z]=schwerpunkt(b.p); wachsen.push({m,v:Math.hypot(x-cx,z-cz)}); if(!RUHIG) m.scale.y=.001; });
-  const bp=C.baeume.filter(drin), kronen=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(3.2,2),M("#f2eee6"),bp.length), mx=new THREE.Matrix4();
-  bp.forEach(([x,z],i)=>{ const f=.8+((i*37)%10)/25; mx.makeScale(f,f,f).setPosition(x,6*f,z); kronen.setMatrixAt(i,mx); });
-  kronen.castShadow=true; scene.add(kronen);
+  const bp=C.baeume.filter(drin), mx=new THREE.Matrix4();
+  const kronen=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(3.2,2),M("#f1ede5"),bp.length);
+  const staemme=new THREE.InstancedMesh(new THREE.CylinderGeometry(.3,.42,1,8),M("#d4cbbd"),bp.length);
+  bp.forEach(([x,z],i)=>{ const f=.8+((i*37)%10)/25; mx.makeScale(f,f,f).setPosition(x,6.6*f,z); kronen.setMatrixAt(i,mx);
+    mx.makeScale(f,4.4*f,f).setPosition(x,2.2*f,z); staemme.setMatrixAt(i,mx); });
+  kronen.castShadow=staemme.castShadow=true; scene.add(kronen,staemme);
 
   /* Warmes Licht wie am späten Nachmittag; nachts kühl und gedämpft */
   const himmel=new THREE.HemisphereLight(0xfff0e0,0x7c6a5c,1.25); scene.add(himmel);
@@ -9412,47 +9457,18 @@ function baueWelt(name,C,cfg){
   sonne.castShadow=true; sonne.shadow.mapSize.setScalar(klein()?2048:4096);
   Object.assign(sonne.shadow.camera,{left:-s2,right:s2,top:s2,bottom:-s2,near:10,far:1600}); sonne.shadow.bias=-.0003; sonne.shadow.normalBias=.5; scene.add(sonne);
 
-  /* Schilder für das Kartenfenster */
-  const schild=(m,ansicht)=>{ const el=document.createElement("div"); el.className="gl-schild aus"+(m.stab?" stab":""); el.style.setProperty("--fc",m.farbe);
-    el.innerHTML=`<i></i><b>${m.name}</b><span></span>`; schildEbene.append(el);
-    return {id:m.id,el,name:el.querySelector("b"),wert:el.querySelector("span"),ansicht,basis:m.ort[2]+3,ort:new THREE.Vector3(m.ort[0],m.ort[2]+3,m.ort[1])}; };
-  const schilder=cfg.marken(C).filter(m=>m.ort).map(m=>schild(m,cfg.ansicht));
-
-  /* Acrylstäbe: so markieren Architekten etwas im Modell, hier sind es die eigenen Zahlen */
-  const stabGeo=new THREE.CylinderGeometry(1,1,1,28); stabGeo.translate(0,.5,0);
-  /* Stationen: runder Sockel mit leuchtendem Farbring, darauf ein Glasrohr mit Rand,
-     innen die farbige Säule mit gewölbter Kuppe. Nur Darstellung, die Zahlen bleiben dieselben. */
-  const kuppeGeo=new THREE.SphereGeometry(1,28,14,0,Math.PI*2,0,Math.PI/2);
-  const ringGeo=new THREE.TorusGeometry(1,.075,10,48); ringGeo.rotateX(Math.PI/2);
-  const sockelGeo=new THREE.CylinderGeometry(1,1.06,1,48); sockelGeo.translate(0,.5,0);
-  const staebe={};
-  Object.entries(cfg.staebe(C)).forEach(([ansicht,r])=>{
-    let boden=r.y;
-    if(r.sockel){ const s=lege(new THREE.BoxGeometry(r.n*r.abstand+26,6,30),M("#ddd5c8",.85)); s.position.set(r.x,-3,r.z); s.castShadow=true;
-      const s2=lege(new THREE.BoxGeometry(r.n*r.abstand+15,1.3,21),M("#f4efe7",.55)); s2.position.set(r.x,.65,r.z); s2.castShadow=true; boden=1.3; }
-    const rr=r.sockel?r.r*.8:r.r;
-    staebe[ansicht]=[...Array(r.n)].map((_,i)=>{
-      const x=r.x+(i-(r.n-1)/2)*r.abstand;
-      let fuss=boden, ring=null;
-      if(r.sockel){ const so=lege(sockelGeo,M("#fbf7f1",.4)); so.position.set(x,boden,r.z); so.scale.set(r.r*1.95,2.2,r.r*1.95); so.castShadow=true;
-        fuss=boden+2.2;
-        ring=new THREE.Mesh(ringGeo,new THREE.MeshStandardMaterial({color:"#ffffff",emissive:"#ffffff",emissiveIntensity:.3,roughness:.3}));
-        ring.position.set(x,fuss+.02,r.z); ring.scale.setScalar(r.r*1.62); scene.add(ring); }
-      const mat=new THREE.MeshStandardMaterial({color:"#f69646",emissive:"#f69646",emissiveIntensity:.3,roughness:.18,transparent:true,opacity:.9});
-      const m=new THREE.Mesh(stabGeo,mat); m.position.set(x,fuss,r.z); m.scale.set(rr,.01,rr); m.castShadow=true; m.visible=false; scene.add(m);
-      const kuppe=new THREE.Mesh(kuppeGeo,mat); kuppe.position.set(x,fuss,r.z); kuppe.scale.set(rr,rr*.55,rr); kuppe.castShadow=true; kuppe.visible=false; scene.add(kuppe);
-      const st={m,kuppe,ring,ist:0,soll:0,fuss,rohrIst:0,rohrSoll:0};
-      if(r.rohr){ st.rohr=new THREE.Mesh(stabGeo,new THREE.MeshPhysicalMaterial({color:"#ffffff",emissive:"#ffffff",emissiveIntensity:.15,roughness:.06,clearcoat:1,clearcoatRoughness:.1,transparent:true,opacity:.26,depthWrite:false}));
-        st.rohr.position.copy(m.position); st.rohr.scale.set(r.r*1.12,.01,r.r*1.12); st.rohr.visible=false; scene.add(st.rohr);
-        st.rand=new THREE.Mesh(ringGeo,new THREE.MeshStandardMaterial({color:"#ffffff",emissive:"#ffffff",emissiveIntensity:.35,roughness:.15,transparent:true,opacity:.85}));
-        st.rand.position.copy(m.position); st.rand.scale.setScalar(r.r*1.12); st.rand.visible=false; scene.add(st.rand); }
-      if(r.schilder){ st.schild=schild({id:"",name:"",farbe:"#fff",ort:[x,r.z,fuss],stab:1},ansicht); st.schild.stab=st; schilder.push(st.schild); }
-      return st; });
-    staebe[ansicht].ueber=r.ueber;   /* dieses Schild rückt über die Stäbe */
-  });
+  /* Gebäude als Anzeige: eine farbige Hülle über dem Gebäude, sichtbar nur bis zur Füllhöhe (Schnittebene) */
+  const lichter={};
+  Object.entries(cfg.lichter||{}).forEach(([ansicht,refs])=>{
+    lichter[ansicht]=refs.map(ref=>{ const hs=haus[ref]; if(!hs) return null;
+      const ebene=new THREE.Plane(new THREE.Vector3(0,-1,0),0);
+      const mat=new THREE.MeshStandardMaterial({color:"#ffffff",map:fenster,emissive:"#ffffff",emissiveIntensity:.2,roughness:.55,
+        clippingPlanes:[ebene],polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4});
+      const huelle=new THREE.Mesh(hs.geo,mat); huelle.visible=false; hs.m.add(huelle);
+      return {huelle,mat,ebene,h:hs.h,ist:0,soll:0}; }); });
   /* Abends und nachts steht eine warme Lampe über dem Modell */
   const lampe=new THREE.SpotLight(0xffc68a,0,0,.78,.8,0); lampe.position.set(cx+60,360,cz+230); lampe.target.position.set(cx,0,cz+95); scene.add(lampe,lampe.target);
-  return {name,scene,wachsen,himmel,sonne,lampe,schilder,staebe,gewachsen:RUHIG?1:0};
+  return {name,scene,wachsen,himmel,sonne,lampe,schilder:[],lichter,gewachsen:RUHIG?1:0};
 }
 
 const TS={uniforms:{tDiffuse:{value:null},delta:{value:new THREE.Vector2()},staerke:{value:2.4},mitte:{value:.5}},
@@ -9526,13 +9542,10 @@ function bild(jetzt){
   if(aktiv){ let bewegt=false;
     /* Wachstum nach Zeit, nicht nach Bildern: auch bei wenigen Bildern pro Sekunde gleich schnell */
     const zug=RUHIG?1:1-Math.exp(-Math.min(400,stabZeit?jetzt-stabZeit:16)/150); stabZeit=jetzt;
-    Object.values(aktiv.staebe).forEach(l=>l.forEach(st=>{ const d=st.soll-st.ist; if(Math.abs(d)<.04){ if(st.ist!==st.soll){ st.ist=st.soll; bewegt=true; } }
-      else { st.ist+=d*zug; bewegt=true; } st.m.scale.y=Math.max(.01,st.ist); st.m.visible=st.ist>.02;
-      if(st.kuppe){ st.kuppe.position.y=st.fuss+st.ist; st.kuppe.visible=st.m.visible; }
-      if(st.rohr){ const e=st.rohrSoll-st.rohrIst; if(Math.abs(e)<.04) st.rohrIst=st.rohrSoll; else { st.rohrIst+=e*zug*.8; bewegt=true; }
-        st.rohr.scale.y=Math.max(.01,st.rohrIst); st.rohr.visible=st.rohrIst>.02;
-        if(st.rand){ st.rand.position.y=st.fuss+st.rohrIst; st.rand.visible=st.rohr.visible; } } }));
-    if(bewegt){ renderer.shadowMap.needsUpdate=true; bis=Math.max(bis,jetzt+120); } else stabZeit=0; }
+    Object.values(aktiv.lichter).forEach(l=>l.forEach(li=>{ if(!li) return; const d=li.soll-li.ist;
+      if(Math.abs(d)<.003){ if(li.ist!==li.soll){ li.ist=li.soll; bewegt=true; } } else { li.ist+=d*zug*.7; bewegt=true; }
+      li.ebene.constant=li.ist*li.h+.02; li.huelle.visible=li.ist>.004&&aktiv.gewachsen>=1; }));   /* erst nach dem Aufbau, sonst wäre das wachsende Haus ganz farbig */
+    if(bewegt) bis=Math.max(bis,jetzt+120); else stabZeit=0; }
   stelle(); comp.render(); setzeSchilder();
   /* Zu langsam? Dann erst die Schärfe senken, danach die Unschärfe am Bildrand weglassen */
   if(letztes&&flugDauer){ const dt=jetzt-letztes; langsam=dt>48?langsam+1:Math.max(0,langsam-1);
@@ -9575,15 +9588,10 @@ function fenster(ansicht){
 /* Stäbe und Schilder der gezeigten Welt auf den Stand von NOVA bringen. Nur die Stäbe der offenen Ansicht stehen, die anderen sinken ein. */
 function bestuecke(){
   if(!aktiv) return; const d=daten();
-  aktiv.schilder.forEach(s=>{ if(!s.stab){ s.wert.textContent=d.text[s.id]||""; s.wert.hidden=!d.text[s.id]; } });
-  Object.entries(aktiv.staebe).forEach(([ansicht,l])=>{ const reihe=d[ansicht]||[], offen=ansicht===VIEW; let max=0;
-    l.forEach((st,i)=>{ const r=reihe[i]; st.soll=offen&&r?Math.max(r.matt?.4:1.2,r.hoch):0; st.rohrSoll=offen&&r&&r.rohr?r.rohr:0; if(offen) max=Math.max(max,st.soll);
-      if(st.rohr&&r){ st.rohr.material.color.set(r.farbe).lerp(weissF,.55); st.rohr.material.emissive.copy(st.rohr.material.color); }
-      if(r){ st.m.material.color.set(r.farbe); st.m.material.emissive.set(r.farbe); st.m.material.emissiveIntensity=r.an?.5:.12; st.m.material.opacity=r.matt?.3:r.an?.95:.62;
-        if(st.ring){ st.ring.material.color.set(r.farbe); st.ring.material.emissive.set(r.farbe); st.ring.material.emissiveIntensity=r.an?1.6:.45; }
-        if(st.schild){ st.schild.el.style.setProperty("--fc",r.farbe); st.schild.name.textContent=r.name||""; st.schild.wert.textContent=r.text||""; } } });
-    if(l.ueber){ const s=aktiv.schilder.find(x=>x.id===l.ueber); if(s) s.ort.y=s.basis+(offen?max:0); } });
-  fordere(900);
+  Object.entries(aktiv.lichter).forEach(([ansicht,l])=>{ const reihe=d[ansicht]||[], offen=ansicht===VIEW;
+    l.forEach((li,i)=>{ if(!li) return; const r=reihe[i]; li.soll=offen&&r?r.anteil:0;
+      if(r){ li.mat.color.set(r.farbe); li.mat.emissive.set(r.farbe); li.mat.emissiveIntensity=r.an?.6:.16; } }); });
+  fordere(1600);
 }
 for(const a of Object.keys(BLICKE)){
   if(!BLICKE[a].fenster||typeof R[a]!=="function") continue;

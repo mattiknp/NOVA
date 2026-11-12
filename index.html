@@ -2918,6 +2918,17 @@ body.gl-erkunden #glasSchleier{ opacity:0 !important; }
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
 } }
 </script>
+
+<style id="thema-welt">
+/* NOVA-Welten: Woog für Training, Lichtwiese mit deiner Stadt für alle anderen Seiten */
+#novaWelt, #novaCampus{ position:fixed; inset:0; z-index:0; width:100%; height:100%; border:0; display:block; background:transparent;
+  opacity:0; visibility:hidden; pointer-events:none; transition:opacity .35s ease, visibility 0s linear .35s; }
+body.gl-sportwelt #novaWelt, body.gl-campuswelt #novaCampus{ opacity:1; visibility:visible; transition:opacity .35s ease; }
+body.gl-iframewelt #glasWelt, body.gl-iframewelt #glasSchilder{ opacity:0; visibility:hidden; }
+body.gl-sportwelt.gl-erkunden #novaWelt, body.gl-campuswelt.gl-erkunden #novaCampus{ pointer-events:auto; }
+body.gl-iframewelt #glasErkunden{ pointer-events:none; }
+body.gl-iframewelt #glasErkunden .ge-leiste{ pointer-events:auto; }
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -9484,6 +9495,30 @@ const leinwand=document.createElement("canvas"); leinwand.id="glasWelt"; leinwan
 const schleier=document.createElement("div"); schleier.id="glasSchleier";
 const schildEbene=document.createElement("div"); schildEbene.id="glasSchilder"; schildEbene.setAttribute("aria-hidden","true");
 document.body.prepend(leinwand,schleier,schildEbene);
+/* ── NOVA-Welten (welt/…): eigene, lebendige Szenen; NOVA schickt Ansicht, Tagesdaten und deine Stadt ── */
+const welten2={ sport:{id:"novaWelt",datei:"welt/index.html",titel:"3D-Welt am Großen Woog"},
+                campus:{id:"novaCampus",datei:"welt/lichtwiese.html",titel:"3D-Welt Lichtwiese mit deiner Stadt"} };
+for(const k in welten2){ const w=welten2[k], f=document.createElement("iframe"); f.id=w.id; f.title=w.titel;
+  f.setAttribute("aria-hidden","true"); f.tabIndex=-1; document.body.prepend(f); w.el=f; w.geladen=false; }
+let weltAktiv=null;
+function weltDaten(mitStadt){ const d={novaWelt:1};
+  try{ const m=((S.metrics||{})[today()])||{}; d.schlaf=!(+m.sleep>0)||!!zielPruefer().sleep(today()); }catch(e){ d.schlaf=true; }   /* Nebel nur, wenn der eingetragene Schlaf zu kurz war */
+  try{ d.training=sportOn(today()).some(e=>!String(e.id||"").startsWith("stretch_")); }catch(e){ d.training=true; }
+  try{ const st=stadtDaten(); d.solide=!!st.heuteOk; if(mitStadt) d.stadt=st; }catch(e){ d.solide=false; }
+  return d; }
+const anWelt=(k,m)=>{ try{ const f=welten2[k].el; if(f.contentWindow) f.contentWindow.postMessage(m,"*"); }catch(e){} };
+function weltZeigen(v){
+  const k=v==="sport"?"sport":"campus", w=welten2[k];
+  if(!w.geladen){ w.geladen=true;
+    w.el.addEventListener("load",()=>anWelt(k,{...weltDaten(k==="campus"),ansicht:VIEW,sofort:true,pause:weltAktiv!==k}));
+    w.el.src=new URL(w.datei+"?eingebettet=1&ansicht="+encodeURIComponent(v),location.href).href; }
+  for(const kk in welten2) if(kk!==k) anWelt(kk,{novaWelt:1,pause:true});
+  weltAktiv=k;
+  document.body.classList.add("gl-iframewelt");
+  document.body.classList.toggle("gl-sportwelt",k==="sport"); document.body.classList.toggle("gl-campuswelt",k==="campus");
+  anWelt(k,{...weltDaten(k==="campus"),ansicht:v,pause:false});
+}
+setInterval(()=>{ if(weltAktiv&&!document.hidden) anWelt(weltAktiv,weltDaten(weltAktiv==="campus")); },60000);
 
 const klein=()=>innerWidth<=860;
 const renderer=new THREE.WebGLRenderer({canvas:leinwand,antialias:true});
@@ -9826,7 +9861,7 @@ function setzeSchilder(){
 }
 
 let bis=0, laeuft=false, letztes=0, langsam=0, stufe=0, stabZeit=0, erkunden=false;
-function fordere(ms){ letztes=0; bis=Math.max(bis,performance.now()+ms); if(!laeuft){ laeuft=true; requestAnimationFrame(bild); } }
+function fordere(ms){ if(document.body.classList.contains("gl-iframewelt")) return; letztes=0; bis=Math.max(bis,performance.now()+ms); if(!laeuft){ laeuft=true; requestAnimationFrame(bild); } }
 function bild(jetzt){
   if(flugDauer){ const p=Math.min(1,(jetzt-flugStart)/flugDauer), e=weich(p);
     ZAHLEN.forEach(k=>jetztB[k]=vonB[k]+(zuB[k]-vonB[k])*e); jetztB.ziel.lerpVectors(vonB.ziel,zuB.ziel,e); if(p>=1) flugDauer=0; }
@@ -9918,9 +9953,11 @@ const erk=document.createElement("div"); erk.id="glasErkunden"; erk.hidden=true;
 erk.innerHTML=`<div class="ge-leiste"><span>Ziehen verschiebt · Umschalt oder rechte Maustaste dreht · Scrollen zoomt</span><button type="button" class="ge-zu">Fertig</button></div>`;
 document.body.append(erk);
 const fliegeZu=(z,ms)=>{ ZAHLEN.forEach(k=>vonB[k]=jetztB[k]); vonB.ziel=jetztB.ziel.clone(); Object.assign(zuB,z); zuB.ziel=z.ziel||jetztB.ziel.clone(); flugStart=performance.now(); flugDauer=ms; fordere(ms+80); };
-function erkundenAn(){ if(!aktiv||erkunden) return; erkunden=true; document.body.classList.add("gl-erkunden"); erk.hidden=false;
+function erkundenAn(){ if(erkunden||(!aktiv&&!weltAktiv)) return; erkunden=true; document.body.classList.add("gl-erkunden"); erk.hidden=false;
+  if(weltAktiv) anWelt(weltAktiv,{novaWelt:1,erkunden:true});
   fliegeZu({az:jetztB.az,neig:Math.min(jetztB.neig,1.15),d:jetztB.d*1.25,nacht:jetztB.nacht,hoch:0},800); }
 function erkundenAus(zurueck=true){ if(!erkunden) return; erkunden=false; document.body.classList.remove("gl-erkunden"); erk.hidden=true;
+  if(weltAktiv) anWelt(weltAktiv,{novaWelt:1,erkunden:false});
   if(zurueck) fliege(blickFuer(VIEW),900); }
 erk.querySelector(".ge-zu").addEventListener("click",e=>{ e.stopPropagation(); erkundenAus(); });
 erk.querySelector(".ge-leiste").addEventListener("pointerdown",e=>e.stopPropagation());
@@ -9982,6 +10019,7 @@ function einblenden(){
 }
 function wechsel(v){
   erkundenAus(false);
+  weltZeigen(v); zustand(); return;
   const b=blickFuer(v), vorher=aktiv;
   zustand(); bestuecke();
   zeigeWelt(b.welt).then(()=>{
@@ -10011,10 +10049,9 @@ ohneTitel(); new MutationObserver(ohneTitel).observe(document.getElementById("ap
 const startAnsicht=typeof VIEW==="string"?VIEW:"heute", start=blickFuer(startAnsicht);
 if(start.fenster) try{ fenster(startAnsicht); }catch(e){}
 zustand();
-await zeigeWelt(start.welt,true);
-setze(alsZiel({...start,d:start.d*1.25,az:start.az-22})); fliege(start,RUHIG?0:2400);
+weltZeigen(startAnsicht);   /* NOVAs alte Szene bleibt ungebaut: die Welten in welt/ übernehmen */
 /* Die zweite Welt im Hintergrund vorbereiten, damit der Wechsel zu Training nicht stockt */
-(window.requestIdleCallback||setTimeout)(()=>ladeWelt(start.welt==="woog"?"campus":"woog"),{timeout:4000});
+/* (kein Vorladen der alten Szenen mehr) */
 
 addEventListener("resize",()=>{ groesse(); const z=alsZiel(blickFuer(VIEW)); if(!flugDauer) jetztB.d=z.d; fordere(120); });
 document.addEventListener("visibilitychange",()=>{ if(!document.hidden) fordere(120); });

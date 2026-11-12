@@ -2928,6 +2928,36 @@ body.gl-iframewelt #glasWelt, body.gl-iframewelt #glasSchilder{ opacity:0; visib
 body.gl-sportwelt.gl-erkunden #novaWelt, body.gl-campuswelt.gl-erkunden #novaCampus{ pointer-events:auto; }
 body.gl-iframewelt #glasErkunden{ pointer-events:none; }
 body.gl-iframewelt #glasErkunden .ge-leiste{ pointer-events:auto; }
+/* ── Lernmodus: Licht läuft um den Bildschirmrand, das Glas wird kühl, die Leiste leuchtet ── */
+@property --lw{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
+#lernAura, #lernWelle{ pointer-events:none; }
+#lernAura{ position:fixed; inset:0; z-index:39; opacity:0; visibility:hidden; transition:opacity 1.4s var(--aus), visibility 0s linear 1.4s; }
+html.lernt #lernAura{ opacity:1; visibility:visible; transition:opacity 1.4s var(--aus); }
+#lernAura::before, #lernAura::after{ content:""; position:absolute; inset:0; padding:3px;
+  background:conic-gradient(from var(--lw), #3683db, #7cc4ff 12%, #b7a6ff 24%, #3683db 38%, #5fd4ff 55%, #2f74c9 70%, #a9dcff 84%, #3683db);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude;
+  animation:lernDreh 10s linear infinite; }
+#lernAura::after{ padding:16px; filter:blur(24px); opacity:.8; }
+@keyframes lernDreh{ to{ --lw:360deg; } }
+html.lernt body.gl-iframewelt .shell::after{ box-shadow:none; }
+html.lernt body.gl-iframewelt{
+  --fenster:linear-gradient(128deg, rgba(170,210,255,.18) 0%, rgba(170,210,255,.05) 18%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 72%, rgba(170,210,255,.08) 100%),
+    radial-gradient(120% 70% at 85% 110%, rgba(54,131,219,.18), transparent 60%), rgba(9,20,40,.46);
+  --platte:linear-gradient(165deg, rgba(170,210,255,.13), rgba(120,180,255,.05) 55%, rgba(120,180,255,.07)), rgba(9,22,46,.16);
+  --platte-solo:linear-gradient(128deg, rgba(170,210,255,.17), rgba(120,180,255,.05) 40%, rgba(120,180,255,.07)), rgba(10,22,44,.44);
+  --rand:rgba(140,200,255,.2); --glass-edge:rgba(140,200,255,.18); }
+body.gl-iframewelt .lu-leiste{ border-radius:999px; margin:4px 10px 6px; padding:7px 8px 7px 18px; border:1px solid rgba(140,200,255,.38);
+  background:linear-gradient(90deg, rgba(54,131,219,.42), rgba(54,131,219,.16) 60%, rgba(54,131,219,.32));
+  box-shadow:0 0 34px -6px rgba(54,131,219,.75), inset 0 1px 0 rgba(255,255,255,.2); }
+body.gl-iframewelt .lu-leiste::before{ content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(100deg, transparent 30%, rgba(205,232,255,.26) 50%, transparent 70%); transform:translateX(-110%); animation:lernGlanz 7s ease-in-out infinite; }
+@keyframes lernGlanz{ 0%,58%{ transform:translateX(-110%); } 100%{ transform:translateX(110%); } }
+body.gl-iframewelt .lu-l-zeit{ font-size:24px; }
+#lernWelle{ position:fixed; left:var(--wx,50vw); top:var(--wy,50vh); width:60px; height:60px; margin:-30px 0 0 -30px; border-radius:50%; z-index:41; opacity:0;
+  border:2px solid rgba(170,220,255,.95); box-shadow:0 0 40px 12px rgba(54,131,219,.55), inset 0 0 40px 12px rgba(124,196,255,.4); }
+#lernWelle.los{ animation:lernWelle 1.5s cubic-bezier(.2,.7,.2,1) forwards; }
+@keyframes lernWelle{ 0%{ opacity:1; transform:scale(.3); } 70%{ opacity:.5; } 100%{ opacity:0; transform:scale(42); } }
+@media (prefers-reduced-motion:reduce){ #lernAura::before, #lernAura::after, body.gl-iframewelt .lu-leiste::before{ animation:none; } #lernWelle{ display:none; } }
 </style>
 </head>
 <body>
@@ -7753,7 +7783,7 @@ const NOVA_TITEL=document.title;
 function luZeichnen(){
   const an=luLaeuft(), root=document.documentElement;
   /* Lernmodus: ganz NOVA wird blau, atmet und zeigt oben die Zeit */
-  root.classList.toggle("lernt",an);
+  root.classList.toggle("lernt",an); if(window.weltLernen) window.weltLernen(an);
   const lst=document.getElementById("luLeiste"); if(lst) lst.hidden=!an||VIEW==="uni";
   const lab=document.querySelector(".lu-l-label");
   if(lab){ const t=an&&S.lernUhr.modul?`Lernmodus · ${luFachName(S.lernUhr.modul)}`:"Lernmodus"; if(lab.textContent!==t) lab.textContent=t; }
@@ -7932,7 +7962,9 @@ setInterval(()=>{ if(!document.hidden) luZeichnen(); },1000);
 function klausurJahrHtml(){
   /* Von der letzten Woche bis Ende April: die vergangene Woche bleibt sichtbar,
      damit man sieht, wie viel man gelernt hat; danach ist Sommer */
-  const h=parsedk(today()), start=addD(sow(h),-7);
+  const h=parsedk(today()), sem=semesterWoche(); let start=addD(sow(h),-7);
+  { const ab=sow(sem?sem.start:addD(h,-120)); if(ab<start) start=ab;
+    for(let d=addD(start,-1), bis=addD(start,-56); d>=bis; d=addD(d,-1)){ const v=(S.metrics[dk(d)]||{}).study; if(nv(v)&&v>0) start=sow(d); } }
   let ende=new Date(h.getMonth()>=4?h.getFullYear()+1:h.getFullYear(),3,30);
   const ter=uniTermine(), proTag={};
   /* Liegt eine Klausur später (Sommersemester), wächst das Raster bis zu
@@ -9505,6 +9537,7 @@ function weltDaten(mitStadt){ const d={novaWelt:1};
   try{ const m=((S.metrics||{})[today()])||{}; d.schlaf=!(+m.sleep>0)||!!zielPruefer().sleep(today()); }catch(e){ d.schlaf=true; }   /* Nebel nur, wenn der eingetragene Schlaf zu kurz war */
   try{ d.training=sportOn(today()).some(e=>!String(e.id||"").startsWith("stretch_")); }catch(e){ d.training=true; }
   try{ const st=stadtDaten(); d.solide=!!st.heuteOk; if(mitStadt) d.stadt=st; }catch(e){ d.solide=false; }
+  try{ d.lernen=luLaeuft(); d.lernFach=d.lernen&&S.lernUhr.modul?luFachName(S.lernUhr.modul):""; }catch(e){}
   return d; }
 const anWelt=(k,m)=>{ try{ const f=welten2[k].el; if(f.contentWindow) f.contentWindow.postMessage(m,"*"); }catch(e){} };
 function weltZeigen(v){
@@ -9519,6 +9552,19 @@ function weltZeigen(v){
   anWelt(k,{...weltDaten(k==="campus"),ansicht:v,pause:false});
 }
 setInterval(()=>{ if(weltAktiv&&!document.hidden) anWelt(weltAktiv,weltDaten(weltAktiv==="campus")); },60000);
+/* Lernmodus: Lichtrand und Startwelle in NOVA, die Campus-Welt fliegt zum HMZ und lässt es leuchten */
+const lernAura=document.createElement("div"); lernAura.id="lernAura";
+const lernWelle=document.createElement("div"); lernWelle.id="lernWelle";
+for(const e of [lernAura,lernWelle]){ e.setAttribute("aria-hidden","true"); document.body.append(e); }
+let weltLernStand=null;
+window.weltLernen=function(an){
+  if(an===weltLernStand) return; const erstes=weltLernStand===null; weltLernStand=an;
+  if(an&&!erstes&&!matchMedia("(prefers-reduced-motion: reduce)").matches){
+    const quelle=[document.getElementById("luGross"),document.querySelector("#luLeiste .lu-l-zeit")].find(e=>e&&e.getBoundingClientRect().width);
+    if(quelle){ const q=quelle.getBoundingClientRect(); lernWelle.style.setProperty("--wx",(q.left+q.width/2)+"px"); lernWelle.style.setProperty("--wy",(q.top+q.height/2)+"px"); }
+    lernWelle.classList.remove("los"); void lernWelle.offsetWidth; lernWelle.classList.add("los"); }
+  if(!erstes||an) anWelt("campus",{novaWelt:1,lernen:an,lernFach:an&&S.lernUhr&&S.lernUhr.modul?luFachName(S.lernUhr.modul):""});
+};
 
 const klein=()=>innerWidth<=860;
 const renderer=new THREE.WebGLRenderer({canvas:leinwand,antialias:true});

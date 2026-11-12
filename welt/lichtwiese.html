@@ -1079,14 +1079,26 @@ function demoStadt() {
   const lauf = (len, park) => { const r = []; for (let i = 0; i < len; i++) { const d = new Date(heute); d.setDate(d.getDate() - (70 - n++)); const k = d.toISOString().slice(0, 10); r.push(park && i === park ? { k, typ: "park" } : { k, p: i + 1, typ: "haus" }); } return r; };
   return { runs: [lauf(12), lauf(5), lauf(30, 9), lauf(9)], heuteOk: false, laufAktiv: true, ziele: [true, true, false, false], farben: ["#efb756", "#a594f7", "#62b0f5", "#f2906b"] };
 }
-function stadtWeg() { stadtObjekte.forEach(o => scene.remove(o)); stadtObjekte = []; stadtKran = null; stadtAgenten = []; stadtFahrer = []; stadtBoote = []; stadtZug = null; stadtNeon = []; }
+/* Alte Stadt wirklich freigeben: eigene Geometrien, Materialien und Instanzpuffer löschen. Geteilt bleiben die Modelle (M)
+   und alles, was der Campus selbst benutzt — das wird beim ersten Abriss einmal gesammelt. */
+const stadtGeteilt = new Set();
+function stadtWeg() {
+  if (!stadtGeteilt.size) { const eigen = new Set(stadtObjekte); Object.values(M).forEach(g => stadtGeteilt.add(g)); [stadtMat, stadtGlanz, stadtKrone, stadtRinde, neonMat, flussMat].forEach(m => stadtGeteilt.add(m));
+    scene.traverse(t => { let o = t; while (o && !eigen.has(o)) o = o.parent; if (o) return; if (t.geometry) stadtGeteilt.add(t.geometry); [].concat(t.material || []).forEach(m => stadtGeteilt.add(m)); }); }
+  stadtObjekte.forEach(o => { scene.remove(o); o.traverse(t => {
+    if (t.geometry && !stadtGeteilt.has(t.geometry)) t.geometry.dispose();
+    [].concat(t.material || []).forEach(m => { if (!stadtGeteilt.has(m)) { if (m.map) m.map.dispose(); m.dispose(); } });
+    if (t.isInstancedMesh) t.dispose(); }); });
+  stadtObjekte = []; stadtKran = null; stadtAgenten = []; stadtFahrer = []; stadtBoote = []; stadtZug = null; stadtNeon = []; }
 const sAdd = (o, schatten = true) => { o.castShadow = schatten; o.receiveShadow = true; scene.add(o); stadtObjekte.push(o); return o; };
 const faerben = (o, farbe) => { o.geometry = o.geometry.clone(); const c2 = col.set(farbe), ca = o.geometry.attributes.color; if (!ca) return o;
   for (let i = 0; i < ca.count; i++) if (ca.getW(i) > 0.5) ca.setXYZ(i, c2.r * ca.getX(i), c2.g * ca.getY(i), c2.b * ca.getZ(i)); ca.needsUpdate = true; return o; };
 const modellAn = (name, mat, rot, x, y, z, s = [1, 1, 1]) => { const m = sAdd(new THREE.Mesh(M[name], mat)); m.matrixAutoUpdate = false; m.matrix.copy(rot).setPosition(x, y, z).multiply(new THREE.Matrix4().makeScale(...s)); m.updateMatrixWorld(true); return m; };
 
+let stadtStand = "";
 function baueStadt(sd) {
   if (!STADT || !sd) return;
+  const stand = JSON.stringify(sd); if (stand === stadtStand) return; stadtStand = stand;   /* nur neu bauen, wenn sich deine Daten geändert haben */
   stadtWeg();
   const folge = [];
   (sd.runs || []).forEach((r, ri) => { r.forEach(t => folge.push(t)); if (ri < sd.runs.length - 1 || !sd.laufAktiv) folge.push({ typ: "garten" }); });

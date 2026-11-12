@@ -1004,12 +1004,13 @@ const freiePunkt = (x, z, r = 3) => !W.b.some(q => innen([x, z], pts(q[2])) || a
 if (CAMPUS) {
   const campusMat = toenMat({ rauh: 0.6 });
   /* Mensa, HMZ und Maschinenbau-Hauptgebäude als eigene Modelle auf ihrem echten Grundriss */
-  const NAMEN = { mensa_lw: ["Mensa Lichtwiese", "L4|01"], hmz: ["Hörsaal- und Medienzentrum", "L4|02 · größte Hörsäle der Lichtwiese"], maschinenbau: ["Maschinenbau", "Hauptgebäude L1|01"] };
+  const NAMEN = { mensa_lw: ["Mensa Lichtwiese", "L4|01"], hmz: ["Hörsaal- und Medienzentrum", "L4|02 · Haupteingang im Westen"], maschinenbau: ["Maschinenbau", "Hauptgebäude L1|01"] };
   campusModelle.forEach(({ m, p }) => { const b = boxUmPolygon(p); if (!b) return; M[m].computeBoundingBox(); const bb = M[m].boundingBox;
     const c = [p.reduce((a, q) => a + q[0], 0) / p.length, p.reduce((a, q) => a + q[1], 0) / p.length];
     const rot = basis(b.ux, b.uz, m === "maschinenbau" ? [b.x - c[0], b.z - c[1]] : m === "mensa_lw" ? [0, 1] : [0, 1]);
     const sx = b.L / (bb.max.x - bb.min.x) * (m === "mensa_lw" ? 1.05 : 1), sz = b.B / (bb.max.z - bb.min.z) * (m === "mensa_lw" ? 1.15 : 1);
-    const mm = stelle(m, campusMat, b.x, 0.05, b.z, rot, [sx, 1, sz]); mm.userData.schild = NAMEN[m]; });
+    const welt = m === "hmz" || m === "mensa_lw";   /* in Blender direkt in Weltkoordinaten gebaut */
+    const mm = welt ? stelle(m, campusMat, 0, 0.05, 0, new THREE.Matrix4()) : stelle(m, campusMat, b.x, 0.05, b.z, rot, [sx, 1, sz]); mm.userData.schild = NAMEN[m]; });
   /* Rotes Zahnrad auf der Wiese vor L1|01 */
   const l101 = gebBox("L1|01");
   if (l101) for (const d of [16, 22, 28, -16, -22]) { const x = l101.x + l101.vx * d, z = l101.z + l101.vz * d; if (freiePunkt(x, z)) { stelle("zahnrad", campusMat, x, 0, z, basis(l101.ux, l101.uz)).userData.schild = ["Zahnrad", "vor dem Maschinenbau L1|01"]; break; } }

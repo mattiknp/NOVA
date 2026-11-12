@@ -1200,6 +1200,7 @@ function licht(min) {
   zugFenster.material.color.setRGB(1, .88, .68).multiplyScalar(0.15 + nacht * 2);
   wolkenMat.color.copy(lerpC(C(0x5a6680), C(0xffffff), tag)).lerp(C(0xb9bec6), trueb); wolkenMat.opacity = 0.15 + 0.6 * tag;
   const wolkenZahl = daten.schlaf ? 5 : 14; wolken.forEach((w, i) => w.visible = i < wolkenZahl);
+  if (typeof lern !== "undefined" && lern.k > 0.001) lernLicht(lern.k);
   return { nacht, tag, grad };
 }
 
@@ -1294,6 +1295,7 @@ function bild(jetzt) {
     steuer.target.lerpVectors(flug.von[0], flug.nach[0], e); kam.position.lerpVectors(flug.von[1], flug.nach[1], e); if (p >= 1) flug = null;
     if (steuer.autoRotate) { steuer.autoRotate = false; bFahrt.classList.remove("an"); } }
   steuer.target.x = THREE.MathUtils.clamp(steuer.target.x, -HX, HX); steuer.target.z = THREE.MathUtils.clamp(steuer.target.z, -HZ, HZ);
+  if (typeof lernSchritt === "function") lernSchritt(dt, sek);
   steuer.update(dt); himmel.position.copy(kam.position); comp.render();
   if (schildZiel) { pv.copy(schildZiel).project(kam); schild.style.left = (pv.x * 0.5 + 0.5) * innerWidth + "px"; schild.style.top = (-pv.y * 0.5 + 0.5) * innerHeight + "px"; }
   uhrEl.textContent = `${zweistellig(spielMin / 60)}:${zweistellig(spielMin % 60)}`;
@@ -1312,8 +1314,11 @@ addEventListener("message", e => {
   for (const k of ["schlaf", "training", "solide"]) if (k in d) daten[k] = !!d[k];
   if ("pause" in d) { const war = pausiert; pausiert = !!d.pause; if (war && !pausiert) { letzt = performance.now(); spielMin = echteMinuten(); requestAnimationFrame(bild); } }
   if (istCampus && d.stadt) baueStadt(d.stadt);
-  if (istCampus && d.ansicht && (d.ansicht !== aktuelleAnsicht || d.sofort)) { aktuelleAnsicht = d.ansicht; blickSetzen(aktuelleAnsicht, !!d.sofort); }
-  if ("erkunden" in d) { if (d.erkunden) { steuer.autoRotate = false; flug = null; }
+  const lernt = istCampus && typeof lern !== "undefined" && (("lernen" in d) ? !!d.lernen : lern.an);
+  if (istCampus && d.ansicht && (d.ansicht !== aktuelleAnsicht || d.sofort)) { aktuelleAnsicht = d.ansicht; if (!lernt) blickSetzen(aktuelleAnsicht, !!d.sofort); }   /* beim Lernen bleibt die Kamera am HMZ */
+  if (istCampus && "lernen" in d && typeof lernModus === "function") lernModus(!!d.lernen, d.lernFach);
+  if ("erkunden" in d) { if (typeof erkundet !== "undefined") erkundet = !!d.erkunden; if (d.erkunden) { steuer.autoRotate = false; flug = null; }
+    else if (istCampus && typeof lern !== "undefined" && lern.an) { blickSetzen("lernen"); lern.dreht = false; }
     else if (istCampus) blickSetzen(aktuelleAnsicht);
     else { const [z, p] = grundBlick(); flug = { t0: performance.now(), von: [steuer.target.clone(), kam.position.clone()], nach: [z, p] }; steuer.autoRotate = !ruhig; } }
 });

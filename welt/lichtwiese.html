@@ -1484,6 +1484,7 @@ function licht(min) {
   zugFenster.material.color.setRGB(1, .88, .68).multiplyScalar(0.15 + nacht * 2);
   wolkenMat.color.copy(lerpC(C(0x5a6680), C(0xffffff), tag)).lerp(C(0xb9bec6), trueb); wolkenMat.opacity = 0.15 + 0.6 * tag;
   const wolkenZahl = daten.schlaf ? 5 : 14; wolken.forEach((w, i) => w.visible = i < wolkenZahl);
+  if (typeof lern !== "undefined" && lern.k > 0.001) lernLicht(lern.k);
   return { nacht, tag, grad };
 }
 
@@ -1580,6 +1581,7 @@ function bild(jetzt) {
     steuer.target.lerpVectors(flug.von[0], flug.nach[0], e); kam.position.lerpVectors(flug.von[1], flug.nach[1], e); if (p >= 1) flug = null;
     if (steuer.autoRotate) { steuer.autoRotate = false; bFahrt.classList.remove("an"); } }
   steuer.target.x = THREE.MathUtils.clamp(steuer.target.x, -HX, HX); steuer.target.z = THREE.MathUtils.clamp(steuer.target.z, -HZ, STADT ? SZ0 + stadtTiefe : HZ);
+  if (typeof lernSchritt === "function") lernSchritt(dt, sek);
   steuer.update(dt); himmel.position.copy(kam.position); comp.render();
   if (schildZiel) { pv.copy(schildZiel).project(kam); schild.style.left = (pv.x * 0.5 + 0.5) * innerWidth + "px"; schild.style.top = (-pv.y * 0.5 + 0.5) * innerHeight + "px"; }
   uhrEl.textContent = `${zweistellig(spielMin / 60)}:${zweistellig(spielMin % 60)}`;
@@ -1592,14 +1594,88 @@ addEventListener("resize", () => { kam.aspect = innerWidth / innerHeight; kam.up
 const grundBlick = () => { if (typeof tennisMitte === 'undefined') return [steuer.target.clone(), kam.position.clone()]; const z = new THREE.Vector3(tennisMitte[0] - 30, 0, tennisMitte[1] + 35); return [z, z.clone().add(new THREE.Vector3(-230, 250, 300))]; };
 const istCampus = typeof CAMPUS !== "undefined" && CAMPUS;
 let aktuelleAnsicht = new URLSearchParams(location.search).get("ansicht") || "heute";
+/* ══ Lernmodus: solange in NOVA der Lern-Timer läuft, wird das HMZ zum Leuchtturm ══
+   Lichtsäule über dem Dach, Lichtringe auf dem Dach, aufsteigende Funken, das Gebäude selbst glimmt blau,
+   die übrige Welt wird kühler und etwas dunkler. Die Kamera fliegt zum HMZ und kreist langsam. */
+var lern = { an: false, k: 0, fach: "", gebaut: false };
+BLICKE.lernen = () => ({ ziel: zielVon("L4|02"), az: -62, neig: 60, d: 330, hoch: 0.22 });
+function lernBauen() {
+  if (lern.gebaut) return; lern.gebaut = true;
+  const e = campusModelle.find(c => c.m === "hmz"); let hmzMesh = null;
+  scene.traverse(o => { if (o.isMesh && o.userData.schild && o.userData.schild[0] === "Hörsaal- und Medienzentrum") hmzMesh = o; });
+  const b = e ? boxUmPolygon(e.p) : null, cx = b ? b.x : 20, cz = b ? b.z : 20, dach = 19.5;
+  lern.cx = cx; lern.cz = cz;
+  const g = new THREE.Group(); g.userData.ohneSchnitt = true; g.visible = false; scene.add(g); lern.gruppe = g;
+  /* Lichtsäule: offener Zylinder, nach oben ausblendend, mit langsam steigenden Bändern */
+  lern.saeuleMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, toneMapped: false,
+    uniforms: { zeit: { value: 0 }, k: { value: 0 } },
+    vertexShader: `varying vec2 vUv; varying float vRand; void main(){ vUv = uv; vec3 n = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      vRand = 1.0 - abs(dot(n, normalize(-mv.xyz))); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform float zeit, k; varying vec2 vUv; varying float vRand;
+      void main(){ float y = vUv.y; float a = pow(1.0 - y, 1.7) * smoothstep(0.0, 0.04, y);
+        float baender = 0.6 + 0.4 * sin(y * 46.0 - zeit * 2.2);
+        a *= baender * (0.25 + 0.75 * pow(vRand, 1.4)) * k;
+        gl_FragColor = vec4(vec3(0.42, 0.74, 1.0) * 1.7, a * 0.85); }` });
+  const saeule = new THREE.Mesh(new THREE.CylinderGeometry(7, 10, 240, 48, 1, true).translate(0, 120, 0), lern.saeuleMat);
+  saeule.position.set(cx, dach, cz); saeule.renderOrder = 5; g.add(saeule);
+  const kern = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 2.4, 200, 20, 1, true).translate(0, 100, 0), lern.saeuleMat);
+  kern.position.copy(saeule.position); g.add(kern);
+  /* Lichtringe, die sich vom Dach aus ausbreiten */
+  lern.ringe = [0, 1, 2].map(i => { const m = new THREE.Mesh(new THREE.RingGeometry(0.86, 1, 64).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x7cc4ff, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, side: THREE.DoubleSide }));
+    m.position.set(cx, dach + 0.4, cz); m.userData.ph = i / 3; g.add(m); return m; });
+  /* Das HMZ glimmt: dieselbe Form, leicht größer, als blaue Lichthülle */
+  if (hmzMesh) { lern.huelleMat = new THREE.MeshBasicMaterial({ color: 0x3f8fe8, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
+    const h = new THREE.Mesh(hmzMesh.geometry, lern.huelleMat); h.matrixAutoUpdate = false; h.matrix.copy(hmzMesh.matrix).multiply(new THREE.Matrix4().makeScale(1.004, 1.004, 1.004)); g.add(h); }
+  /* Funken: steigen vom Campus rund ums HMZ auf und ziehen in die Säule */
+  const N = 320, pos = new Float32Array(N * 3), farbe = new Float32Array(N * 3); lern.fd = [];
+  for (let i = 0; i < N; i++) lern.fd.push({ w: Math.random() * Math.PI * 2, r: 12 + Math.random() * 46, y: Math.random() * 120, v: 4 + Math.random() * 9, d: 0.4 + Math.random() * 0.8, hell: 0.5 + Math.random() * 0.5 });
+  const fg = new THREE.BufferGeometry(); fg.setAttribute("position", new THREE.BufferAttribute(pos, 3)); fg.setAttribute("color", new THREE.BufferAttribute(farbe, 3));
+  lern.funken = new THREE.Points(fg, new THREE.PointsMaterial({ size: 1.5, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }));
+  lern.funken.frustumCulled = false; g.add(lern.funken);
+}
+function lernModus(an, fach) {
+  lern.fach = fach || ""; if (an === lern.an) return; lern.an = an;
+  if (an) { lernBauen(); blickSetzen("lernen"); lern.dreht = false; }
+  else { steuer.autoRotate = false; blickSetzen(aktuelleAnsicht); }
+}
+/* Licht: kühler, etwas dunkler, mehr Glühen — nur so weit, wie der Lernmodus eingeblendet ist */
+function lernLicht(k) {
+  hemi.intensity *= 1 - 0.28 * k; sonne.intensity *= 1 - 0.32 * k;
+  hemi.color.lerp(C(0x9cc4ff), 0.35 * k);
+  scene.fog.color.lerp(C(0x22406e), 0.4 * k);
+  himmelMat.uniforms.oben.value.lerp(C(0x16305a), 0.45 * k); himmelMat.uniforms.unten.value.lerp(C(0x4a78b0), 0.3 * k);
+  bloom.strength += 0.28 * k; bloom.threshold = THREE.MathUtils.lerp(bloom.threshold, 0.72, k);
+}
+function lernSchritt(dt, sek) {
+  const ziel = lern.an ? 1 : 0; lern.k += (ziel - lern.k) * Math.min(1, dt / (lern.an ? 1.6 : 0.9));
+  if (Math.abs(lern.k - ziel) < 0.002) lern.k = ziel;
+  if (!lern.gruppe) return; lern.gruppe.visible = lern.k > 0.003; if (!lern.gruppe.visible) return;
+  const k = lern.k, puls = 0.85 + 0.15 * Math.sin(sek * 1.3);
+  lern.saeuleMat.uniforms.zeit.value = sek; lern.saeuleMat.uniforms.k.value = k * puls;
+  lern.ringe.forEach(r => { const t = (sek * 0.28 + r.userData.ph) % 1; r.scale.setScalar(10 + t * 70); r.material.opacity = (1 - t) * (1 - t) * 0.9 * k; });
+  if (lern.huelleMat) lern.huelleMat.opacity = (0.1 + 0.08 * Math.sin(sek * 1.3)) * k;
+  const p = lern.funken.geometry.attributes.position.array, c = lern.funken.geometry.attributes.color.array;
+  lern.fd.forEach((f, i) => { f.y += f.v * dt; f.w += dt * 0.35 * f.d; f.r = Math.max(2.5, f.r - dt * f.d * 2.2 * (f.y / 60));
+    if (f.y > 150) { f.y = 0; f.r = 12 + Math.random() * 46; }
+    p[i * 3] = lern.cx + Math.cos(f.w) * f.r; p[i * 3 + 1] = 1 + f.y; p[i * 3 + 2] = lern.cz + Math.sin(f.w) * f.r;
+    const a = Math.min(1, f.y / 12) * (1 - f.y / 150) * f.hell * k * 2.2; c[i * 3] = 0.55 * a; c[i * 3 + 1] = 0.82 * a; c[i * 3 + 2] = 1.0 * a; });
+  lern.funken.geometry.attributes.position.needsUpdate = lern.funken.geometry.attributes.color.needsUpdate = true;
+  /* nach dem Anflug langsam ums HMZ kreisen */
+  if (lern.an && !flug && !lern.dreht && !erkundet) { lern.dreht = true; steuer.autoRotateSpeed = ruhig ? 0 : 0.22; steuer.autoRotate = !ruhig; }
+}
+var erkundet = false;
 if (EINGEBETTET) { if (istCampus) blickSetzen(aktuelleAnsicht, true); else { const [z, p] = grundBlick(); steuer.target.copy(z); kam.position.copy(p); steuer.autoRotateSpeed = 0.1; } }
 addEventListener("message", e => {
   if (e.source !== parent) return; const d = e.data || {}; if (!d.novaWelt) return;
   for (const k of ["schlaf", "training", "solide"]) if (k in d) daten[k] = !!d[k];
   if ("pause" in d) { const war = pausiert; pausiert = !!d.pause; if (war && !pausiert) { letzt = performance.now(); spielMin = echteMinuten(); requestAnimationFrame(bild); } }
   if (istCampus && d.stadt) baueStadt(d.stadt);
-  if (istCampus && d.ansicht && (d.ansicht !== aktuelleAnsicht || d.sofort)) { aktuelleAnsicht = d.ansicht; blickSetzen(aktuelleAnsicht, !!d.sofort); }
-  if ("erkunden" in d) { if (d.erkunden) { steuer.autoRotate = false; flug = null; }
+  const lernt = istCampus && typeof lern !== "undefined" && (("lernen" in d) ? !!d.lernen : lern.an);
+  if (istCampus && d.ansicht && (d.ansicht !== aktuelleAnsicht || d.sofort)) { aktuelleAnsicht = d.ansicht; if (!lernt) blickSetzen(aktuelleAnsicht, !!d.sofort); }   /* beim Lernen bleibt die Kamera am HMZ */
+  if (istCampus && "lernen" in d && typeof lernModus === "function") lernModus(!!d.lernen, d.lernFach);
+  if ("erkunden" in d) { if (typeof erkundet !== "undefined") erkundet = !!d.erkunden; if (d.erkunden) { steuer.autoRotate = false; flug = null; }
+    else if (istCampus && typeof lern !== "undefined" && lern.an) { blickSetzen("lernen"); lern.dreht = false; }
     else if (istCampus) blickSetzen(aktuelleAnsicht);
     else { const [z, p] = grundBlick(); flug = { t0: performance.now(), von: [steuer.target.clone(), kam.position.clone()], nach: [z, p] }; steuer.autoRotate = !ruhig; } }
 });

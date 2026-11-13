@@ -2928,23 +2928,21 @@ body.gl-iframewelt #glasWelt, body.gl-iframewelt #glasSchilder{ opacity:0; visib
 body.gl-sportwelt.gl-erkunden #novaWelt, body.gl-campuswelt.gl-erkunden #novaCampus{ pointer-events:auto; }
 body.gl-iframewelt #glasErkunden{ pointer-events:none; }
 body.gl-iframewelt #glasErkunden .ge-leiste{ pointer-events:auto; }
-/* ── Vor der Blaupause: weißes Liquid Glass. Milchig hell statt dunkel getönt, helle Lichtkanten,
+/* ── Vor der Blaupause: schwarzes Liquid Glass. Tief schwarz getönt, feine helle Lichtkanten,
       und das Glas nimmt die Farbe dahinter kaum auf (sonst färbt sich ganz NOVA blau). Das offene Kartenfenster oben bleibt farbig. ── */
 body.gl-iframewelt{
-  --fenster:linear-gradient(128deg, rgba(255,255,255,.30) 0%, rgba(255,255,255,.12) 22%, rgba(255,255,255,.05) 46%, rgba(255,255,255,.07) 74%, rgba(255,255,255,.18) 100%), rgba(255,255,255,.10);
-  --platte:linear-gradient(165deg, rgba(255,255,255,.24), rgba(255,255,255,.09) 55%, rgba(255,255,255,.13)), rgba(255,255,255,.07);
-  --platte-solo:linear-gradient(128deg, rgba(255,255,255,.30), rgba(255,255,255,.11) 40%, rgba(255,255,255,.15)), rgba(255,255,255,.10);
-  --kante:inset 1px 1px 0 rgba(255,255,255,.42), inset -1px -1px 0 rgba(255,255,255,.12);
-  --kante-hell:inset 1px 1px 0 rgba(255,255,255,.62), inset -1px -1px 0 rgba(255,255,255,.2), inset 0 0 0 1px rgba(255,255,255,.12);
-  --rand:rgba(255,255,255,.26); --glass-edge:rgba(255,255,255,.24);
-  --unscharf:blur(30px) saturate(30%) brightness(1.0); --unscharf-leicht:blur(18px) saturate(35%) brightness(1.02);
-  --klar-filter:blur(1.5px) saturate(45%) brightness(.9); }
-body.gl-iframewelt{ --text-dim:#ebe8e4; --text-faint:#d2cec9; }   /* Nebentexte heller, damit sie auf dem weißen Glas lesbar bleiben */
-body.gl-iframewelt .stage, body.gl-iframewelt .rail{ text-shadow:0 1px 2px rgba(10,20,40,.28); }
-body.gl-iframewelt .rail{ border-color:rgba(255,255,255,.28);
-  background:linear-gradient(128deg, rgba(255,255,255,.34), rgba(255,255,255,.13) 30%, rgba(255,255,255,.07) 60%, rgba(255,255,255,.17)), rgba(255,255,255,.10);
-  box-shadow:inset 1px 1px 0 rgba(255,255,255,.6), inset -1px -1px 0 rgba(255,255,255,.18), var(--sh-3); }
-body.gl-iframewelt .goal, body.gl-iframewelt .goal.hit{ -webkit-backdrop-filter:blur(2px) saturate(55%); backdrop-filter:blur(2px) saturate(55%); }
+  --fenster:linear-gradient(128deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.03) 20%, rgba(255,255,255,0) 42%, rgba(255,255,255,0) 74%, rgba(255,255,255,.05) 100%), rgba(3,4,7,.66);
+  --platte:linear-gradient(165deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 55%, rgba(255,255,255,.035)), rgba(0,0,0,.34);
+  --platte-solo:linear-gradient(128deg, rgba(255,255,255,.10), rgba(255,255,255,.02) 40%, rgba(255,255,255,.04)), rgba(2,3,6,.62);
+  --kante:inset 1px 1px 0 rgba(255,255,255,.14), inset -1px -1px 0 rgba(255,255,255,.04);
+  --kante-hell:inset 1px 1px 0 rgba(255,255,255,.24), inset -1px -1px 0 rgba(255,255,255,.06), inset 0 0 0 1px rgba(255,255,255,.04);
+  --rand:rgba(255,255,255,.09); --glass-edge:rgba(255,255,255,.08);
+  --unscharf:blur(30px) saturate(25%) brightness(.5); --unscharf-leicht:blur(18px) saturate(30%) brightness(.6);
+  --klar-filter:blur(1.5px) saturate(40%) brightness(.6); }
+body.gl-iframewelt .rail{ border-color:rgba(255,255,255,.09);
+  background:linear-gradient(128deg, rgba(255,255,255,.10), rgba(255,255,255,.03) 30%, rgba(255,255,255,.01) 60%, rgba(255,255,255,.05)), rgba(2,3,6,.66);
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.18), inset -1px -1px 0 rgba(255,255,255,.04), var(--sh-3); }
+body.gl-iframewelt .goal, body.gl-iframewelt .goal.hit{ -webkit-backdrop-filter:blur(2px) saturate(55%) brightness(.6); backdrop-filter:blur(2px) saturate(55%) brightness(.6); }
 /* ── Lernmodus: Licht läuft um den Bildschirmrand, das Glas wird kühl, die Leiste leuchtet ── */
 @property --lw{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
 #lernAura, #lernWelle{ pointer-events:none; }

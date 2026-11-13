@@ -2931,9 +2931,17 @@ body.gl-iframewelt #glasErkunden .ge-leiste{ pointer-events:auto; }
 /* ── Vor der Blaupause: schwarzes Liquid Glass. Tief schwarz getönt, feine helle Lichtkanten,
       und das Glas nimmt die Farbe dahinter kaum auf (sonst färbt sich ganz NOVA blau). Das offene Kartenfenster oben bleibt farbig. ── */
 body.gl-iframewelt{
-  --fenster:linear-gradient(128deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.03) 20%, rgba(255,255,255,0) 42%, rgba(255,255,255,0) 74%, rgba(255,255,255,.05) 100%), rgba(3,4,7,.66);
-  --platte:linear-gradient(165deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 55%, rgba(255,255,255,.035)), rgba(0,0,0,.34);
-  --platte-solo:linear-gradient(128deg, rgba(255,255,255,.10), rgba(255,255,255,.02) 40%, rgba(255,255,255,.04)), rgba(2,3,6,.62);
+  /* Blaupause im Dashboard: feines Zeichenraster in der Scheibe (alle 24 px, kräftiger alle 120 px), Passermarken an den Karten */
+  --bp:rgba(150,190,255,.42); --bp-fein:rgba(120,165,255,.045); --bp-grob:rgba(120,165,255,.085);
+  --bp-marken:linear-gradient(var(--bp),var(--bp)) left 10px top 10px/12px 1px no-repeat, linear-gradient(var(--bp),var(--bp)) left 10px top 10px/1px 12px no-repeat,
+    linear-gradient(var(--bp),var(--bp)) right 10px top 10px/12px 1px no-repeat, linear-gradient(var(--bp),var(--bp)) right 10px top 10px/1px 12px no-repeat,
+    linear-gradient(var(--bp),var(--bp)) left 10px bottom 10px/12px 1px no-repeat, linear-gradient(var(--bp),var(--bp)) left 10px bottom 10px/1px 12px no-repeat,
+    linear-gradient(var(--bp),var(--bp)) right 10px bottom 10px/12px 1px no-repeat, linear-gradient(var(--bp),var(--bp)) right 10px bottom 10px/1px 12px no-repeat;
+  --fenster:repeating-linear-gradient(0deg, var(--bp-grob) 0 1px, transparent 1px 120px), repeating-linear-gradient(90deg, var(--bp-grob) 0 1px, transparent 1px 120px),
+    repeating-linear-gradient(0deg, var(--bp-fein) 0 1px, transparent 1px 24px), repeating-linear-gradient(90deg, var(--bp-fein) 0 1px, transparent 1px 24px),
+    linear-gradient(128deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.03) 20%, rgba(255,255,255,0) 42%, rgba(255,255,255,0) 74%, rgba(255,255,255,.05) 100%), rgba(3,4,7,.66);
+  --platte:var(--bp-marken), linear-gradient(165deg, rgba(255,255,255,.07), rgba(255,255,255,.02) 55%, rgba(255,255,255,.035)), rgba(0,0,0,.34);
+  --platte-solo:var(--bp-marken), linear-gradient(128deg, rgba(255,255,255,.10), rgba(255,255,255,.02) 40%, rgba(255,255,255,.04)), rgba(2,3,6,.62);
   --kante:inset 1px 1px 0 rgba(255,255,255,.14), inset -1px -1px 0 rgba(255,255,255,.04);
   --kante-hell:inset 1px 1px 0 rgba(255,255,255,.24), inset -1px -1px 0 rgba(255,255,255,.06), inset 0 0 0 1px rgba(255,255,255,.04);
   --rand:rgba(255,255,255,.09); --glass-edge:rgba(255,255,255,.08);
@@ -2943,6 +2951,9 @@ body.gl-iframewelt .rail{ border-color:rgba(255,255,255,.09);
   background:linear-gradient(128deg, rgba(255,255,255,.10), rgba(255,255,255,.03) 30%, rgba(255,255,255,.01) 60%, rgba(255,255,255,.05)), rgba(2,3,6,.66);
   box-shadow:inset 1px 1px 0 rgba(255,255,255,.18), inset -1px -1px 0 rgba(255,255,255,.04), var(--sh-3); }
 body.gl-iframewelt .goal, body.gl-iframewelt .goal.hit{ -webkit-backdrop-filter:blur(2px) saturate(55%) brightness(.6); backdrop-filter:blur(2px) saturate(55%) brightness(.6); }
+/* Diagramme als Blaupause: Säulen als Drahtgitter (helle Kontur, durchscheinende Füllung), auch die 3D-Flächen */
+body.gl-iframewelt .views svg [data-balken]{ fill-opacity:.24; stroke:rgba(190,220,255,.9); stroke-width:1px; vector-effect:non-scaling-stroke; }
+body.gl-iframewelt .views svg [data-d3teil] polygon{ fill-opacity:.07; stroke:rgba(190,220,255,.5); stroke-width:.8px; vector-effect:non-scaling-stroke; }
 /* ── Lernmodus: Licht läuft um den Bildschirmrand, das Glas wird kühl, die Leiste leuchtet ── */
 @property --lw{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
 #lernAura, #lernWelle{ pointer-events:none; }
@@ -9435,7 +9446,7 @@ if(imported) setTimeout(()=>toast(imported==="seed"
       if(el.classList.contains("sb-feld")||el.hasAttribute("data-sln")||el.closest("[data-d3teil]")) return false;
       let b; try{ b=el.getBBox(); }catch(e){ return false; } return b.width>2&&b.width<=60&&b.height>.5; });
     if(!bars.length) return; svg.dataset.d3="1"; svg.style.overflow="visible";
-    bars.forEach(el=>{ const b=el.getBBox(), f=el.getAttribute("fill"), t=Math.min(10,Math.max(3,b.width*.34)), dy=t*.6;
+    bars.forEach(el=>{ el.setAttribute("data-balken",""); const b=el.getBBox(), f=el.getAttribute("fill"), t=Math.min(10,Math.max(3,b.width*.34)), dy=t*.6;
       const g=document.createElementNS(NS,"g"); g.setAttribute("data-d3teil",""); g.setAttribute("pointer-events","none");
       const op=el.getAttribute("opacity"); if(op) g.setAttribute("opacity",op);
       const flaeche=(pts,fill,deck)=>{ const p=document.createElementNS(NS,"polygon"); p.setAttribute("points",pts.map(q=>q.map(v=>v.toFixed(1)).join(",")).join(" "));

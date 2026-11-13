@@ -158,10 +158,11 @@ const OBEN = new THREE.Vector3(0, 1, 0);
 
 /* ── Modelle aus Blender laden ───────────────────────── */
 const lader = new GLTFLoader();
-let [gB, gF, gL, gW, gT, gD, gC, gS, gLW, gBK] = await Promise.all(["baeume", "fahrzeuge", "leute", "woog", "tsg", "details", "campus", "stadt", "lichtwiese", "bangkok"].map(n => lader.loadAsync(`modelle/${n}.glb`)));
+let [gB, gF, gL, gW, gT, gD, gC, gS, gLW, gBK] = await Promise.all(["baeume", "fahrzeuge", "leute", "woog", "tsg", "details", "campus", "stadt", "lichtwiese", "bangkok"].map(n => n === "fahrzeuge" || n === "leute" ? Promise.resolve({ scene: new THREE.Group() }) : lader.loadAsync(`modelle/${n}.glb`)));
 const M = {};
 for (const g of [gB, gF, gL, gW, gT, gD, gC, gS, gLW, gBK]) g.scene.traverse(o => { if (o.isMesh) { o.updateWorldMatrix(true, false); const geo = o.geometry.clone(); geo.applyMatrix4(o.matrixWorld); M[o.name] = geo; } });
 gB = gF = gL = gW = gT = gD = gC = gS = gLW = gBK = null;   /* Originale freigeben: M hat eigene Kopien */
+for (const n of ["bus", "klein", "kombi", "limo", "wagen", "mantel", "mensch"]) if (!M[n]) M[n] = new THREE.BoxGeometry(0.01, 0.01, 0.01);   /* Autos und Leute gibt es im Modell nicht: winzige Platzhalter */
 { M.bahnhof.computeBoundingBox(); const b = M.bahnhof.boundingBox; M.bahnhof.translate(-(b.min.x + b.max.x) / 2, 0, -(b.min.z + b.max.z) / 2); }
 const masse = n => { M[n].computeBoundingBox(); const b = M[n].boundingBox; return { x: b.max.x - b.min.x, y: b.max.y - b.min.y, z: b.max.z - b.min.z }; };
 
@@ -584,8 +585,9 @@ if (W.t.length) {
   const aussen = kanten.filter(k => k.n === 1).map(k => [...k.a, ...k.b]), innenK = kanten.filter(k => k.n > 1);
   zaun(aussen, 3.4, 2.2);
   zaun(innenK.map(k => [...k.a, ...k.b]), 1.0);
-  const us = instanz(M.unterstand, toenMat(), innenK.length);
-  innenK.forEach((k, i) => { const dx = k.b[0] - k.a[0], dz = k.b[1] - k.a[1], l = Math.hypot(dx, dz) || 1; us.setMatrixAt(i, basis(dx / l, dz / l).setPosition(k.m[0], 0.09, k.m[1])); us.setColorAt(i, col.set("#ffffff")); });
+  /* Modell: eine Spielerbank je Platz, am Netz neben dem Seitenaus */
+  const us = instanz(M.unterstand, toenMat(), plaetze.length);
+  plaetze.forEach((c, i) => { const v = 5.485 + 2.4; us.setMatrixAt(i, basis(c.ux, c.uz, [-c.vx, -c.vz]).setPosition(c.x + c.vx * v, 0.09, c.z + c.vz * v)); us.setColorAt(i, col.set("#ffffff")); });
   const ecken = [];
   aussen.forEach(([ax, az, bx, bz]) => [[ax, az], [bx, bz]].forEach(p => { if (!ecken.some(e => Math.hypot(e[0] - p[0], e[1] - p[1]) < 8)) ecken.push(p); }));
   const tm = plaetze.length ? [plaetze.reduce((s, c) => s + c.x, 0) / plaetze.length, plaetze.reduce((s, c) => s + c.z, 0) / plaetze.length] : [0, 0];
@@ -1588,18 +1590,18 @@ const PALETTEN = {
     oben: "#dbe3ec", unten: "#f3f1ec", sonne: "#fff6ec", sonneI: 3.1, hemiO: "#eef3ff", hemiU: "#d9d2c6", hemiI: 1.25, exp: 1.0, linie: "#2a3140", linieS: .5, bloom: 0 },
   sand:  { min: 14 * 60, haus: "#f5eee2", hell: "#f8f2e7", dunkel: "#a69a87", gruenD: "#93a77b", gruenH: "#d7ddc0", wasser: "#9cc3cf", boden: "#ebe2d2", gras: "#dadfc2", wald: "#bac59f", warm: "#da8f70",
     oben: "#e6dccd", unten: "#f6efe3", sonne: "#fff0da", sonneI: 3.1, hemiO: "#fbf3e6", hemiU: "#cdbfa8", hemiI: 1.2, exp: 1.0, linie: "#3b3226", linieS: .45, bloom: 0 },
-  nacht: { min: 22 * 60, haus: "#3b4458", hell: "#6c788f", dunkel: "#1b202c", gruenD: "#28443b", gruenH: "#486f60", wasser: "#1f3f69", boden: "#272e3c", gras: "#2b3c38", wald: "#25352f", warm: "#9f5a4a",
+  nacht: { min: 22 * 60, markierung: "#8a9ab8", haus: "#3b4458", hell: "#6c788f", dunkel: "#1b202c", gruenD: "#28443b", gruenH: "#486f60", wasser: "#1f3f69", boden: "#272e3c", gras: "#2b3c38", wald: "#25352f", warm: "#9f5a4a",
     oben: "#05070d", unten: "#121a29", sonne: "#a9bcff", sonneI: .9, hemiO: "#5d70a0", hemiU: "#141821", hemiI: .6, exp: 1.15, linie: "#a8bbe0", linieS: .26, bloom: .32 },
   /* ab hier: Paletten, die für einfarbige Baukörper gedacht sind */
   gips:  { min: 14 * 60, ein: true, autos: false, haus: "#fdfcfa", hell: "#fbfaf7", dunkel: "#d3d1cc", gruenD: "#e2e2dc", gruenH: "#f6f5f1", wasser: "#dbe5ee", boden: "#f0eee9", gras: "#eae9e3", wald: "#e2e1db", warm: "#eee7de",
     oben: "#e6eaee", unten: "#f4f3ef", sonne: "#fff8f0", sonneI: 3.0, hemiO: "#f1f4fb", hemiU: "#ddd8cf", hemiI: 1.3, exp: 1.0, linie: "#394150", linieS: .58, bloom: 0 },
-  schwarz: { min: 14 * 60, ein: true, haus: "#22262e", hell: "#f3f2ef", dunkel: "#b7bac0", gruenD: "#b3c6ae", gruenH: "#dfe8db", wasser: "#c6dbec", boden: "#f3f2ee", gras: "#e5ece1", wald: "#d4dfcf", warm: "#e5c8bc",
+  schwarz: { min: 14 * 60, ein: true, markierung: "#c9ccd2", haus: "#22262e", hell: "#f3f2ef", dunkel: "#b7bac0", gruenD: "#b3c6ae", gruenH: "#dfe8db", wasser: "#c6dbec", boden: "#f3f2ee", gras: "#e5ece1", wald: "#d4dfcf", warm: "#e5c8bc",
     oben: "#eceef1", unten: "#f6f5f2", sonne: "#fff6ec", sonneI: 3.0, hemiO: "#eef3ff", hemiU: "#d9d2c6", hemiI: 1.25, exp: 1.0, linie: "#3a3f49", linieS: .35, bloom: 0 },
-  akzent: { min: 14 * 60, ein: true, autos: false, akz: ["#3b7cf4", "#e5483d", "#2db36a"], haus: "#23272f", hell: "#f3f2ef", dunkel: "#b7bac0", gruenD: "#c3cfc0", gruenH: "#e6ebe3", wasser: "#cfdeec", boden: "#f4f3ef", gras: "#eaeee7", wald: "#dde3da", warm: "#e5d4cc",
+  akzent: { min: 14 * 60, ein: true, autos: false, markierung: "#c9ccd2", akz: ["#3b7cf4", "#e5483d", "#2db36a"], haus: "#23272f", hell: "#f3f2ef", dunkel: "#b7bac0", gruenD: "#c3cfc0", gruenH: "#e6ebe3", wasser: "#cfdeec", boden: "#f4f3ef", gras: "#eaeee7", wald: "#dde3da", warm: "#e5d4cc",
     oben: "#eceef1", unten: "#f6f5f2", sonne: "#fff6ec", sonneI: 3.0, hemiO: "#eef3ff", hemiU: "#d9d2c6", hemiI: 1.3, exp: 1.0, linie: "#3a3f49", linieS: .32, bloom: 0 },
   holz:  { min: 14 * 60, ein: true, autos: false, holz: 1, haus: "#e2c597", hell: "#f3efe7", dunkel: "#c2b8a6", gruenD: "#9c7046", gruenH: "#c39a68", wasser: "#cbd7dc", boden: "#f2f0eb", gras: "#e6dfcf", wald: "#dcd1b9", warm: "#d6b48a",
     oben: "#ece6dc", unten: "#f6f2ea", sonne: "#fff1dc", sonneI: 3.0, hemiO: "#fbf5ea", hemiU: "#d8ccb8", hemiI: 1.2, exp: 1.0, linie: "#5a4632", linieS: .28, bloom: 0 },
-  blaupause: { min: 14 * 60, ein: true, autos: false, raster: 1, akz: ["#6fdcff", "#ff5a4f", "#46e394"], glow: .4, baumLinie: .22, transparenz: .3, haus: "#2e64ab", hell: "#3b70b5", dunkel: "#1d4a86", gruenD: "#2b5c9f", gruenH: "#3e72b7", wasser: "#1a4580", boden: "#1f4f8f", gras: "#235594", wald: "#265898", warm: "#3a6aaa",
+  blaupause: { min: 14 * 60, ein: true, autos: false, raster: 1, akz: ["#6fdcff", "#ff5a4f", "#46e394"], glow: .4, baumLinie: .22, transparenz: .3, markierung: "#dfeaff", haus: "#2e64ab", hell: "#3b70b5", dunkel: "#1d4a86", gruenD: "#2b5c9f", gruenH: "#3e72b7", wasser: "#1a4580", boden: "#1f4f8f", gras: "#235594", wald: "#265898", warm: "#3a6aaa",
     oben: "#173f74", unten: "#1f4f8f", sonne: "#ffffff", sonneI: 1.1, hemiO: "#e6eeff", hemiU: "#2a5a9a", hemiI: 1.9, exp: 1.0, linie: "#ffffff", linieS: .8, bloom: 0 },
   beton: { min: 14 * 60, ein: true, haus: "#b4b8bd", hell: "#f1f0ed", dunkel: "#a3a7ae", gruenD: "#8fae90", gruenH: "#d2e2cb", wasser: "#a9cdea", boden: "#ecebe7", gras: "#dbe6d3", wald: "#bfd3b8", warm: "#e2ab95",
     oben: "#dfe5ec", unten: "#f2f1ed", sonne: "#fff6ec", sonneI: 3.1, hemiO: "#eef3ff", hemiU: "#d9d2c6", hemiI: 1.25, exp: 1.0, linie: "#2a3140", linieS: .45, bloom: 0 },
@@ -1611,7 +1613,7 @@ const gueltig = p => p === "auto" || !!PALETTEN[p];
 let mWahl = gueltig(mPar) ? mPar : (() => { try { const v = localStorage.getItem("novaModell.palette"); return gueltig(v) ? v : "auto"; } catch (e) { return "auto"; } })();
 const autoPalette = () => sonnenstand(echteMinuten()).el * 180 / Math.PI > -3 ? "weiss" : "nacht";
 let mPalette = mWahl === "auto" ? autoPalette() : mWahl;
-const mU = {}; for (const k of ["haus", "hell", "dunkel", "gruenD", "gruenH", "wasser", "boden", "gras", "wald", "warm"]) mU["uM_" + k] = { value: new THREE.Color(PALETTEN[mPalette][k]) };
+const mU = { uM_markierung: { value: new THREE.Color(PALETTEN[mPalette].markierung || PALETTEN[mPalette].hell) } }; for (const k of ["haus", "hell", "dunkel", "gruenD", "gruenH", "wasser", "boden", "gras", "wald", "warm"]) mU["uM_" + k] = { value: new THREE.Color(PALETTEN[mPalette][k]) };
 let mEin = (() => { const q = new URLSearchParams(location.search).get("einfarbig"); if (q !== null) return q !== "0"; try { const v = localStorage.getItem("novaModell.einfarbig"); return v === null ? !!PALETTEN[mPalette].ein : v === "1"; } catch (e) { return !!PALETTEN[mPalette].ein; } })();
 const mEinU = { value: mEin ? 1 : 0 };
 const mStilU = { uM_a0: { value: new THREE.Color("#3b7cf4") }, uM_a1: { value: new THREE.Color("#e5483d") }, uM_a2: { value: new THREE.Color("#2db36a") },
@@ -1669,6 +1671,8 @@ const PALETTE_GLSL = `
       diffuseColor.rgb = uM_wasser;
     #endif
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.92, 0.95, 1.0), mRaster(vMW.xz) * 0.28 * uRaster);
+  #elif M_ROLLE == 8
+    diffuseColor.rgb = uM_markierung;   /* Platzlinien: in jeder Palette klar lesbar */
   #elif M_ROLLE == 5
     { vec3 s5 = pow(max(diffuseColor.rgb, vec3(0.0)), vec3(1.0/2.2)); float l5 = dot(s5, vec3(0.299, 0.587, 0.114));
       vec3 c5 = mix(uM_gruenD, uM_gruenH, smoothstep(0.12, 0.62, l5));
@@ -1717,7 +1721,7 @@ float mRaster(vec2 p){   /* Blaupause: 10-m-Raster, jede 50 m kräftiger */
 `;
 function modellMaterial(m) {
   if (!m || !m.isMeshStandardMaterial || m.userData.modell) return; m.userData.modell = true;
-  const akz = m.userData.akzent, rolle = ROLLE.get(m) || (akz !== undefined ? 7 : m.userData.hoch ? 6 : 0), baum = BAUM.has(m) || !!m.userData.zart, alt = m.onBeforeCompile, schluessel = m.customProgramCacheKey();
+  const akz = m.userData.akzent, rolle = ROLLE.get(m) || (m.userData.markierung ? 8 : akz !== undefined ? 7 : m.userData.hoch ? 6 : 0), baum = BAUM.has(m) || !!m.userData.zart, alt = m.onBeforeCompile, schluessel = m.customProgramCacheKey();
   ORIG.set(m, { alt, schluessel });
   if (m.transparent) { m.roughness = Math.max(m.roughness, .9); m.metalness = 0; m.userData.deckung = m.opacity; mTransp.push(m);   /* Glas und Zäune matt, Deckung je Palette */
     /* normal überblenden, aber den Alphakanal nicht anfassen: dort steht die Baum-/Zart-Markierung für den Konturfilter */
@@ -1735,7 +1739,7 @@ function modellMaterial(m) {
           vMW = (modelMatrix * mw).xyz; }`);
     const hatWin = sh.fragmentShader.includes("float win");
     sh.fragmentShader = sh.fragmentShader
-      .replace("#include <common>", `#include <common>\n#define M_ROLLE ${rolle}\n${hatWin ? "#define M_WIN" : ""}\nuniform vec3 uM_haus, uM_hell, uM_dunkel, uM_gruenD, uM_gruenH, uM_wasser, uM_boden, uM_gras, uM_wald, uM_warm, uM_a0, uM_a1, uM_a2; uniform float uEinfarbig, uAkzent, uHolz, uRaster, uGlow;
+      .replace("#include <common>", `#include <common>\n#define M_ROLLE ${rolle}\n${hatWin ? "#define M_WIN" : ""}\nuniform vec3 uM_markierung, uM_haus, uM_hell, uM_dunkel, uM_gruenD, uM_gruenH, uM_wasser, uM_boden, uM_gras, uM_wald, uM_warm, uM_a0, uM_a1, uM_a2; uniform float uEinfarbig, uAkzent, uHolz, uRaster, uGlow;
 #define M_AKZ_FARBE uM_a${akz || 0}
 ${MODELL_HELFER}`)
       .replace("#include <alphamap_fragment>", PALETTE_GLSL + "\n#include <alphamap_fragment>")
@@ -1750,7 +1754,10 @@ const modellAlles = () => {
   scene.updateMatrixWorld(true);
   scene.traverse(o => { if (!o.isMesh || o === himmel) return; if (!Array.isArray(o.material) && istZart(o)) o.material = zartKlon(o.material);
     const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox();
-    mBox.copy(g.boundingBox).applyMatrix4(o.matrixWorld); if (mBox.max.y > 1.0) [].concat(o.material).forEach(m => { if (m && !m.userData.modell) m.userData.hoch = true; }); });
+    mBox.copy(g.boundingBox).applyMatrix4(o.matrixWorld); if (mBox.max.y > 1.0) [].concat(o.material).forEach(m => { if (m && !m.userData.modell) m.userData.hoch = true; });
+    /* helle, flache Linien auf dem Boden (Tennis, Fußball, Padel) sind Markierungen */
+    else if (mBox.max.y < .4) [].concat(o.material).forEach(m => { if (m && m.isMeshStandardMaterial && !m.vertexColors && !m.userData.modell && !ROLLE.has(m)) {
+      const c = m.color; if (.2126 * c.r + .7152 * c.g + .0722 * c.b > .75) m.userData.markierung = true; } }); });
   scene.traverse(o => { if (o.isMesh) [].concat(o.material).forEach(modellMaterial); });
 };
 if (stadtGlanz) { stadtGlanz.metalness = 0; stadtGlanz.roughness = .45; }
@@ -1867,7 +1874,7 @@ addEventListener("resize", () => mWecken(1000));
 function modellBild(dt) {
   const P = PALETTEN[mPalette], k = 1 - Math.exp(-dt * 2.5);
   mF.gold += ((daten.solide && P.min < 20 * 60 ? 1 : 0) - mF.gold) * k; mF.dunst += ((daten.schlaf ? 0 : 1) - mF.dunst) * k;
-  for (const n in mU) mU[n].value.lerp(mTmp.set(P[n.slice(3)]), k);
+  for (const n in mU) mU[n].value.lerp(mTmp.set(n === "uM_markierung" ? (P.markierung || P.hell) : P[n.slice(3)]), k);
   mEinU.value += ((mEin ? 1 : 0) - mEinU.value) * k;
   mStilU.uAkzent.value += ((P.akz ? 1 : 0) - mStilU.uAkzent.value) * k;
   mStilU.uHolz.value += ((P.holz ? 1 : 0) - mStilU.uHolz.value) * k;

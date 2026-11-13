@@ -9466,6 +9466,8 @@ if(imported) setTimeout(()=>toast(imported==="seed"
     const bars=[...svg.querySelectorAll("rect,path")].filter(el=>{ const f=el.getAttribute("fill");
       if(!f||f==="none"||f==="transparent"||f.startsWith("url")) return false;
       if(el.classList.contains("sb-feld")||el.hasAttribute("data-sln")||el.closest("[data-d3teil]")) return false;
+      const a=/rgba?\(.*,\s*([\d.]+)\s*\)\s*$/.exec(f); if(a&&+a[1]<.2) return false;   /* fast durchsichtige Hintergrundflächen bleiben flach */
+      if(+(el.getAttribute("opacity")??1)<.2||+(el.getAttribute("fill-opacity")??1)<.2) return false;
       let b; try{ b=el.getBBox(); }catch(e){ return false; } return b.width>2&&b.width<=60&&b.height>.5; });
     if(!bars.length) return; svg.dataset.d3="1"; svg.style.overflow="visible";
     bars.forEach(el=>{ const b=el.getBBox(), f=el.getAttribute("fill"), t=Math.min(5,Math.max(2,b.width*.16)), dy=t*.5;
@@ -9474,8 +9476,16 @@ if(imported) setTimeout(()=>toast(imported==="seed"
       const flaeche=(pts,fill,deck)=>{ const p=document.createElementNS(NS,"polygon"); p.setAttribute("points",pts.map(q=>q.map(v=>v.toFixed(1)).join(",")).join(" "));
         p.setAttribute("fill",fill); if(deck!=null) p.setAttribute("fill-opacity",deck); g.append(p); };
       const {x,y,width:w,height:h}=b;
-      const seite=[[x+w,y],[x+w+t,y-dy],[x+w+t,y+h-dy],[x+w,y+h]], deckel=[[x,y],[x+t,y-dy],[x+w+t,y-dy],[x+w,y]];
-      flaeche(seite,f); flaeche(seite,"#000",.34); flaeche(deckel,f); flaeche(deckel,"#fff",.34);
+      const r=Math.min(+(el.getAttribute("rx")||el.getAttribute("ry")||0),w/2,h/2);
+      if(r>.5){ /* abgerundete Säule: dieselbe Form versetzt dahinter, so bleiben die Rundungen sauber */
+        const hinten=(fill,deck)=>{ const q=document.createElementNS(NS,"rect"); q.setAttribute("x",(x+t).toFixed(1)); q.setAttribute("y",(y-dy).toFixed(1));
+          q.setAttribute("width",w.toFixed(1)); q.setAttribute("height",h.toFixed(1)); q.setAttribute("rx",r.toFixed(1)); q.setAttribute("fill",fill); if(deck!=null) q.setAttribute("fill-opacity",deck); g.append(q); };
+        const seite=[[x+w,y+r],[x+w+t,y+r-dy],[x+w+t,y+h-r-dy],[x+w,y+h-r]];
+        hinten(f); hinten("#000",.34); flaeche(seite,f); flaeche(seite,"#000",.34);
+      } else {
+        const seite=[[x+w,y],[x+w+t,y-dy],[x+w+t,y+h-dy],[x+w,y+h]], deckel=[[x,y],[x+t,y-dy],[x+w+t,y-dy],[x+w,y]];
+        flaeche(seite,f); flaeche(seite,"#000",.34); flaeche(deckel,f); flaeche(deckel,"#fff",.34);
+      }
       el.parentNode.insertBefore(g,el); });
   }
   let plan=0; const alle=()=>{ plan=0; document.querySelectorAll(".views svg").forEach(saeulen3d); };

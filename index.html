@@ -2976,6 +2976,19 @@ body.gl-iframewelt .rail{ border-color:rgba(255,255,255,.09);
   background:linear-gradient(128deg, rgba(255,255,255,.10), rgba(255,255,255,.03) 30%, rgba(255,255,255,.01) 60%, rgba(255,255,255,.05)), rgba(2,3,6,.66);
   box-shadow:inset 1px 1px 0 rgba(255,255,255,.18), inset -1px -1px 0 rgba(255,255,255,.04), var(--sh-3); }
 body.gl-iframewelt .goal, body.gl-iframewelt .goal.hit{ -webkit-backdrop-filter:blur(2px) saturate(55%) brightness(.6); backdrop-filter:blur(2px) saturate(55%) brightness(.6); }
+/* Farbnebel: die Wolken-Optik im schwarzen Glas, getönt in der Farbe der Kachel (Ziel-Kacheln: Zielfarbe, Lernzeit: blau).
+   Der Nebel steigt oben links auf und läuft unten rechts aus; erfüllte Ziele leuchten etwas stärker. */
+body.gl-iframewelt .p.goal, body.gl-iframewelt .p.lu-karte{ --nebel:var(--gc,#4c86f7);
+  background:var(--bp-marken), linear-gradient(180deg, rgba(6,7,10,.2), rgba(6,7,10,.4)), var(--wellen) center / cover,
+    radial-gradient(110% 85% at 0% 0%, color-mix(in srgb, var(--nebel) 34%, transparent), transparent 62%),
+    radial-gradient(90% 70% at 100% 100%, color-mix(in srgb, var(--nebel) 16%, transparent), transparent 60%), rgba(8,9,12,.64);
+  border-color:color-mix(in srgb, var(--nebel) 30%, rgba(255,255,255,.12)); }
+body.gl-iframewelt .p.lu-karte{ --nebel:#4c86f7; }
+body.gl-iframewelt .p.goal.hit, body.gl-iframewelt .p.lu-karte.voll{
+  background:var(--bp-marken), linear-gradient(180deg, rgba(6,7,10,.12), rgba(6,7,10,.32)), var(--wellen) center / cover,
+    radial-gradient(120% 95% at 0% 0%, color-mix(in srgb, var(--nebel) 50%, transparent), transparent 66%),
+    radial-gradient(95% 75% at 100% 100%, color-mix(in srgb, var(--nebel) 24%, transparent), transparent 62%), rgba(8,9,12,.6);
+  border-color:color-mix(in srgb, var(--nebel) 50%, rgba(255,255,255,.14)); }
 /* ── Lernmodus: Licht läuft um den Bildschirmrand, das Glas wird kühl, die Leiste leuchtet ── */
 @property --lw{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
 #lernAura, #lernWelle{ pointer-events:none; }

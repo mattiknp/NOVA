@@ -2835,6 +2835,31 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(10,13,20,.5), rgb
   border-color:rgba(255,225,160,.5); -webkit-backdrop-filter:blur(6px) saturate(170%) brightness(.78); backdrop-filter:blur(6px) saturate(170%) brightness(.78);
   box-shadow:var(--klar-kante), inset 0 0 30px rgba(242,197,94,.14), 0 24px 50px -26px rgba(0,0,0,.6); }
 #v-heute .hz-kopf *{ text-shadow:0 1px 10px rgba(0,0,0,.5); }
+/* Solider Tag als Schriftfeld, wie das Titelfeld eines Bauplans: tiefschwarzes Glas, doppelte Haarlinie,
+   feine Trennstriche zwischen den Feldern. Einzige Farbe ist ein gedämpftes Gold (Gegenfarbe zum Blau der Blaupause). */
+#v-heute .hz-kopf{ --sf-linie:rgba(255,255,255,.2); --sf-gold:#e9c272;
+  background:radial-gradient(90% 140% at 0% 0%, rgba(233,194,114,.09), transparent 55%),
+    linear-gradient(128deg, rgba(255,255,255,.07), rgba(255,255,255,.015) 38%, rgba(255,255,255,0) 70%, rgba(255,255,255,.03)), rgba(5,6,9,.72);
+  border-color:var(--sf-linie); outline:1px solid rgba(255,255,255,.07); outline-offset:-6px;
+  -webkit-backdrop-filter:blur(16px) saturate(25%) brightness(.55); backdrop-filter:blur(16px) saturate(25%) brightness(.55);
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.18), inset -1px -1px 0 rgba(255,255,255,.04), 0 24px 50px -26px rgba(0,0,0,.75); }
+#v-heute .hz-kopf *{ text-shadow:none; }
+#v-heute .hz-kopf .hz-ico{ background:transparent; color:var(--sf-gold); box-shadow:inset 0 0 0 1px rgba(233,194,114,.45); }
+#v-heute .hz-kopf .hz-t b{ color:#f4f2ee; }
+#v-heute .hz-kopf .hz-t span, #v-heute .hz-kopf .hz-serie{ color:rgba(235,238,245,.62); }
+#v-heute .hz-kopf .hz-serie em{ color:rgba(235,238,245,.42); font-style:normal; letter-spacing:.06em; text-transform:uppercase; font-size:.72em; }
+#v-heute .hz-kopf .hz-serie b{ color:#fff; }
+#v-heute .hz-kopf .hz-pips i{ background:transparent; box-shadow:inset 0 0 0 1px rgba(255,255,255,.22); }
+#v-heute .hz-kopf .hz-pips i.an{ background:var(--sf-gold); box-shadow:none; }
+@media (min-width:560px) and (max-width:1179px){
+  #v-heute .hz-kopf .hz-pips, #v-heute .hz-kopf .hz-serie{ align-self:stretch; display:flex; align-items:center; padding-left:18px; border-left:1px solid rgba(255,255,255,.1); }
+  #v-heute .hz-kopf .hz-serie{ align-items:baseline; padding-top:6px; gap:6px; } }
+@media (min-width:1180px){ #v-heute .hz-kopf .hz-serie{ padding-top:14px; border-top:1px solid rgba(255,255,255,.1); } }
+#v-heute .hd-ziele.voll .hz-kopf{ --sf-linie:rgba(233,194,114,.5);
+  background:radial-gradient(90% 140% at 0% 0%, rgba(233,194,114,.2), transparent 60%),
+    linear-gradient(128deg, rgba(255,255,255,.07), rgba(255,255,255,.015) 38%, rgba(255,255,255,0) 70%, rgba(255,255,255,.03)), rgba(5,6,9,.72);
+  outline-color:rgba(233,194,114,.18); }
+#v-heute .hd-ziele.voll .hz-kopf .hz-ico{ background:var(--sf-gold); color:#2c1e00; box-shadow:none; }
 .goal, .goal.hit{ background:radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--gc) 10%, transparent), transparent 60%), var(--klar);
   -webkit-backdrop-filter:blur(2px) saturate(150%); backdrop-filter:blur(2px) saturate(150%); box-shadow:var(--klar-kante); border-color:rgba(255,255,255,.18); }
 .goal.hit{ border-color:color-mix(in srgb, var(--gc) 45%, rgba(255,255,255,.2)); }
@@ -2951,9 +2976,6 @@ body.gl-iframewelt .rail{ border-color:rgba(255,255,255,.09);
   background:linear-gradient(128deg, rgba(255,255,255,.10), rgba(255,255,255,.03) 30%, rgba(255,255,255,.01) 60%, rgba(255,255,255,.05)), rgba(2,3,6,.66);
   box-shadow:inset 1px 1px 0 rgba(255,255,255,.18), inset -1px -1px 0 rgba(255,255,255,.04), var(--sh-3); }
 body.gl-iframewelt .goal, body.gl-iframewelt .goal.hit{ -webkit-backdrop-filter:blur(2px) saturate(55%) brightness(.6); backdrop-filter:blur(2px) saturate(55%) brightness(.6); }
-/* Diagramme als Blaupause: Säulen als Drahtgitter (helle Kontur, durchscheinende Füllung), auch die 3D-Flächen */
-body.gl-iframewelt .views svg [data-balken]{ fill-opacity:.24; stroke:rgba(190,220,255,.9); stroke-width:1px; vector-effect:non-scaling-stroke; }
-body.gl-iframewelt .views svg [data-d3teil] polygon{ fill-opacity:.07; stroke:rgba(190,220,255,.5); stroke-width:.8px; vector-effect:non-scaling-stroke; }
 /* ── Lernmodus: Licht läuft um den Bildschirmrand, das Glas wird kühl, die Leiste leuchtet ── */
 @property --lw{ syntax:"<angle>"; inherits:false; initial-value:0deg; }
 #lernAura, #lernWelle{ pointer-events:none; }
@@ -9446,7 +9468,7 @@ if(imported) setTimeout(()=>toast(imported==="seed"
       if(el.classList.contains("sb-feld")||el.hasAttribute("data-sln")||el.closest("[data-d3teil]")) return false;
       let b; try{ b=el.getBBox(); }catch(e){ return false; } return b.width>2&&b.width<=60&&b.height>.5; });
     if(!bars.length) return; svg.dataset.d3="1"; svg.style.overflow="visible";
-    bars.forEach(el=>{ el.setAttribute("data-balken",""); const b=el.getBBox(), f=el.getAttribute("fill"), t=Math.min(10,Math.max(3,b.width*.34)), dy=t*.6;
+    bars.forEach(el=>{ const b=el.getBBox(), f=el.getAttribute("fill"), t=Math.min(5,Math.max(2,b.width*.16)), dy=t*.5;
       const g=document.createElementNS(NS,"g"); g.setAttribute("data-d3teil",""); g.setAttribute("pointer-events","none");
       const op=el.getAttribute("opacity"); if(op) g.setAttribute("opacity",op);
       const flaeche=(pts,fill,deck)=>{ const p=document.createElementNS(NS,"polygon"); p.setAttribute("points",pts.map(q=>q.map(v=>v.toFixed(1)).join(",")).join(" "));

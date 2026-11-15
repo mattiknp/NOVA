@@ -1833,9 +1833,9 @@ function vUni(){
           ${uniBearbeiten?`<button class="chip" data-act="modNeu">${ic("plus")}Modul</button>`:`<button class="chip" data-unmod="">ohne Modul</button>`}</div>
         ${uniBearbeiten?`<p class="hinweis">Tippe auf ein Modul, um Name und Farbe zu ändern.</p>`:""}
       </div>
-      ${ag.length?ag.map(([m,l])=>`<div class="a-gruppe"><div class="lab" style="--kc:${m?aufPapier(m.farbe):"#5f454a"}">${m?esc(m.name):"ohne modul"}<small>${l.length}</small></div>${l.map(aZeile).join("")}</div>`).join("")
+      ${ag.length?ag.map(([m,l])=>`<div class="a-gruppe"><div class="lab" style="--kc:${m?aufPapier(m.farbe):"#5f454a"}">${m?esc(m.name):"ohne modul"}<small>${l.length}</small></div>${l.map(t=>aZeile(t)).join("")}</div>`).join("")
         :`<div class="leer">Alles nachbereitet.</div>`}
-      ${uniFertig.length?`<details class="fertig-liste"><summary>Erledigt (${uniFertig.length})</summary>${uniFertig.slice(0,25).map(aZeile).join("")}</details>`:""}
+      ${uniFertig.length?`<details class="fertig-liste"><summary>Erledigt (${uniFertig.length})</summary>${uniFertig.slice(0,25).map(t=>aZeile(t)).join("")}</details>`:""}
     </div>
   `;
 }

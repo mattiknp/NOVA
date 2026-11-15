@@ -2009,6 +2009,27 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 .lp-emp-t b{ font-size:var(--t-sm); }
 .lp-emp-t span{ font-size:var(--t-xs); color:var(--text-faint); }
 .lp-ruhe{ font-size:var(--t-sm); color:var(--text-faint); padding:8px 2px; line-height:1.5; }
+/* ── Uni: Sammelzeile je Modul ──
+   Ab zwei offenen Punkten in einem Modul steht nur eine Zeile mit Zahlen da.
+   Aufklappen zeigt die einzelnen Punkte zum Abhaken. */
+details.hd-uni-g > summary, details.lp-emp-g > summary{ list-style:none; }
+details.hd-uni-g > summary::-webkit-details-marker, details.lp-emp-g > summary::-webkit-details-marker{ display:none; }
+.hd-uni-n{
+  flex:0 0 auto; min-width:30px; height:24px; padding:0 6px; border-radius:7px;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-family:var(--f-disp); font-weight:700; font-size:var(--t-base); font-variant-numeric:tabular-nums;
+  color:var(--lf); background:color-mix(in srgb, var(--lf) 15%, transparent);
+}
+.hd-uni-g.alt .hd-uni-n{ color:var(--warn); background:color-mix(in srgb, var(--warn) 15%, transparent); }
+.hd-uni-s > span:nth-child(2){ flex:1; min-width:0; }
+.hd-uni-s em{ margin-left:4px; }
+.hd-uni-s > svg, .lp-emp-s > svg{ width:14px; height:14px; flex:0 0 auto; margin-left:auto; color:var(--text-faint); transition:transform .2s var(--ez); }
+details[open] > .hd-uni-s > svg, details[open] > .lp-emp-s > svg{ transform:rotate(90deg); }
+.hd-uni-gl{ display:flex; flex-direction:column; gap:2px; margin:0 0 4px 12px; padding-left:10px;
+  border-left:1px solid color-mix(in srgb, var(--lf) 35%, transparent); }
+.lp-emp-s{ cursor:pointer; }
+.lp-emp-gl{ display:flex; flex-direction:column; gap:6px; margin:6px 0 0 14px; }
+@media (prefers-reduced-motion:reduce){ .hd-uni-s > svg, .lp-emp-s > svg{ transition:none; } }
 .lp-woche{ display:flex; flex-direction:column; gap:12px; }
 .lp-gruppe{ display:flex; flex-direction:column; gap:2px; }
 .lp-g-k{ display:flex; align-items:center; gap:8px; font-size:var(--t-sm); font-weight:600; margin-bottom:4px; }
@@ -5209,11 +5230,9 @@ R.heute=function(){
         return `<div class="hd-uni"><div class="hd-uni-k">${ico("cap")}Uni heute<button class="hd-uni-l" onclick="go('uni')">Lernplan</button></div>
           ${ankiAktiv()?`<button class="hd-uni-z${an?" fertig":""}" id="hdAnkiNull"><span class="lp-box">${ico("check")}</span><span>Anki-Wiederholungen auf 0</span></button>`:""}
           ${tgl().map(x=>`<button class="hd-uni-z${(x.erledigt||{})[today()]?" fertig":""}" data-tgl="${x.id}" style="--lf:${x.modul?lpFarbe(x.modul):"var(--c1)"}"><span class="lp-box">${ico("check")}</span><span>${esc(tglName(x))}</span></button>`).join("")}
-          ${em.map(h=>`<button class="hd-uni-z${h.alt?" alt":""}" data-lpalle="${h.typ==="anki"?h.schritte.map(x=>x.id).join(","):h.schritt.id}" style="--lf:${lpFarbe(h.modul)}">
-            <span class="lp-box">${ico("check")}</span>
-            <span>${h.typ==="anki"?(h.karten?`<b>${h.heute}</b> neue Ankis ${esc(lpKurz(h.modul))}${h.alt?" nachholen":""}${h.rest>0?` <em>· Rest ${h.rest} später</em>`:""}`
-                :`${esc(lpKurz(h.modul))} · Ankis zu ${esc(h.schritte.map(x=>x.titel).join(", "))}${h.alt?" nachholen":""}`)
-              :`${esc(lpKurz(h.modul))} · ${esc(h.schritt.titel)}`}</span></button>`).join("")}</div>`; })()}
+          ${lpGruppen(em).map(g=>g.n<2?hdUniZeile(g.l[0]):`<details class="hd-uni-g${g.alt?" alt":""}" data-lpgr="${g.modul}"${lpAuf(g.modul)} style="--lf:${lpFarbe(g.modul)}">
+            <summary class="hd-uni-z hd-uni-s"><span class="hd-uni-n">${g.n}</span><span><b>${esc(lpKurz(g.modul))}</b><em>${lpGruppeText(g)}</em></span>${ico("right")}</summary>
+            <div class="hd-uni-gl">${g.l.map(h=>hdUniZeile(h,1)).join("")}</div></details>`).join("")}</div>`; })()}
       ${(()=>{ const x=gsXmas(), dabei=gsPersonen().filter(gsXmasDabei); if(x.tage>28||!dabei.length) return "";
         const fehlt=dabei.filter(p=>gsXmasStand(p)!=="gekauft").length; if(!fehlt) return "";
         return `<button class="hd-geb${x.tage<=7?" nah":""}" onclick="go('geschenke')">${ico("star")}<span><b>Weihnachten</b> ${gsCountdown(x.tage)}</span>
@@ -7326,6 +7345,49 @@ function tglWiring(el,neu){
   el.querySelectorAll("[data-tged]").forEach(b=>b.onclick=()=>tglModal(b.dataset.tged));
 }
 
+/* ── Bündeln je Modul ──
+   Ab zwei offenen Punkten in einem Modul steht nur noch eine Sammelzeile
+   mit Zahlen da („Statistik 5 · 3 Aufgaben · 194 Ankis · 2 überfällig“).
+   Aufklappen zeigt die einzelnen Punkte. Eine aufgeklappte Gruppe bleibt
+   offen, auch wenn nach dem Abhaken neu gezeichnet wird. */
+const LP_AUF=new Set();
+function lpGruppen(liste){
+  const m=new Map();
+  liste.forEach(h=>{ if(!m.has(h.modul)) m.set(h.modul,[]); m.get(h.modul).push(h); });
+  return [...m].map(([modul,l])=>{
+    const ankis=l.filter(h=>h.typ==="anki");
+    return {modul, l, n:l.length, alt:l.filter(h=>h.alt).length, aufgaben:l.length-ankis.length,
+      karten:ankis.reduce((a,h)=>a+(h.karten?h.heute:0),0),
+      vl:ankis.reduce((a,h)=>a+(h.karten?0:h.schritte.length),0)};
+  });
+}
+function lpGruppeText(g){
+  return [g.aufgaben?`${g.aufgaben} ${g.aufgaben===1?"Aufgabe":"Aufgaben"}`:"",
+    g.karten?`${g.karten} Ankis`:g.vl?`Ankis zu ${g.vl} VL`:"",
+    g.alt?`${g.alt} überfällig`:""].filter(Boolean).join(" · ");
+}
+const lpAuf=m=>LP_AUF.has(m)?" open":"";
+
+/* Eine einzelne Zeile in „Uni heute“ (Startseite) */
+const hdUniZeile=(h,o)=>`<button class="hd-uni-z${h.alt?" alt":""}" data-lpalle="${h.typ==="anki"?h.schritte.map(x=>x.id).join(","):h.schritt.id}" style="--lf:${lpFarbe(h.modul)}">
+            <span class="lp-box">${ico("check")}</span>
+            <span>${h.typ==="anki"?(h.karten?`<b>${h.heute}</b> neue Ankis ${esc(lpKurz(h.modul))}${h.alt?" nachholen":""}${h.rest>0?` <em>· Rest ${h.rest} später</em>`:""}`
+                :`${esc(lpKurz(h.modul))} · Ankis zu ${esc(h.schritte.map(x=>x.titel).join(", "))}${h.alt?" nachholen":""}`)
+              :`${o?"":esc(lpKurz(h.modul))+" · "}${esc(h.schritt.titel)}`}</span></button>`;
+/* Eine einzelne Empfehlung in „Heute empfohlen“ (Uni-Seite) */
+const lpEmpZeile=(h,o)=>h.typ==="anki"?`<div class="lp-emp${h.alt?" alt":""}" style="--lf:${lpFarbe(h.modul)}">
+            <span class="lp-emp-z"><b>${h.karten?h.heute:h.schritte.length}</b><span>${h.karten?(h.schritte.some(x=>x.schaetzung)?"ca. neue":"neue"):"VL"}</span></span>
+            <span class="lp-emp-t"><b>${esc(lpKurz(h.modul))} · Ankis${h.alt?" nachholen":""}</b>
+              <span>${h.schritte.map(s=>esc(s.titel.replace(/^VL \d+ · /,""))).filter((v,i,a)=>a.indexOf(v)===i).join(", ")}${
+                h.rest>0?` · Rest ${h.rest} bis ${lpTagLabel(dk(addD(new Date(),h.tage-1)))}`:""}</span></span>
+            <button class="b b-sm" data-lpalle="${h.schritte.map(s=>s.id).join(",")}">${h.rest>0?"Alles geschafft":"Geschafft"}</button>
+          </div>`
+          :`<div class="lp-emp${h.alt?" alt":""}" style="--lf:${lpFarbe(h.modul)}">
+            <span class="lp-emp-z blatt">${ico("note")}<span>${lpArtKurz(h.schritt)}</span></span>
+            <span class="lp-emp-t"><b>${o?"":esc(lpKurz(h.modul))+" · "}${esc(h.schritt.titel)}</b><span>${h.alt?`seit ${lpTagLabel(h.schritt.datum)} offen`
+              :h.schritt.empf===today()?`laut Plan heute · fällig ${lpTagLabel(h.schritt.datum)}`:`fällig ${lpTagLabel(h.schritt.datum)} — heute ist dein ruhigster Tag dafür`}</span></span>
+            <button class="b b-sm" data-lpalle="${h.schritt.id}">Geschafft</button></div>`;
+
 /* Heute empfohlen: Fälliges, Rückstand (auf die Tage bis zur nächsten
    Vorlesung verteilt) und Wöchentliches, dessen ruhigster Tag heute ist */
 function lpHeute(){
@@ -7409,18 +7471,10 @@ function lernplanHtml(){
           <span class="lp-punkte">${tage.map(k=>`<i class="${an[k]?"an":""}${k===today()?" heute":""}" title="${tagLang(k)}"></i>`).join("")}</span>
         </button>`:""}
         ${tgl().map(x=>tglZeile(x,tage)).join("")}
-        ${heute.length?heute.map(h=>h.typ==="anki"?`<div class="lp-emp${h.alt?" alt":""}" style="--lf:${lpFarbe(h.modul)}">
-            <span class="lp-emp-z"><b>${h.karten?h.heute:h.schritte.length}</b><span>${h.karten?(h.schritte.some(x=>x.schaetzung)?"ca. neue":"neue"):"VL"}</span></span>
-            <span class="lp-emp-t"><b>${esc(lpKurz(h.modul))} · Ankis${h.alt?" nachholen":""}</b>
-              <span>${h.schritte.map(s=>esc(s.titel.replace(/^VL \d+ · /,""))).filter((v,i,a)=>a.indexOf(v)===i).join(", ")}${
-                h.rest>0?` · Rest ${h.rest} bis ${lpTagLabel(dk(addD(new Date(),h.tage-1)))}`:""}</span></span>
-            <button class="b b-sm" data-lpalle="${h.schritte.map(s=>s.id).join(",")}">${h.rest>0?"Alles geschafft":"Geschafft"}</button>
-          </div>`
-          :`<div class="lp-emp${h.alt?" alt":""}" style="--lf:${lpFarbe(h.modul)}">
-            <span class="lp-emp-z blatt">${ico("note")}<span>${lpArtKurz(h.schritt)}</span></span>
-            <span class="lp-emp-t"><b>${esc(lpKurz(h.modul))} · ${esc(h.schritt.titel)}</b><span>${h.alt?`seit ${lpTagLabel(h.schritt.datum)} offen`
-              :h.schritt.empf===today()?`laut Plan heute · fällig ${lpTagLabel(h.schritt.datum)}`:`fällig ${lpTagLabel(h.schritt.datum)} — heute ist dein ruhigster Tag dafür`}</span></span>
-            <button class="b b-sm" data-lpalle="${h.schritt.id}">Geschafft</button></div>`).join("")
+        ${heute.length?lpGruppen(heute).map(g=>g.n<2?lpEmpZeile(g.l[0]):`<details class="lp-emp-g" data-lpgr="${g.modul}"${lpAuf(g.modul)} style="--lf:${lpFarbe(g.modul)}">
+            <summary class="lp-emp lp-emp-s${g.alt?" alt":""}"><span class="lp-emp-z"><b>${g.n}</b><span>offen</span></span>
+              <span class="lp-emp-t"><b>${esc(lpName(g.modul))}</b><span>${lpGruppeText(g)}</span></span>${ico("right")}</summary>
+            <div class="lp-emp-gl">${g.l.map(h=>lpEmpZeile(h,1)).join("")}</div></details>`).join("")
           :`<div class="lp-ruhe">${woche.length&&fertig===woche.length?"Die Woche ist komplett abgehakt. Stark.":"Heute steht nichts an — alles im Plan."}</div>`}
       </div>`:""}
 
@@ -7463,6 +7517,8 @@ function lernplanWiring(el){
   lpHakWiring(el,neu);
 }
 function lpHakWiring(el,neu){
+  el.querySelectorAll("details[data-lpgr]").forEach(d=>d.addEventListener("toggle",()=>{
+    if(d.open) LP_AUF.add(d.dataset.lpgr); else LP_AUF.delete(d.dataset.lpgr); }));
   el.querySelectorAll("[data-lphak]").forEach(b=>b.onclick=()=>{
     const x=lpAlle().find(s=>s.id===b.dataset.lphak); if(!x) return;
     x.fertig=x.fertig?null:Date.now(); save();

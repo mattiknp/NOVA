@@ -1108,12 +1108,18 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
 .dr-w{ margin-left:auto; font-family:var(--f-mono); font-size:var(--t-xs); color:var(--text-faint); white-space:nowrap; }
 .dr-w i{ font-style:normal; color:var(--good); }
 .dr-w u{ text-decoration:none; color:var(--bad); }
+.dr-w em{ font-style:normal; }
+.dr-wk{ display:none; }
 @media(max-width:640px){
-  .hb-drang{ padding-left:0; }
-  .dr-b{ flex:1 1 0; justify-content:center; padding:10px 12px; }
-  .dr-b.nein{ flex:0 0 auto; padding:10px 16px; }
-  .dr-w{ flex:1 1 auto; margin-left:0; order:1; }
-  .dr-x{ order:2; }
+  /* Alles in einer Zeile: Knöpfe links, Summe rechts */
+  .hb-drang{ padding-left:0; flex-wrap:nowrap; gap:5px; }
+  .dr-b{ flex:0 0 auto; padding:8px 10px; gap:4px; }
+  .dr-x{ flex:0 0 auto; width:28px; height:28px; }
+  .dr-sep{ display:none; }
+  .dr-w u{ margin-left:5px; }
+  .dr-w{ flex:0 1 auto; margin-left:auto; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .dr-wl{ display:none; }
+  .dr-wk{ display:inline; }
 }
 @media (hover:hover) and (pointer:fine){ .hb.fertig:hover{ opacity:1; } }
 
@@ -3472,7 +3478,7 @@ function drangZeile(h,k){
     <button class="dr-b ok${d.w.length?" hat":""}" data-dr="${h.id}|${k}|w" title="Drang gespürt und nicht nachgegeben">${ico("check")}widerstanden <span class="dr-n">${d.w.length}</span></button>
     <button class="dr-b nein${d.r.length?" hat":""}" data-dr="${h.id}|${k}|r" title="Doch passiert" aria-label="Doch passiert">${ico("x")}<span class="dr-n">${d.r.length}</span></button>
     ${d.w.length||d.r.length?`<button class="dr-x" data-drx="${h.id}|${k}" title="Letzten Eintrag zurücknehmen" aria-label="Letzten Eintrag zurücknehmen">↶</button>`:""}
-    <span class="dr-w" title="Summe der letzten 7 Tage">7 Tage: <i>${s.w} ✓</i> · <u>${s.r} ✗</u></span>
+    <span class="dr-w" title="Summe der letzten 7 Tage"><em class="dr-wl">7 Tage:</em><em class="dr-wk">7T</em> <i>${s.w} ✓</i><span class="dr-sep"> · </span><u>${s.r} ✗</u></span>
   </div>`;
 }
 /* ── Daily Stretches ──

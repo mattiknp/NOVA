@@ -437,6 +437,52 @@ details.fertig-liste[open] summary::before{ content:"- "; }
 .idee-a.x{ background:var(--oliv); color:var(--puder); } .idee-a.g{ background:var(--plum); color:var(--butter); }
 .idee-s{ font-size:11px; color:var(--leise); white-space:nowrap; }
 .anl{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--tinte-2); }
+/* ── Adventskalender: ihre Türchen weiß auf Pflaume, seine bleiben gestreift zu ── */
+.adv{ border-radius:24px; padding:20px 22px; margin-bottom:18px; background:var(--plum); color:var(--puder); }
+.adv-k{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+.adv-k > div{ display:flex; flex-direction:column; }
+.adv-k b{ font-family:var(--disp); font-size:32px; font-weight:400; line-height:1; color:var(--butter); }
+.adv-k span{ font-size:13px; margin-top:4px; }
+.adv-bar{ flex:1; min-width:140px; height:6px; border-radius:6px; background:color-mix(in srgb, var(--puder) 22%, transparent); overflow:hidden; }
+.adv-bar i{ display:block; height:100%; background:var(--butter); border-radius:6px; }
+.adv-raster{ display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:7px; }
+.adv-t{ position:relative; aspect-ratio:1/1.08; border-radius:14px; padding:7px 7px 6px; display:flex; flex-direction:column; align-items:flex-start; text-align:left; overflow:hidden;
+  background:var(--weiss); color:var(--plum); transition:transform .16s var(--ez); }
+button.adv-t:active{ transform:scale(.95); }
+.adv-t b.num{ font-family:var(--disp); font-weight:400; font-size:22px; line-height:1; }
+.adv-t span{ margin-top:auto; font-size:10.5px; line-height:1.2; color:var(--tinte-2); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:break-word; hyphens:auto; -webkit-hyphens:auto; }
+.adv-t .ic{ position:absolute; top:7px; right:7px; width:14px; height:14px; }
+.adv-t.frei{ background:transparent; color:var(--puder); box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--puder) 45%, transparent); }
+.adv-t.frei span{ color:color-mix(in srgb, var(--puder) 70%, transparent); }
+.adv-t.besorgt{ background:var(--butter); } .adv-t.besorgt .ic{ color:var(--oliv); }
+.adv-t.verpackt{ background:var(--oliv); color:var(--butter); } .adv-t.verpackt span{ color:var(--puder); }
+.adv-t.fremd{ color:color-mix(in srgb, var(--puder) 75%, transparent); background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--puder) 13%, transparent) 0 6px, transparent 6px 12px); }
+.adv-t.fremd .ic{ opacity:.6; }
+.adv-t.heute{ box-shadow:0 0 0 2.5px var(--butter); }
+.adv-t.vorbei{ opacity:.45; }
+.adv-ideen{ margin-top:16px; display:flex; flex-direction:column; gap:6px; }
+.adv-ideen .lab{ color:var(--butter); font-size:21px; margin-bottom:4px; }
+.adv-ideen .idee{ color:var(--tinte); }
+.adv-ideen .neu-a{ margin:4px 0 0; }
+.adv-ideen .neu-a input{ background:var(--weiss); }
+.adv-ideen .neu-a .btn{ background:var(--butter); color:var(--plum); box-shadow:none; }
+.idee.s1 .idee-st{ background:var(--butter); color:var(--oliv); box-shadow:none; }
+.idee.s2 .idee-st{ background:var(--oliv); color:var(--butter); box-shadow:none; }
+.adv-tc{ height:28px; font-size:12px; padding:0 11px; flex:0 0 auto; }
+.adv-tc.hat{ background:var(--plum); color:var(--butter); box-shadow:none; font-weight:650; }
+.adv-leer{ font-size:13px; color:color-mix(in srgb, var(--puder) 80%, transparent); padding:2px 2px 4px; line-height:1.5; }
+.adv-wahl{ display:flex; flex-wrap:wrap; gap:6px; }
+.adv-wahl .chip{ height:auto; min-height:32px; padding:6px 13px; text-align:left; }
+.adv-pick{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+.adv-pick button{ border-radius:14px; padding:8px; min-height:64px; display:flex; flex-direction:column; align-items:flex-start; text-align:left; background:var(--weiss); box-shadow:inset 0 0 0 1.5px var(--linie-2); color:var(--plum); }
+.adv-pick button b{ font-family:var(--disp); font-weight:400; font-size:22px; line-height:1; }
+.adv-pick button span{ font-size:10.5px; color:var(--leise); margin-top:auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+.adv-pick button.on{ background:var(--plum); color:var(--butter); box-shadow:none; } .adv-pick button.on span{ color:var(--puder); }
+.adv-z{ display:flex; align-items:center; gap:10px; font-size:14px; padding:2px 0; }
+.adv-z b{ font-family:var(--disp); font-weight:400; font-size:24px; color:var(--plum); min-width:30px; }
+.adv-z span{ flex:1; min-width:0; }
+.adv-z em{ font-style:normal; font-size:12px; color:var(--leise); }
+@media (max-width:520px){ .adv{ padding:18px 14px; } .adv-raster{ gap:5px; } .adv-t{ padding:6px 5px 5px; border-radius:11px; } .adv-t b.num{ font-size:19px; } .adv-t span{ font-size:9.5px; } .adv-t .ic{ top:5px; right:5px; width:12px; height:12px; } }
 .anl .chip{ height:28px; font-size:12px; padding:0 11px; }
 
 /* ── Blatt (Dialog) ── */
@@ -1111,6 +1157,7 @@ function vHeute(){
     uniMini(),
     fristen.length?`<div class="karte"><div class="k-kopf"><h3 class="lab" style="--kc:#8f6200">fristen:</h3><button class="btn klein ghost" data-go="uni">Uni ${ic("rechts")}</button></div>
         ${fristen.slice(0,5).map(terZeile).join("")}</div>`:"",
+    advKarte(),
     geb.length?`<div class="kasten"><div class="k-kopf"><h3 class="lab" style="--kc:${P.Wein}">geburtstage:</h3><button class="btn klein ghost" data-go="geschenke">Geschenke ${ic("rechts")}</button></div>
         ${geb.map(({p,n})=>`<div class="geb-z"><b>${n.d.getDate()}.</b>${esc(p.name)}${n.alter?` wird ${n.alter}`:""}<span>${bisText(n.tage)}</span></div>`).join("")}</div>`:"",
     tagLeer?morgenKarte:""
@@ -1991,6 +2038,7 @@ function vGeschenke(){
       <div><b>Weihnachten</b><span>${x.tage===0?"heute":bisText(x.tage)} · ${fertig} von ${dabei.length} besorgt</span></div>
       <div class="xmas-bar"><i style="width:${fertig/dabei.length*100}%"></i></div></div>
     <div class="xmas-pers">${st.map(({p,s})=>`<button class="xp s-${s}" data-gzu="${p.id}" data-anl="xmas"><i>${s==="gekauft"?ic("check"):s==="idee"?ic("idee"):""}</i>${esc(p.name)}</button>`).join("")}</div></div>`:""}
+  ${advBlock()}
   ${ps.some(z=>z.n&&z.n.tage<=60)?`<div class="gb-bald">${ps.filter(z=>z.n&&z.n.tage<=60).map(({p,n})=>`<button class="gb${n.tage<=7?" nah":""}" data-gzu="${p.id}" data-anl="geb">
       <b class="n num">${n.tage===0?ic("kuchen"):n.tage}</b><span><b>${esc(p.name)}</b>${n.tage===0?"hat heute Geburtstag":`${n.tage===1?"Tag":"Tage"} · ${kurzD(n.d)}`}${n.alter?` · wird ${n.alter}`:""}</span></button>`).join("")}</div>`:""}
   ${ps.length?`<div class="pers">${ps.map(({p,n})=>{ const akt=(p.ideen||[]).filter(i=>i.status!=="verschenkt"), alt=(p.ideen||[]).filter(i=>i.status==="verschenkt");
@@ -2054,6 +2102,89 @@ function ideeNeu(pid){
   const m=v.match(/^(.*?)[\s,]+(\d+(?:[.,]\d+)?\s*(?:€|eur|euro))$/i);
   p.ideen=p.ideen||[]; p.ideen.push({id:uid(),text:m?m[1]:v,preis:m?m[2].replace(/\s*(eur|euro)$/i," €"):null,status:"idee",jahr:null,anlass:anlassVor(p),t:Date.now()});
   sichern(); zeige(); document.querySelector(`[data-gneu="${pid}"]`)?.focus({preventScroll:true});
+}
+
+/* ── Adventskalender ──
+   Ihr macht euch gegenseitig einen: Woche hat die ungeraden Türchen (1, 3 … 23),
+   NOVA die geraden. Hier stehen nur ihre eigenen Ideen; seine Türchen bleiben zu.
+   Nichts davon geht in den geteilten Planer-Auszug.
+   Ablage: S.advent = {jahr, ideen:[{id, text, st (0 Idee, 1 besorgt, 2 eingepackt), tuer|null, t}]} */
+const ADV_MEIN=n=>n%2===1, ADV_ST=["Idee","besorgt","eingepackt"];
+const advJahr=()=>new Date().getFullYear();
+function advDaten(){ if(!S.advent||!(S.advent.jahr>=advJahr())) S.advent={jahr:advJahr(),ideen:[]}; S.advent.ideen=S.advent.ideen||[]; return S.advent; }
+const advMeine=()=>[...Array(24)].map((_,i)=>i+1).filter(ADV_MEIN);
+const advIn=n=>advDaten().ideen.find(i=>i.tuer===n);
+const advHeute=()=>{ const d=new Date(); return d.getMonth()===11&&d.getDate()<=24?d.getDate():0; };
+const advBis1=()=>Math.round((new Date(advJahr(),11,1)-pk(heute()))/86400000);
+const advSichtbar=()=>{ const m=new Date().getMonth(); return m>=9||!!(S.advent&&S.advent.jahr===advJahr()&&(S.advent.ideen||[]).length); };
+const advVon=()=>{ const n=partnerName(); return n==="Er"?"ihm":esc(n); }, advWer=()=>{ const n=partnerName(); return n==="Er"?"er":esc(n); };
+const advBesorgt=()=>advMeine().filter(n=>{ const i=advIn(n); return i&&i.st>=1; }).length;
+function advBlock(){
+  if(!advSichtbar()) return "";
+  const a=advDaten(), heuteN=advHeute(), b1=advBis1(), besorgt=advBesorgt();
+  const unter=heuteN?`heute Türchen ${heuteN} · ${ADV_MEIN(heuteN)?"von dir":`von ${advVon()}`}`:b1>0?`Türchen 1 ${bisText(b1)} · ${besorgt} von 12 besorgt`:"frohe Weihnachten";
+  const zelle=n=>{
+    if(!ADV_MEIN(n)) return `<div class="adv-t fremd${n===heuteN?" heute":""}${heuteN&&n<heuteN?" vorbei":""}" title="Türchen ${n} kommt von ${advVon()}"><b class="num">${n}</b>${ic("partner")}</div>`;
+    const i=advIn(n), k=i?["idee","besorgt","verpackt"][i.st||0]:"frei";
+    return `<button class="adv-t ${k}${n===heuteN?" heute":""}${heuteN&&n<heuteN?" vorbei":""}" data-adv="${n}" aria-label="Türchen ${n}${i?`: ${esc(i.text)}, ${ADV_ST[i.st||0]}`:", noch leer"}">
+      <b class="num">${n}</b>${i&&i.st===2?ic("geschenke"):i&&i.st===1?ic("check"):""}<span>${i?esc(i.text):"frei"}</span></button>`; };
+  const ideen=a.ideen.slice().sort((x,y)=>(x.tuer||99)-(y.tuer||99)||(x.t||0)-(y.t||0));
+  return `<div class="adv">
+    <div class="adv-k"><span class="xmas-ic">${ic("stern")}</span>
+      <div><b>Adventskalender</b><span>${unter}</span></div>
+      <div class="adv-bar"><i style="width:${besorgt/12*100}%"></i></div></div>
+    <div class="adv-raster">${[...Array(24)].map((_,i)=>zelle(i+1)).join("")}</div>
+    <div class="adv-ideen"><h3 class="lab">ideen für deine türchen:</h3>
+      ${ideen.length?ideen.map(i=>`<div class="idee s${i.st||0}">
+        <button class="idee-st" data-advst="${i.id}" title="Tippen: Idee, besorgt, eingepackt" aria-label="Stand ändern">${ic((i.st||0)===0?"idee":i.st===1?"check":"geschenke")}</button>
+        <span class="idee-t">${esc(i.text)}</span><span class="idee-s">${ADV_ST[i.st||0]}</span>
+        <button class="chip adv-tc${i.tuer?" hat":""}" data-advtuer="${i.id}">${i.tuer?`Tür ${i.tuer}`:`${ic("plus")}Tür`}</button>
+        <button class="btn rund klein ghost" data-advweg="${i.id}" aria-label="Löschen">${ic("x")}</button></div>`).join("")
+        :`<div class="adv-leer">Schreib hier alles auf, was dir für seine Türchen einfällt. Er sieht davon nichts. Tippe auf ein Türchen oder auf „Tür“, um eine Idee hineinzulegen, und hak ab, was besorgt und eingepackt ist.</div>`}
+      <div class="neu-a"><input data-advneu placeholder="Neue Idee für deine Türchen" autocomplete="off" enterkeyhint="done" aria-label="Neue Idee für den Adventskalender"><button class="btn rund" data-advadd aria-label="Hinzufügen">${ic("plus")}</button></div>
+    </div></div>`;
+}
+function advNeu(){
+  const inp=document.querySelector("[data-advneu]"), v=(inp?.value||"").trim(); if(!v) return;
+  advDaten().ideen.push({id:uid(),text:v,st:0,tuer:null,t:Date.now()}); sichern(); zeige();
+  document.querySelector("[data-advneu]")?.focus({preventScroll:true});
+}
+function advLegen(i,n){ const alt=advIn(n); if(alt&&alt!==i) alt.tuer=null; i.tuer=n; }
+function advTuerBlatt(n){
+  const a=advDaten(), i=advIn(n), frei=a.ideen.filter(x=>!x.tuer);
+  blatt(`<h2>Türchen ${n}</h2>
+    ${i?`<div class="feld"><label>drin</label><div style="font-size:16px;margin-bottom:10px">${esc(i.text)}</div>
+      <div class="seg">${ADV_ST.map((t,k)=>`<button class="${(i.st||0)===k?"on":""}" data-advsetst="${k}">${t}</button>`).join("")}</div></div>`:""}
+    ${frei.length?`<div class="feld"><label>${i?"stattdessen hineinlegen":"eine idee hineinlegen"}</label><div class="adv-wahl">${frei.map(x=>`<button class="chip" data-advlege="${x.id}">${esc(x.text)}</button>`).join("")}</div></div>`:""}
+    <div class="feld"><label for="advTN">${i||frei.length?"oder etwas neues":"was kommt hinein?"}</label><input id="advTN" placeholder="z. B. Lieblingsschokolade" autocomplete="off" enterkeyhint="done"></div>
+    <div class="blatt-akt">${i?`<button class="btn gefahr links" id="advLeer">Türchen leeren</button>`:""}<button class="btn" data-act="zu">Abbrechen</button><button class="btn prim" id="advOk">Fertig</button></div>`);
+  const fertig=t=>{ sichern(); zu(); zeige(); if(t) toast(t); };
+  document.querySelectorAll("#blatt [data-advsetst]").forEach(b=>b.onclick=()=>{ i.st=+b.dataset.advsetst; fertig(["Wieder Idee","Besorgt","Eingepackt"][i.st]); });
+  document.querySelectorAll("#blatt [data-advlege]").forEach(b=>b.onclick=()=>{ const x=a.ideen.find(y=>y.id===b.dataset.advlege); if(x){ advLegen(x,n); fertig(`In Türchen ${n}`); } });
+  const neuIn=()=>{ const v=document.getElementById("advTN").value.trim(); if(!v){ zu(); return; } const x={id:uid(),text:v,st:0,tuer:null,t:Date.now()}; a.ideen.push(x); advLegen(x,n); fertig(`In Türchen ${n}`); };
+  document.getElementById("advOk").onclick=neuIn;
+  document.getElementById("advTN").onkeydown=e=>{ if(e.key==="Enter"&&!e.isComposing){ e.preventDefault(); neuIn(); } };
+  document.getElementById("advLeer")?.addEventListener("click",()=>{ i.tuer=null; fertig("Türchen geleert, die Idee bleibt in der Liste"); });
+}
+function advTuerWahl(id){
+  const a=advDaten(), i=a.ideen.find(x=>x.id===id); if(!i) return;
+  blatt(`<h2>Welches Türchen?</h2><div class="feld"><label>${esc(i.text)}</label>
+    <div class="adv-pick">${advMeine().map(n=>{ const d=advIn(n); return `<button class="${i.tuer===n?"on":""}" data-advpick="${n}"><b>${n}</b><span>${d&&d!==i?esc(d.text):i.tuer===n?"hier":"frei"}</span></button>`; }).join("")}</div></div>
+    <div class="blatt-akt">${i.tuer?`<button class="btn links" id="advOhne">Ohne Türchen</button>`:""}<button class="btn" data-act="zu">Abbrechen</button></div>`);
+  document.querySelectorAll("#blatt [data-advpick]").forEach(b=>b.onclick=()=>{ const n=+b.dataset.advpick; advLegen(i,n); sichern(); zu(); zeige(); toast(`In Türchen ${n}`); });
+  document.getElementById("advOhne")?.addEventListener("click",()=>{ i.tuer=null; sichern(); zu(); zeige(); });
+}
+/* Startseite: im Dezember das Türchen von heute, Ende November die noch leeren */
+function advKarte(){
+  if(!S.advent&&new Date().getMonth()!==11) return "";
+  const n=advHeute(), b1=advBis1();
+  if(n){ const meins=ADV_MEIN(n), i=meins?advIn(n):null;
+    return `<div class="kasten"><div class="k-kopf"><h3 class="lab" style="--kc:${P.Pflaume}">adventskalender:</h3><button class="btn klein ghost" data-go="geschenke">Ansehen ${ic("rechts")}</button></div>
+      <div class="adv-z"><b>${n}</b><span>${meins?(i?`Heute bekommt ${advWer()} dein Türchen: ${esc(i.text)}`:`Heute ist dein Türchen dran, es ist noch leer`):`Heute öffnest du das Türchen von ${advVon()}`}</span>${meins&&i&&i.st<2?`<em>${i.st?"noch einpacken":"noch besorgen"}</em>`:""}</div></div>`; }
+  const fehlt=12-advBesorgt();
+  if(b1>0&&b1<=14&&fehlt>0) return `<div class="kasten"><div class="k-kopf"><h3 class="lab" style="--kc:${P.Pflaume}">adventskalender:</h3><button class="btn klein ghost" data-go="geschenke">Ansehen ${ic("rechts")}</button></div>
+      <div class="adv-z"><b>${b1}</b><span>${b1===1?"Tag":"Tage"} bis Türchen 1 · noch ${fehlt} ${fehlt===1?"Türchen":"Türchen"} nicht besorgt</span></div></div>`;
+  return "";
 }
 
 /* ============================================================
@@ -2185,6 +2316,12 @@ document.addEventListener("click",e=>{
     gneuA.replaceWith(inp); inp.focus(); inp.addEventListener("blur",()=>anlassSetzen(inp)); return; }
   const ganl=e.target.closest("[data-ganl]"); if(ganl){ const [pid,...r]=ganl.dataset.ganl.split("|"), a=r.join("|"); anlassWahl[pid]=a; ganl.parentElement.querySelectorAll("[data-ganl]").forEach(c=>c.classList.toggle("on",c===ganl)); return; }
   const gadd=e.target.closest("[data-gadd]"); if(gadd){ ideeNeu(gadd.dataset.gadd); return; }
+  const adv=e.target.closest("[data-adv]"); if(adv){ advTuerBlatt(+adv.dataset.adv); return; }
+  const advst=e.target.closest("[data-advst]");
+  if(advst){ const i=advDaten().ideen.find(x=>x.id===advst.dataset.advst); if(!i) return; i.st=((i.st||0)+1)%3; sichern(); zeige(); toast(["Wieder Idee","Besorgt","Eingepackt"][i.st]); return; }
+  const advt=e.target.closest("[data-advtuer]"); if(advt){ advTuerWahl(advt.dataset.advtuer); return; }
+  const advw=e.target.closest("[data-advweg]"); if(advw){ const a=advDaten(); a.ideen=a.ideen.filter(x=>x.id!==advw.dataset.advweg); sichern(); zeige(); return; }
+  if(e.target.closest("[data-advadd]")){ advNeu(); return; }
   const a=e.target.closest("[data-act]"); if(!a) return;
   const id=a.dataset.id, aktTag=()=>SEITE==="kalender"?(kalModus==="monat"?monWahl:kalModus==="tag"?kalDatum:(mkVon(pk(kalDatum))===mkVon(new Date())?heute():mkVon(pk(kalDatum)))):heute();
   switch(a.dataset.act){
@@ -2243,6 +2380,7 @@ document.addEventListener("keydown",e=>{
   if(e.target.dataset&&e.target.dataset.ganlin){ e.preventDefault(); anlassSetzen(e.target); }
   if(e.target.id==="schnellA"){ e.preventDefault(); document.querySelector('[data-act="schnellA"]').click(); }
   if(e.target.dataset&&e.target.dataset.gneu){ e.preventDefault(); ideeNeu(e.target.dataset.gneu); }
+  if(e.target.dataset&&"advneu" in e.target.dataset){ e.preventDefault(); advNeu(); }
 });
 /* Frisch bleiben: Die App bleibt auf dem Handy oft über Nacht offen */
 const darfNeu=()=>!document.getElementById("ov").classList.contains("on")&&!document.activeElement?.matches("input,textarea,select");

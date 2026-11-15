@@ -2731,6 +2731,51 @@ body.gl-karte .topbar{ background:linear-gradient(180deg, rgba(10,13,20,.5), rgb
 .gk-xbar{ background:rgba(255,255,255,.1); }
 .gk-xpe{ background:var(--knopf); border-color:rgba(255,255,255,.08); }
 .gk-xpe.s-gekauft{ background:var(--gold); }
+/* ── Adventskalender: deine Türchen als Glaskacheln, ihre bleiben gestreift zu ── */
+.adv{ position:relative; border-radius:var(--r-xl); padding:20px 22px; margin-bottom:16px; background:var(--platte); border:1px solid rgba(239,139,171,.24);
+  -webkit-backdrop-filter:var(--unscharf-leicht); backdrop-filter:var(--unscharf-leicht); box-shadow:var(--kante); }
+.adv-k{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+.adv-ic{ width:44px; height:44px; border-radius:50%; display:grid; place-items:center; background:var(--gift); color:#2a0d17; flex:0 0 auto; }
+.adv-ic svg{ width:20px; height:20px; }
+.adv-k > div{ display:flex; flex-direction:column; }
+.adv-k b{ font-family:var(--f-disp); font-size:var(--t-2xl); font-weight:500; letter-spacing:-.02em; line-height:1.05; color:#fff; }
+.adv-k span{ font-size:var(--t-sm); color:var(--text-dim); margin-top:3px; }
+.adv-bar{ flex:1; min-width:140px; height:6px; border-radius:6px; background:rgba(255,255,255,.1); overflow:hidden; }
+.adv-bar i{ display:block; height:100%; border-radius:6px; background:var(--gift); }
+.adv-raster{ display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:7px; }
+.adv-t{ position:relative; aspect-ratio:1/1.05; border-radius:14px; padding:7px 7px 6px; display:flex; flex-direction:column; align-items:flex-start; text-align:left; overflow:hidden;
+  background:rgba(255,255,255,.07); color:var(--text); border:1px solid rgba(255,255,255,.14); transition:transform .3s var(--spring); }
+button.adv-t:active{ transform:scale(.94); transition-duration:.08s; }
+@media (hover:hover) and (pointer:fine){ button.adv-t:hover{ border-color:rgba(255,255,255,.3); } }
+.adv-t b{ font-family:var(--f-disp); font-weight:500; font-size:1.3rem; line-height:1; font-variant-numeric:tabular-nums; }
+.adv-t span{ margin-top:auto; font-size:10.5px; line-height:1.2; color:var(--text-dim); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; overflow-wrap:break-word; hyphens:auto; -webkit-hyphens:auto; }
+.adv-t svg{ position:absolute; top:7px; right:7px; width:13px; height:13px; }
+.adv-t.frei{ background:transparent; border-style:dashed; border-color:rgba(255,255,255,.22); }
+.adv-t.frei span{ color:var(--text-faint); }
+.adv-t.besorgt{ background:color-mix(in srgb, var(--good) 26%, transparent); border-color:color-mix(in srgb, var(--good) 55%, transparent); } .adv-t.besorgt svg{ color:var(--good); }
+.adv-t.verpackt{ background:var(--gift); border-color:transparent; color:#2a0d17; } .adv-t.verpackt span{ color:rgba(42,13,23,.75); }
+.adv-t.fremd{ color:var(--text-faint); border-color:rgba(255,255,255,.06); background:repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 6px, transparent 6px 12px); }
+.adv-t.fremd svg{ opacity:.7; }
+.adv-t.heute{ box-shadow:0 0 0 2px var(--gold); }
+.adv-t.vorbei{ opacity:.45; }
+.adv-ideen{ margin-top:16px; display:flex; flex-direction:column; gap:6px; }
+.adv-lab{ font-weight:500; color:var(--text-faint); margin-bottom:2px; }
+.gk-idee.s1 .gk-st{ color:#0d2a18; background:var(--good); box-shadow:none; }
+.gk-idee.s2 .gk-st{ color:#2a0d17; background:var(--gift); box-shadow:none; }
+.adv-tc{ height:28px; font-size:var(--t-xs); padding:0 11px; flex:0 0 auto; }
+.adv-tc svg{ width:12px; height:12px; margin-right:3px; }
+.adv-tc.hat{ background:color-mix(in srgb, var(--gift) 26%, transparent); border-color:color-mix(in srgb, var(--gift) 50%, transparent); color:#ffd3e0; font-weight:600; }
+.adv-leer{ font-size:var(--t-sm); color:var(--text-dim); line-height:1.5; padding:2px 2px 4px; }
+.adv-wahl{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.adv-wahl .chip{ height:auto; min-height:32px; padding:6px 13px; text-align:left; }
+.adv-seg{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.adv-drin{ font-size:var(--t-base); margin-top:4px; }
+.adv-pick{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:8px; }
+.adv-pick button{ border-radius:14px; padding:8px; min-height:64px; display:flex; flex-direction:column; align-items:flex-start; text-align:left; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:var(--text); }
+.adv-pick button b{ font-family:var(--f-disp); font-weight:500; font-size:1.3rem; line-height:1; }
+.adv-pick button span{ font-size:10.5px; color:var(--text-faint); margin-top:auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+.adv-pick button.on{ background:var(--gift); color:#2a0d17; border-color:transparent; } .adv-pick button.on span{ color:rgba(42,13,23,.75); }
+@media (max-width:560px){ .adv{ padding:18px 14px; } .adv-raster{ gap:5px; } .adv-t{ padding:6px 5px 5px; border-radius:11px; } .adv-t b{ font-size:1.1rem; } .adv-t span{ font-size:9.5px; } .adv-t svg{ top:5px; right:5px; width:11px; height:11px; } }
 
 /* ── Raum: Seitenleiste und Widgets stehen leicht schräg vor dem Fenster ──
    Wie in visionOS: das Hauptfenster schaut gerade nach vorn, die Leiste links
@@ -5080,6 +5125,7 @@ R.heute=function(){
         const fehlt=dabei.filter(p=>gsXmasStand(p)!=="gekauft").length; if(!fehlt) return "";
         return `<button class="hd-geb${x.tage<=7?" nah":""}" onclick="go('geschenke')">${ico("star")}<span><b>Weihnachten</b> ${gsCountdown(x.tage)}</span>
           <em>${fehlt} ${fehlt===1?"Geschenk fehlt":"Geschenke fehlen"}</em></button>`; })()}
+      ${advHinweis()}
       ${gsBald(14).map(({p,n})=>`<button class="hd-geb${n.tage<=3?" nah":""}" onclick="go('geschenke')">
           ${ico("gift")}<span><b>${esc(p.name)}</b> ${n.tage===0?"hat heute Geburtstag":`hat ${gsCountdown(n.tage)} Geburtstag`}${n.alter?` (${n.alter})`:""}</span>
           ${gsOffenBald(p)?`<em>noch nichts gekauft</em>`:""}</button>`).join("")}
@@ -8410,6 +8456,98 @@ R.partner=function(){
 const gsEigene=p=>[...new Set([...(p.ideen||[]).map(i=>i.anlass),gsAnlassWahl[p.id]].filter(a=>a&&a!=="geb"&&a!=="xmas"))];
 const gsAnlassName=a=>a==="geb"?"Geburtstag":a==="xmas"?"Weihnachten":a;
 
+/* ── Adventskalender ──
+   Ihr macht euch gegenseitig einen: NOVA hat die geraden Türchen (2, 4 … 24),
+   ihre Woche-App die ungeraden. Hier stehen nur deine eigenen Ideen; ihre Türchen
+   bleiben zu. Nichts davon geht in den geteilten Planer-Auszug, nova.json sieht sie nie.
+   Ablage: S.advent = {jahr, ideen:[{id, text, st (0 Idee, 1 besorgt, 2 eingepackt), tuer|null, t}]} */
+const ADV_MEIN=n=>n%2===0, ADV_ST=["Idee","besorgt","eingepackt"];
+const advJahr=()=>new Date().getFullYear();
+function advDaten(){ if(!S.advent||!(S.advent.jahr>=advJahr())) S.advent={jahr:advJahr(),ideen:[]}; S.advent.ideen=S.advent.ideen||[]; return S.advent; }
+const advMeine=()=>[...Array(24)].map((_,i)=>i+1).filter(ADV_MEIN);
+const advIn=n=>advDaten().ideen.find(i=>i.tuer===n);
+const advHeute=()=>{ const d=new Date(); return d.getMonth()===11&&d.getDate()<=24?d.getDate():0; };
+const advBis1=()=>Math.round((new Date(advJahr(),11,1)-parsedk(today()))/86400000);
+const advSichtbar=()=>{ const m=new Date().getMonth(); return m>=9||!!(S.advent&&S.advent.jahr===advJahr()&&(S.advent.ideen||[]).length); };
+const advBesorgt=()=>advMeine().filter(n=>{ const i=advIn(n); return i&&i.st>=1; }).length;
+const advName=()=>{ const d=teilIhr(); return d&&String(d.von||"").trim(); };
+const advVon=()=>advName()?esc(advName()):"ihr", advWer=()=>advName()?esc(advName()):"sie";
+function advBlock(){
+  if(!advSichtbar()) return "";
+  const a=advDaten(), h=advHeute(), b1=advBis1(), besorgt=advBesorgt();
+  const unter=h?`Heute Türchen ${h} · ${ADV_MEIN(h)?"von dir":`von ${advVon()}`}`:b1>0?`Türchen 1 ${gsCountdown(b1)} · ${besorgt} von 12 besorgt`:"Frohe Weihnachten";
+  const zelle=n=>{
+    if(!ADV_MEIN(n)) return `<div class="adv-t fremd${n===h?" heute":""}${h&&n<h?" vorbei":""}" title="Türchen ${n} kommt von ${advVon()}"><b>${n}</b>${ico("heart")}</div>`;
+    const i=advIn(n), k=i?["idee","besorgt","verpackt"][i.st||0]:"frei";
+    return `<button class="adv-t ${k}${n===h?" heute":""}${h&&n<h?" vorbei":""}" data-adv="${n}" aria-label="Türchen ${n}${i?`: ${esc(i.text)}, ${ADV_ST[i.st||0]}`:", noch leer"}">
+      <b>${n}</b>${i&&i.st===2?ico("gift"):i&&i.st===1?ico("check"):""}<span>${i?esc(i.text):"frei"}</span></button>`; };
+  const ideen=a.ideen.slice().sort((x,y)=>(x.tuer||99)-(y.tuer||99)||(x.t||0)-(y.t||0));
+  return `<div class="adv">
+    <div class="adv-k"><span class="adv-ic">${ico("star")}</span>
+      <div><b>Adventskalender</b><span>${unter}</span></div>
+      <div class="adv-bar"><i style="width:${besorgt/12*100}%"></i></div></div>
+    <div class="adv-raster">${[...Array(24)].map((_,i)=>zelle(i+1)).join("")}</div>
+    <div class="adv-ideen"><div class="adv-lab">Ideen für deine Türchen</div>
+      ${ideen.length?ideen.map(i=>`<div class="gk-idee s${i.st||0}">
+        <button class="gk-st" data-advst="${i.id}" title="Tippen: Idee, besorgt, eingepackt" aria-label="Stand ändern">${(i.st||0)===0?ico("bulb"):i.st===1?ico("check"):ico("gift")}</button>
+        <span class="gk-it">${esc(i.text)}</span><span class="gk-is">${ADV_ST[i.st||0]}</span>
+        <button class="chip adv-tc${i.tuer?" hat":""}" data-advtuer="${i.id}">${i.tuer?`Tür ${i.tuer}`:`${ico("plus")}Tür`}</button>
+        <button class="gk-weg" data-advweg="${i.id}" aria-label="Idee löschen">${ico("x")}</button></div>`).join("")
+        :`<div class="adv-leer">Schreib hier alles auf, was dir für ihre Türchen einfällt. Sie sieht davon nichts. Tippe auf ein Türchen oder auf „Tür“, um eine Idee hineinzulegen, und hak ab, was besorgt und eingepackt ist.</div>`}
+      <div class="gk-neu"><input data-advneu placeholder="Neue Idee für deine Türchen" autocomplete="off" enterkeyhint="done" aria-label="Neue Idee für den Adventskalender">
+        <button class="gk-rund voll" data-advadd aria-label="Idee hinzufügen">${ico("plus")}</button></div>
+    </div></div>`;
+}
+function advLegen(i,n){ const alt=advIn(n); if(alt&&alt!==i) alt.tuer=null; i.tuer=n; }
+function advTuerModal(n){
+  const a=advDaten(), i=advIn(n), frei=a.ideen.filter(x=>!x.tuer);
+  modal(`<h3>Türchen ${n}</h3>
+    ${i?`<label>Drin</label><div class="adv-drin">${esc(i.text)}</div>
+      <div class="adv-seg">${ADV_ST.map((t,k)=>`<button class="chip${(i.st||0)===k?" on":""}" data-advsetst="${k}">${t}</button>`).join("")}</div>`:""}
+    ${frei.length?`<label>${i?"Stattdessen hineinlegen":"Eine Idee hineinlegen"}</label><div class="adv-wahl">${frei.map(x=>`<button class="chip" data-advlege="${x.id}">${esc(x.text)}</button>`).join("")}</div>`:""}
+    <label>${i||frei.length?"Oder etwas Neues":"Was kommt hinein?"}</label><input id="advTN" placeholder="z. B. ihre Lieblingsschokolade" autocomplete="off" enterkeyhint="done">
+    <div class="mo-act">${i?`<button class="b" id="advLeer" style="margin-right:auto">Türchen leeren</button>`:""}<button class="b" onclick="closeModal()">Abbrechen</button><button class="b b-1" id="advOk">Fertig</button></div>`);
+  const fertig=t=>{ save(); closeModal(); R.geschenke(); if(t) toast(t,"gift"); };
+  const m=document.getElementById("modal");
+  m.querySelectorAll("[data-advsetst]").forEach(b=>b.onclick=()=>{ i.st=+b.dataset.advsetst; fertig(["Wieder Idee","Besorgt","Eingepackt"][i.st]); });
+  m.querySelectorAll("[data-advlege]").forEach(b=>b.onclick=()=>{ const x=a.ideen.find(y=>y.id===b.dataset.advlege); if(x){ advLegen(x,n); fertig(`In Türchen ${n}`); } });
+  const neuIn=()=>{ const v=document.getElementById("advTN").value.trim(); if(!v){ closeModal(); return; } const x={id:uid(),text:v,st:0,tuer:null,t:Date.now()}; a.ideen.push(x); advLegen(x,n); fertig(`In Türchen ${n}`); };
+  document.getElementById("advOk").onclick=neuIn;
+  document.getElementById("advTN").onkeydown=e=>{ if(e.key==="Enter"&&!e.isComposing){ e.preventDefault(); neuIn(); } };
+  document.getElementById("advLeer")?.addEventListener("click",()=>{ i.tuer=null; fertig("Türchen geleert, die Idee bleibt in der Liste"); });
+}
+function advTuerWahl(id){
+  const a=advDaten(), i=a.ideen.find(x=>x.id===id); if(!i) return;
+  modal(`<h3>Welches Türchen?</h3><label>${esc(i.text)}</label>
+    <div class="adv-pick">${advMeine().map(n=>{ const d=advIn(n); return `<button class="${i.tuer===n?"on":""}" data-advpick="${n}"><b>${n}</b><span>${d&&d!==i?esc(d.text):i.tuer===n?"hier":"frei"}</span></button>`; }).join("")}</div>
+    <div class="mo-act">${i.tuer?`<button class="b" id="advOhne" style="margin-right:auto">Ohne Türchen</button>`:""}<button class="b" onclick="closeModal()">Abbrechen</button></div>`);
+  const m=document.getElementById("modal");
+  m.querySelectorAll("[data-advpick]").forEach(b=>b.onclick=()=>{ const n=+b.dataset.advpick; advLegen(i,n); save(); closeModal(); R.geschenke(); toast(`In Türchen ${n}`,"gift"); });
+  document.getElementById("advOhne")?.addEventListener("click",()=>{ i.tuer=null; save(); closeModal(); R.geschenke(); });
+}
+function advVerdrahten(el){
+  const neu=()=>{ const inp=el.querySelector("[data-advneu]"), v=(inp?.value||"").trim(); if(!v) return;
+    advDaten().ideen.push({id:uid(),text:v,st:0,tuer:null,t:Date.now()}); save(); R.geschenke(); el.querySelector("[data-advneu]")?.focus({preventScroll:true}); };
+  el.querySelector("[data-advadd]")?.addEventListener("click",neu);
+  el.querySelector("[data-advneu]")?.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.isComposing){ e.preventDefault(); neu(); } });
+  el.querySelectorAll("[data-adv]").forEach(b=>b.onclick=()=>advTuerModal(+b.dataset.adv));
+  el.querySelectorAll("[data-advtuer]").forEach(b=>b.onclick=()=>advTuerWahl(b.dataset.advtuer));
+  el.querySelectorAll("[data-advst]").forEach(b=>b.onclick=()=>{ const i=advDaten().ideen.find(x=>x.id===b.dataset.advst); if(!i) return;
+    i.st=((i.st||0)+1)%3; save(); toast(["Wieder Idee","Besorgt","Eingepackt"][i.st],"gift"); R.geschenke(); });
+  el.querySelectorAll("[data-advweg]").forEach(b=>b.onclick=()=>{ const a=advDaten(); a.ideen=a.ideen.filter(x=>x.id!==b.dataset.advweg); save(); R.geschenke(); });
+}
+/* Für „Heute": im Dezember das Türchen des Tages, in den zwei Wochen davor die noch leeren */
+function advHinweis(){
+  if(!S.advent&&new Date().getMonth()!==11) return "";
+  const n=advHeute();
+  if(n){ const meins=ADV_MEIN(n), i=meins?advIn(n):null;
+    return `<button class="hd-geb${meins&&(!i||i.st<2)?" nah":""}" onclick="go('geschenke')">${ico("gift")}<span><b>Türchen ${n}</b> ${meins?(i?`bekommt ${advWer()} heute von dir: ${esc(i.text)}`:"ist heute deins und noch leer"):`öffnest du heute, von ${advVon()}`}</span>
+      ${meins&&i&&i.st<2?`<em>${i.st?"noch einpacken":"noch besorgen"}</em>`:""}</button>`; }
+  const b1=advBis1(), fehlt=12-advBesorgt();
+  if(b1>0&&b1<=14&&fehlt>0) return `<button class="hd-geb${b1<=3?" nah":""}" onclick="go('geschenke')">${ico("gift")}<span><b>Adventskalender</b> ${gsCountdown(b1)}</span><em>noch ${fehlt} ${fehlt===1?"Türchen":"Türchen"} offen</em></button>`;
+  return "";
+}
+
 /* Geschenke, aufgeräumt wie in der Woche-App: ein Weihnachtsblock, die
    nächsten Geburtstage als Leiste, darunter eine ruhige Karte je Mensch. */
 R.geschenke=function(){
@@ -8472,6 +8610,8 @@ R.geschenke=function(){
         <i>${s==="gekauft"?ico("check"):s==="idee"?ico("bulb"):""}</i>${esc(p.name)}</button>`).join("")}</div>
     </div>`; })()}
 
+  ${advBlock()}
+
   ${bald.length?`<div class="gk-bald">${bald.map(({p,n})=>`
     <button class="gk-gb${n.tage<=7?" nah":""}" data-gsgo="${p.id}">
       <b class="gk-gbn">${n.tage===0?ico("gift"):n.tage}</b>
@@ -8488,6 +8628,7 @@ R.geschenke=function(){
     k.scrollIntoView({behavior:"smooth",block:"center"}); k.classList.add("blink"); setTimeout(()=>k.classList.remove("blink"),1200);
   };
   el.querySelector("#gsNeu").onclick=()=>gsPersonModal(null);
+  advVerdrahten(el);
   el.querySelectorAll("[data-gsedit]").forEach(b=>b.onclick=()=>gsPersonModal(b.dataset.gsedit));
   el.querySelectorAll("[data-gsgo]").forEach(b=>b.onclick=()=>zeigeKarte(b.dataset.gsgo,"geb"));
   el.querySelectorAll("[data-gsxgo]").forEach(b=>b.onclick=()=>zeigeKarte(b.dataset.gsxgo,"xmas"));

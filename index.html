@@ -1074,6 +1074,47 @@ html.lernt .lu-l-pz{ font-size:var(--t-xs); color:#9cc8ff; font-variant-numeric:
   background:color-mix(in srgb, var(--good) 12%, transparent);
 }
 .hb.fertig{ opacity:.55; }
+
+/* ── Drang-Zähler ─────────────────────────────────────────
+   Für Gewohnheiten, die etwas LASSEN wollen (Nägel, Handy beim Lernen).
+   Jeder Drang wird sofort gezählt: widerstanden oder passiert. */
+.hb2.drang{ flex-wrap:wrap; }
+.hb-drang{ flex:1 1 100%; order:4; display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding-left:21px; }
+.dr-b{
+  display:inline-flex; align-items:center; gap:6px; padding:6px 12px;
+  border-radius:var(--r-pill); border:1px solid var(--line-2);
+  background:rgba(var(--ov),.03); color:var(--text-dim);
+  font-size:var(--t-sm); font-weight:500; cursor:pointer;
+  transition:transform 160ms cubic-bezier(.23,1,.32,1), background-color var(--d1) var(--ez), border-color var(--d1) var(--ez);
+}
+.dr-b:active{ transform:scale(.97); }
+.dr-b svg{ width:13px; height:13px; stroke-width:3; }
+.dr-n{ display:inline-block; font-family:var(--f-mono); font-variant-numeric:tabular-nums; min-width:1ch; color:var(--text); font-weight:600; }
+.dr-b.ok{ border-color:color-mix(in srgb, var(--good) 38%, transparent); }
+.dr-b.ok svg{ stroke:var(--good); }
+.dr-b.ok.hat{ background:color-mix(in srgb, var(--good) 15%, transparent); }
+.dr-b.nein{ border-color:color-mix(in srgb, var(--bad) 32%, transparent); }
+.dr-b.nein svg{ stroke:var(--bad); }
+.dr-b.nein.hat{ background:color-mix(in srgb, var(--bad) 13%, transparent); }
+@media (hover:hover) and (pointer:fine){
+  .dr-b.ok:hover{ background:color-mix(in srgb, var(--good) 20%, transparent); }
+  .dr-b.nein:hover{ background:color-mix(in srgb, var(--bad) 18%, transparent); }
+}
+.dr-x{
+  width:30px; height:30px; border-radius:50%; border:1px solid var(--line);
+  background:transparent; color:var(--text-faint); font-size:15px; line-height:1; cursor:pointer;
+}
+@media (hover:hover) and (pointer:fine){ .dr-x:hover{ color:var(--text); border-color:var(--line-2); } }
+.dr-w{ margin-left:auto; font-family:var(--f-mono); font-size:var(--t-xs); color:var(--text-faint); white-space:nowrap; }
+.dr-w i{ font-style:normal; color:var(--good); }
+.dr-w u{ text-decoration:none; color:var(--bad); }
+@media(max-width:640px){
+  .hb-drang{ padding-left:0; }
+  .dr-b{ flex:1 1 0; justify-content:center; padding:10px 12px; }
+  .dr-b.nein{ flex:0 0 auto; padding:10px 16px; }
+  .dr-w{ flex:1 1 auto; margin-left:0; order:1; }
+  .dr-x{ order:2; }
+}
 @media (hover:hover) and (pointer:fine){ .hb.fertig:hover{ opacity:1; } }
 
 
@@ -3385,6 +3426,55 @@ function toggleHabit(k,id){
   if(id===STRETCH_ID) stretchTraining(k);
   save();
 }
+/* ── Drang-Zähler ──
+   Für Gewohnheiten, die etwas LASSEN wollen (Nägel, Handy beim Lernen).
+   Abends weiß man nicht mehr, ob der Tag geschafft war, deshalb wird
+   jeder Drang sofort gezählt: widerstanden (w) oder passiert (r).
+   Gespeichert werden Zeitstempel statt Zahlen. Beim Abgleich zweier
+   Geräte werden Listen vereinigt, Zahlen würden sich überschreiben.
+   Außerdem lässt sich später sehen, zu welcher Uhrzeit der Drang kommt.
+   Der Tageshaken folgt daraus: widerstanden und nichts passiert heißt
+   geschafft, einmal passiert heißt nicht geschafft. Ein Tag ganz ohne
+   Drang wird wie bisher von Hand abgehakt. */
+const istDrang=h=>!!(h&&h.drang);
+function drangTag(k,id){ const d=(S.drang||{})[k]?.[id]||{}; return {w:d.w||[], r:d.r||[]}; }
+function drangSumme(id,tage,bis){
+  let w=0,r=0; const ende=parsedk(bis||today());
+  for(let i=0;i<tage;i++){ const d=drangTag(dk(addD(ende,-i)),id); w+=d.w.length; r+=d.r.length; }
+  return {w,r};
+}
+function drangHaken(k,id){
+  const d=drangTag(k,id);
+  if(!S.habitLog[k]) S.habitLog[k]={};
+  if(!d.r.length&&d.w.length) S.habitLog[k][id]=true;
+  else delete S.habitLog[k][id];
+}
+function drangPlus(k,id,art){
+  S.drang=S.drang||{}; S.drang[k]=S.drang[k]||{};
+  const d=S.drang[k][id]=S.drang[k][id]||{};
+  (d[art]=d[art]||[]).push(Date.now());
+  drangHaken(k,id); save();
+}
+/* Nimmt den jüngsten Eintrag des Tages zurück, egal welcher Art. */
+function drangZurueck(k,id){
+  const d=(S.drang||{})[k]?.[id]; if(!d) return null;
+  const lw=(d.w||[]).at(-1)||0, lr=(d.r||[]).at(-1)||0;
+  if(!lw&&!lr) return null;
+  const art=lw>=lr?"w":"r"; d[art].pop();
+  if(!d[art].length) delete d[art];
+  if(!Object.keys(d).length) delete S.drang[k][id];
+  if(!Object.keys(S.drang[k]).length) delete S.drang[k];
+  drangHaken(k,id); save(); return art;
+}
+function drangZeile(h,k){
+  const d=drangTag(k,h.id), s=drangSumme(h.id,7,k);
+  return `<div class="hb-drang" role="group" aria-label="Drang: ${esc(h.name)}">
+    <button class="dr-b ok${d.w.length?" hat":""}" data-dr="${h.id}|${k}|w" title="Drang gespürt und nicht nachgegeben">${ico("check")}widerstanden <span class="dr-n">${d.w.length}</span></button>
+    <button class="dr-b nein${d.r.length?" hat":""}" data-dr="${h.id}|${k}|r" title="Doch passiert" aria-label="Doch passiert">${ico("x")}<span class="dr-n">${d.r.length}</span></button>
+    ${d.w.length||d.r.length?`<button class="dr-x" data-drx="${h.id}|${k}" title="Letzten Eintrag zurücknehmen" aria-label="Letzten Eintrag zurücknehmen">↶</button>`:""}
+    <span class="dr-w" title="Summe der letzten 7 Tage">7 Tage: <i>${s.w} ✓</i> · <u>${s.r} ✗</u></span>
+  </div>`;
+}
 /* ── Daily Stretches ──
    Jeder Haken bei dieser Gewohnheit ist zugleich eine Einheit von 15
    Minuten Mobility im Training; Haken weg, Einheit weg. Die Kennung der
@@ -3405,6 +3495,21 @@ function stretchAnlegen(){
   if(!S.habits.some(h=>h.id===STRETCH_ID))
     S.habits.push({id:STRETCH_ID,name:"Daily Stretches",color:"#d488b8",createdAt:today(),archived:false});
   S.stretchAngelegt=1; return true;
+}
+/* Einmal einrichten: die Nägel-Gewohnheit wird zum Drang-Zähler,
+   „No Phone while learning“ kommt dazu. Feste Kennungen, damit zwei
+   Geräte nichts doppelt anlegen. */
+const NOPHONE_ID="h_nophone";
+function drangAnlegen(){
+  if(S.drangAngelegt) return false;
+  S.habits=S.habits||[];
+  const nagel=S.habits.find(h=>!h.archived&&/nail|n[äa]gel|knibb/i.test(h.name));
+  if(nagel) nagel.drang=true;
+  else if(!S.habits.some(h=>h.id==="h_nonail"))
+    S.habits.push({id:"h_nonail",name:"No Nail-Biting",color:"#C9B458",createdAt:today(),archived:false,drang:true});
+  if(!S.habits.some(h=>h.id===NOPHONE_ID))
+    S.habits.push({id:NOPHONE_ID,name:"No Phone while learning",color:"#5a9ded",createdAt:today(),archived:false,drang:true});
+  S.drangAngelegt=1; return true;
 }
 function streak(h){
   let n=0,d=new Date();
@@ -4230,12 +4335,12 @@ function beleben(root){
 }
 /* Was gerade angetippt wurde, springt nach dem Neuzeichnen kurz auf. */
 document.addEventListener("click",e=>{
-  const t=e.target.closest&&e.target.closest("[data-hd],[data-tgl],[data-lpalle],#hdAnkiNull");
+  const t=e.target.closest&&e.target.closest("[data-hd],[data-tgl],[data-lpalle],[data-dr],#hdAnkiNull");
   if(!t||BEWEG_ARM) return;
-  const a=["data-hd","data-tgl","data-lpalle"].find(x=>t.hasAttribute(x));
+  const a=["data-hd","data-tgl","data-lpalle","data-dr"].find(x=>t.hasAttribute(x));
   const sel=a?`[${a}="${CSS.escape(t.getAttribute(a))}"]`:"#"+t.id;
   requestAnimationFrame(()=>{ const n=document.querySelector(sel); if(!n) return;
-    const z=n.querySelector(".lp-box")||n; z.classList.remove("knall"); void z.offsetWidth; z.classList.add("knall"); });
+    const z=n.querySelector(".lp-box,.dr-n")||n; z.classList.remove("knall"); void z.offsetWidth; z.classList.add("knall"); });
 },true);
 /* Markierung der Seitenleiste zum aktiven Eintrag schieben */
 function railInd(sofort){
@@ -5085,7 +5190,7 @@ R.heute=function(){
           const geschafft = vollAb>=0;
           const erledigt = geschafft && !on;
           const kraft=habitStaerke(h,k), se=habitSerie(h);
-          return `<div class="hb2${on?" on":""}${erledigt?" fertig":""}"
+          return `<div class="hb2${on?" on":""}${erledigt?" fertig":""}${istDrang(h)?" drang":""}"
             title="Stärke ${kraft} %${se.n?` · ${se.n} ${se.e} in Folge`:""}">
             <span class="hb-dot" style="background:${h.color}"></span>
             <span class="hb-n">${esc(h.name)}</span>
@@ -5103,6 +5208,7 @@ R.heute=function(){
                 title="${fmtShort(d)}${schein?" · Ziel erreicht, dieser Tag zählt nicht gegen dich":""}"
                 >${an||schein?ico("check"):""}</button>`;}).join("")}</span>
             <span class="hb-s" style="--kf:${kraft}%">${kraft} %</span>
+            ${istDrang(h)?drangZeile(h,k):""}
           </div>`;}).join("")}</div>`
         :`<div class="empty">${ico("list")}<div>Noch keine Gewohnheiten.<br>Lege unter „Gewohnheiten“ die erste an.</div></div>`}
       </div>
@@ -5228,6 +5334,13 @@ R.heute=function(){
   V.querySelectorAll("[data-hd]").forEach(b=>b.onclick=()=>{
     const [id,tag]=b.dataset.hd.split("|");
     toggleHabit(tag,id); R.heute(); paintOrb(); });
+  V.querySelectorAll("[data-dr]").forEach(b=>b.onclick=()=>{
+    const [id,tag,art]=b.dataset.dr.split("|");
+    drangPlus(tag,id,art); R.heute(); paintOrb(); });
+  V.querySelectorAll("[data-drx]").forEach(b=>b.onclick=()=>{
+    const [id,tag]=b.dataset.drx.split("|");
+    if(drangZurueck(tag,id)) toast("Zurückgenommen");
+    R.heute(); paintOrb(); });
   V.querySelector("#hDate").onchange=e=>{ dayView=e.target.value||today(); R.heute(); };
   V.querySelector("#hToday")?.addEventListener("click",()=>{ dayView=today(); R.heute(); });
   V.querySelector("#mSave").onclick=()=>{
@@ -5466,7 +5579,9 @@ R.habits=function(){
         <div style="display:flex;gap:20px;margin-bottom:12px;flex-wrap:wrap">
           ${[[soll>=7?"täglich":`${wo}/${soll}`, soll>=7?"Ziel":"diese Woche"],
              [se.n, se.e+" in Folge"],
-             [r30+" %","letzte 30 Tage"]].map(([v,l])=>
+             [r30+" %","letzte 30 Tage"],
+             ...(istDrang(h)?[(()=>{ const s=drangSumme(h.id,30);
+               return [`${s.w}<span style="color:var(--good)">✓</span> ${s.r}<span style="color:var(--bad)">✗</span>`,"Drang, 30 Tage"]; })()]:[])].map(([v,l])=>
             `<div><div style="font-family:var(--f-disp);font-size:var(--t-lg);font-weight:700;font-variant-numeric:tabular-nums">${v}</div>
              <div style="font-size:var(--t-xs);color:var(--text-faint)">${l}</div></div>`).join("")}
         </div>
@@ -5503,6 +5618,13 @@ function habitModal(id){
     <div style="font-size:var(--t-xs);color:var(--text-faint);margin:-4px 0 12px;line-height:1.5">
       Unter „täglich" gilt die Gewohnheit als erledigt, sobald das Wochenziel
       erreicht ist — sie zählt dann nicht mehr als offener Posten.</div>
+    <label>Art</label>
+    <div class="chips" id="hnArt">
+      <button data-a="0" class="chip${istDrang(h)?"":" on"}">Abhaken</button>
+      <button data-a="1" class="chip${istDrang(h)?" on":""}">Drang zählen</button></div>
+    <div style="font-size:var(--t-xs);color:var(--text-faint);margin:-4px 0 12px;line-height:1.5">
+      Drang zählen: Jedes Mal sofort tippen, ob du widerstanden hast oder ob es passiert ist.
+      Der Tag gilt als geschafft, wenn du widerstanden hast und nichts passiert ist.</div>
     <label>Farbe</label>
     <div class="chips" id="hnCols">${PALETTE.map(c=>
       `<button data-c="${c}" style="width:28px;height:28px;padding:0;border-radius:50%;background:${c};border:2px solid ${c===col?"var(--text)":"transparent"};transform:${c===col?"scale(1.12)":"none"};transition:transform var(--d1) var(--ez)"></button>`).join("")}</div>
@@ -5516,6 +5638,12 @@ function habitModal(id){
     sbox.querySelectorAll("[data-s]").forEach(x=>x.classList.remove("on"));
     bt.classList.add("on");
   });
+  let drang=istDrang(h);
+  const abox=document.getElementById("hnArt");
+  abox.querySelectorAll("[data-a]").forEach(bt=>bt.onclick=()=>{
+    drang=bt.dataset.a==="1";
+    abox.querySelectorAll("[data-a]").forEach(x=>x.classList.toggle("on",x===bt));
+  });
   const box=document.getElementById("hnCols");
   box.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{
     col=b.dataset.c;
@@ -5526,8 +5654,8 @@ function habitModal(id){
   document.getElementById("hnSave").onclick=()=>{
     const n=document.getElementById("hnName").value.trim();
     if(!n){ toast("Bitte einen Namen angeben","x"); return; }
-    if(h){ h.name=n; h.color=col; h.proWoche=soll; }
-    else S.habits.push({id:uid(),name:n,color:col,proWoche:soll,createdAt:today(),archived:false});
+    if(h){ h.name=n; h.color=col; h.proWoche=soll; if(drang) h.drang=true; else delete h.drang; }
+    else S.habits.push(Object.assign({id:uid(),name:n,color:col,proWoche:soll,createdAt:today(),archived:false},drang?{drang:true}:{}));
     save(); closeModal(); toast(h?"Gespeichert":"Angelegt"); go(VIEW);
   };
 }
@@ -9541,6 +9669,7 @@ garminNeu=mergeGarmin();
 if(garminNeu) persist();
 if(typeof lpKorrekturen==="function"&&lpKorrekturen()) save();
 if(stretchAnlegen()) save();
+if(drangAnlegen()) save();
 shell();
 /* Auftakt: die Blöcke fallen einmal nacheinander ein */
 function auftakt(){ if(BEWEG_ARM) return; const v=document.getElementById("views"); if(!v) return;
